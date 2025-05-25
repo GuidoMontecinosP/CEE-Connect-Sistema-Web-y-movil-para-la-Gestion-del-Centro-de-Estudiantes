@@ -1,25 +1,31 @@
-
 import express from "express";
 import cors from "cors";
-import { connectDB } from "./config/configDb.js"; // o la ruta donde tengas tu conexión
 import dotenv from "dotenv";
+import { connectDB } from "./config/configDb.js";
+import indexRoutes from "./routes/index.routes.js";
+
+// Cargar variables de entorno
 dotenv.config();
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middlewares
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Conexión a la base de datos
+// Conectar a la base de datos
 await connectDB();
 
 // Ruta base de prueba
-app.get("/", (req, res) => {
-  res.send("CEE Connect Backend funcionando");
+app.get("/conexion", (req, res) => {
+  res.send("CEE Connect Backend funcionando correctamente");
 });
 
-// Levantar el servidor
+// Rutas principales
+app.use("/api", indexRoutes);
+
+// Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${3000}`);
+  console.log(`Servidor escuchando en http://localhost:${PORT}/api`);
 });

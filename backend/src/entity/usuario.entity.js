@@ -17,7 +17,7 @@ const UsuarioSchema = new EntitySchema({
       type: "varchar",
       unique: true,
     },
-    contraseña: {
+    contrasena: {
       type: "text",
     },
     rol: {
