@@ -9,15 +9,14 @@ export default function EmitirVoto({ route }) {
   const [usuarioId, setUsuarioId] = useState('');
 
   useEffect(() => {
-    axios.get(`/votaciones/${id}`).then(res => setVotacion(res.data));
+    axios.get(`/votacion/${id}`).then(res => setVotacion(res.data.data));
   }, []);
 
   const votar = async () => {
     try {
-      await axios.post('/votar', {
+      await axios.post(`/votacion/${id}/votar`, {
         usuarioId: Number(usuarioId),
-        votacionId: id,
-        opcionId,
+        opcionId
       });
       alert('Voto registrado');
     } catch (err) {
@@ -30,8 +29,6 @@ export default function EmitirVoto({ route }) {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 20 }}>{votacion.titulo}</Text>
-      <Text>{votacion.descripcion}</Text>
-
       <TextInput
         placeholder="ID de usuario"
         keyboardType="numeric"

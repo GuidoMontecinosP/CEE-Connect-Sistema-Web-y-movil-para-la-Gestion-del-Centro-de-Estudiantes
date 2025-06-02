@@ -4,19 +4,21 @@ const RespuestaVotacionSchema = new EntitySchema({
   name: "RespuestaVotacion",
   tableName: "respuestas_votacion",
   columns: {
-    id: { type: "int", primary: true, generated: true },
-    fecha: {
+    id: {
+      type: "int",
+      primary: true,
+      generated: true,
+    },
+    tokenVotacion: {
+      type: "varchar",
+      length: 36, // Para UUID
+    },
+    fechaVoto: {
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
     },
   },
   relations: {
-    votacion: {
-      type: "many-to-one",
-      target: "Votacion",
-      joinColumn: true,
-      onDelete: "CASCADE",
-    },
     opcion: {
       type: "many-to-one",
       target: "OpcionVotacion",

@@ -6,14 +6,10 @@ export default function ListaVotaciones({ navigation }) {
   const [votaciones, setVotaciones] = useState([]);
 
   useEffect(() => {
-  axios.get('/votaciones')
-    .then(res => {
-      setVotaciones(res.data);
-    })
-    .catch(err => {
-      console.error("Error al cargar votaciones", err);
-    });
-}, []);
+    axios.get('/votacion')
+      .then(res => setVotaciones(res.data.data))
+      .catch(err => console.error("Error al cargar votaciones", err));
+  }, []);
 
   return (
     <View style={{ padding: 20 }}>
@@ -22,9 +18,18 @@ export default function ListaVotaciones({ navigation }) {
         data={votaciones}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => navigation.navigate('Votar', { id: item.id })}>
-            <Text style={{ padding: 10, fontSize: 18 }}>{item.titulo}</Text>
-          </TouchableOpacity>
+          <View style={{ marginBottom: 20 }}>
+            <Text style={{ fontSize: 18 }}>{item.titulo}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Votar', { id: item.id })}>
+              <Text style={{ color: 'blue' }}> Emitir Voto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Resultados', { id: item.id })}>
+              <Text style={{ color: 'blue' }}> Ver Resultados</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Detalle', { id: item.id })}>
+              <Text style={{ color: 'blue' }}> Ver Detalle</Text>
+            </TouchableOpacity>
+          </View>
         )}
       />
     </View>

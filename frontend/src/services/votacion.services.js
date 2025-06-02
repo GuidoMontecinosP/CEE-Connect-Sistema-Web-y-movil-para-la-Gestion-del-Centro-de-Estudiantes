@@ -1,33 +1,56 @@
 import axios from './root.services.js';
 
-export const getVotaciones = async () => {
+export const votacionService = {
+  // Obtener todas las votaciones
+  obtenerVotaciones: async () => {
     try {
-        const response = await axios.get('/votaciones');
-        console.log('Votaciones:', response.data);
+      const response = await axios.get('/votacion');
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener votacion');
+    }
+  },
 
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching votaciones:', error);
-        throw error;
-    }
-}
-export const crearVotacion = async (votacionData) => {
+  // Crear nueva votación 
+  crearVotacion: async (titulo, opciones) => {
     try {
-        const response = await axios.post('/votaciones', votacionData);
-        console.log('Votacion creada:', response.data);
-        return response.data;
+      const response = await axios.post('/votacion', {
+        titulo,
+        opciones // Array de strings con las opciones
+      });
+      return response.data;
     } catch (error) {
-        console.error('Error creating votacion:', error);
-        throw error;
+      throw new Error(error.response?.data?.mensaje || 'Error al crear votación');
     }
-}
-export const getVotacionPorId = async (id) => {
+  },
+
+  // Obtener votación por ID
+  obtenerVotacionPorId: async (id) => {
     try {
-        const response = await axios.get(`/votaciones/${id}`);
-        console.log('Votacion por ID:', response.data);
-        return response.data;
+      const response = await axios.get(`/votacion/${id}`);
+      return response.data;
     } catch (error) {
-        console.error('Error fetching votacion by ID:', error);
-        throw error;
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener votación');
     }
-}
+  },
+
+  // Cerrar votación
+  cerrarVotacion: async (votacionId) => {
+    try {
+      const response = await axios.patch(`/votacion/${votacionId}/cerrar`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al cerrar votación');
+    }
+  },
+
+  // Obtener resultados de votación
+  obtenerResultados: async (votacionId) => {
+    try {
+      const response = await axios.get(`/votacion/${votacionId}/resultados`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener resultados');
+    }
+  }
+};

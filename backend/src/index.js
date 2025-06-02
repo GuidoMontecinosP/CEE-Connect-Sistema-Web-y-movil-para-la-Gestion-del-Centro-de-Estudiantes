@@ -11,7 +11,12 @@ const app = express();
 const PORT = 3000;
 
 // Middlewares
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: true, // o el puerto que uses con Vite o React
+  credentials: true
+}));
+
+
 app.use(express.json());
 
 // Conectar a la base de datos

@@ -4,8 +4,14 @@ const OpcionVotacionSchema = new EntitySchema({
   name: "OpcionVotacion",
   tableName: "opciones_votacion",
   columns: {
-    id: { type: "int", primary: true, generated: true },
-    textoOpcion: { type: "text" },
+    id: {
+      type: "int",
+      primary: true,
+      generated: true,
+    },
+    textoOpcion: {
+      type: "text",
+    },
   },
   relations: {
     votacion: {

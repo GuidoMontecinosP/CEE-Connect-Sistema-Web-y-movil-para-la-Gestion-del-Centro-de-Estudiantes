@@ -4,27 +4,38 @@ const VotacionSchema = new EntitySchema({
   name: "Votacion",
   tableName: "votaciones",
   columns: {
-    id: { type: "int", primary: true, generated: true },
-    titulo: { type: "text" },
-    descripcion: { type: "text", nullable: true },
-    fechaInicio: { type: "timestamp" },
-    fechaFin: { type: "timestamp" },
+    id: {
+      type: "int",
+      primary: true,
+      generated: true,
+    },
+    titulo: {
+      type: "varchar",
+      length: 300,
+    },
+    estado: {
+      type: "enum",
+      enum: ["activa", "cerrada"],
+      default: "activa",
+    },
+    fechaCreacion: {
+      type: "timestamp",
+      default: () => "CURRENT_TIMESTAMP",
+    },
+    fechaCierre: {
+      type: "timestamp",
+      nullable: true,
+    },
   },
   relations: {
-    creadaPor: {
-      type: "many-to-one",
-      target: "Usuario",
-      joinColumn: true,
-      onDelete: "SET NULL",
-    },
     opciones: {
       type: "one-to-many",
       target: "OpcionVotacion",
       inverseSide: "votacion",
     },
-    registros: {
+    tokens: {
       type: "one-to-many",
-      target: "RegistroVotante",
+      target: "TokenVotacion",
       inverseSide: "votacion",
     },
   },
