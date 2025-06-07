@@ -7,6 +7,8 @@ import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
 import MenuPrincipal from './pages/MenuPrincipal';
 
+import VerEventos from './pages/VerEventos';
+
 function App() {
   return (
     <Router>
@@ -18,6 +20,7 @@ function App() {
   <Route path="/votacion/:id/votar" element={<Votar />} />
   <Route path="/votacion/:id/resultados" element={<Resultados />} />
   <Route path="/votacion/:id/cerrar" element={<CerrarVotacion />} />
+  <Route path="/eventos" element={<VerEventos />} />
 </Routes>
     </Router>
   );

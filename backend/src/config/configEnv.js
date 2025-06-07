@@ -1,7 +1,7 @@
 "use strict";
 
 import dotenv from "dotenv";
-dotenv.config({ path: "./src/config/.env" }); 
+dotenv.config(); 
 
 export const HOST = process.env.HOST;
 export const DB_USERNAME = process.env.DB_USERNAME;

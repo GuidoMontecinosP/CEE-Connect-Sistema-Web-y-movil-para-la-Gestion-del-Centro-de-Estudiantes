@@ -17,7 +17,11 @@ const EventosSchema = new EntitySchema({
       type: "varchar"
     },
     fecha: {
-      type: "timestamp",
+      type: "date",
+      default: () => "CURRENT_TIMESTAMP",
+    },
+    hora: {
+      type: "time",
       default: () => "CURRENT_TIMESTAMP",
     },
     lugar: {

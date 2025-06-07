@@ -7,6 +7,7 @@ function MenuPrincipal() {
       <ul>
         <li><Link to="/votaciones"> Listado de Votaciones</Link></li>
         <li><Link to="/crear">Crear Nueva Votación</Link></li>
+        <li><Link to="/eventos">Proximo Eventos</Link></li>
       </ul>
     </div>
   );

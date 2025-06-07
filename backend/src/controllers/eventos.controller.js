@@ -3,11 +3,12 @@ import { crearEvento, modificarEvento, eventos } from "../services/eventos.servi
 export async function crearEventoController(req, res) {
   try {
     
-    const { titulo, descripcion, fecha, lugar, tipo } = req.body;
+    const { titulo, descripcion, fecha, hora, lugar, tipo } = req.body;
     const evento = await crearEvento({
       titulo,
       descripcion,
       fecha,
+      hora,
       lugar,
       tipo,
     });
@@ -25,12 +26,13 @@ export async function crearEventoController(req, res) {
 export async function modificarEventoController(req, res) {
   try {
     const { id } = req.params;
-    const { titulo, descripcion, fecha, lugar, tipo, estado } = req.body;
+    const { titulo, descripcion, fecha, hora, lugar, tipo, estado } = req.body;
 
     const eventoModificado = await modificarEvento(id, {
       titulo,
       descripcion,
       fecha,
+      hora,
       lugar,
       tipo,
       estado,

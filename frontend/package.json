@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "antd": "^5.25.2",
+    "antd": "^5.25.4",
     "axios": "^1.9.0",
     "js-cookie": "^3.0.5",
     "react": "^19.1.0",
