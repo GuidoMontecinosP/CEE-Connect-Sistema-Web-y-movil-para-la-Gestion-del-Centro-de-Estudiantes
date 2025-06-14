@@ -14,10 +14,6 @@ const TokenVotacionSchema = new EntitySchema({
       unique: true,
       length: 36, // Para UUID
     },
-    yaVoto: {
-      type: "boolean",
-      default: false,
-    },
     fechaCreacion: {
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
