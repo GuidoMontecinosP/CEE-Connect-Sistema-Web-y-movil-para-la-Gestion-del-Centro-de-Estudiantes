@@ -9,8 +9,9 @@ import {
   emitirVoto, 
   verificarSiYaVoto 
 } from "../services/voto.service.js";
-
-// GET /api/votaciones - Obtener todas las votaciones
+import 
+  crearVotacionValidation from "../validations/votacion.validation.js";
+  
 export const getVotaciones = async (req, res) => {
   try {
     const votaciones = await obtenerVotaciones();
@@ -26,16 +27,24 @@ export const getVotaciones = async (req, res) => {
     });
   }
 };
-export const createVotacion = async (req, res) => {
-  try {
-    const { titulo, opciones } = req.body;
 
-    if (!titulo || !opciones) {
+export const createVotacion = async (req, res) => {
+  console.log('Datos recibidos:', req.body); // Para depuración, ver qué datos se reciben
+  try {
+    // VALIDAR datos con Joi
+    const { error, value } = crearVotacionValidation.validate(req.body);
+    
+    if (error) {
+      console.log('Errores de validación:', error.details);
       return res.status(400).json({
         success: false,
-        message: "Título y opciones son requeridos"
+        message: "Datos de entrada inválidos",
+        errors: error.details.map(detail => detail.message)
       });
     }
+
+    // Usar los datos validados (value contiene los datos limpios)
+    const { titulo, opciones } = value;
 
     const nuevaVotacion = await crearVotacion({ titulo, opciones });
     
@@ -45,13 +54,14 @@ export const createVotacion = async (req, res) => {
       data: nuevaVotacion
     });
   } catch (error) {
-    res.status(400).json({
+    res.status(500).json({
       success: false,
-      message: "Error al crear votación",
+      message: "Error interno del servidor",
       error: error.message
     });
   }
 };
+
 
 export const getVotacionById = async (req, res) => {
   try {
@@ -81,7 +91,7 @@ export const votar = async (req, res) => {
   try {
     const { id: votacionId } = req.params;
     const { usuarioId, opcionId } = req.body;
-    console.log("📥 Datos recibidos para votar:", {
+    console.log(" Datos recibidos para votar:", {
       usuarioId,
       votacionId,
       opcionId

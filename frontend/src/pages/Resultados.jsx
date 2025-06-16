@@ -280,7 +280,7 @@ function Resultados() {
                     {resultados.votacion.titulo}
                   </Title>
                   <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 16 }}>
-                    ID: {resultados.votacion.id}
+                    
                   </Text>
                 </div>
               </Col>

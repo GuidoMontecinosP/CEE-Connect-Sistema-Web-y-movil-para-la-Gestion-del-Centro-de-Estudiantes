@@ -283,7 +283,7 @@ function Votar() {
                   {votacion.titulo}
                 </Title>
                 <Text style={{ color: '#64748b', fontSize: 16 }}>
-                  ID: {votacion.id}
+                 
                 </Text>
               </div>
               {getEstadoTag(votacion.estado)}

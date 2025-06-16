@@ -86,7 +86,7 @@ function ListarVotaciones() {
       try {
         setCerrandoVotacion(votacion.id);
         
-        // Mostrar loading mientras se procesa
+        
         Swal.fire({
           title: 'Cerrando votación...',
           text: 'Por favor espera un momento',
@@ -288,7 +288,7 @@ function ListarVotaciones() {
       <Content style={{ padding: '48px 24px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           
-          {/* Header de la página */}
+       
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
             <div>
               <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
@@ -318,7 +318,7 @@ function ListarVotaciones() {
             </Button>
           </div>
 
-          {/* Filtros */}
+         
           <Card
             style={{
               borderRadius: 12,
@@ -363,7 +363,7 @@ function ListarVotaciones() {
             </Radio.Group>
           </Card>
 
-          {/* Resumen de filtros */}
+          
           <div style={{ marginBottom: 24 }}>
             <Text style={{ fontSize: 16, color: '#64748b' }}>
               Mostrando {votacionesFiltradas.length} de {votaciones.length} votaciones
@@ -375,7 +375,7 @@ function ListarVotaciones() {
             </Text>
           </div>
 
-          {/* Contenido principal */}
+         
           {loading ? (
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Spin size="large" />
@@ -483,7 +483,7 @@ function ListarVotaciones() {
 
                     <Divider style={{ margin: '16px 0' }} />
 
-                    {/* Acciones */}
+                    
                     <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                       <Row gutter={[8, 8]}>
                         <Col span={12}>

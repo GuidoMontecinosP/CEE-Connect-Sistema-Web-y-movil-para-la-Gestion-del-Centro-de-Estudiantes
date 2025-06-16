@@ -23,7 +23,7 @@ export const crearVotacion = async (data) => {
     throw new Error("Debe haber al menos 2 opciones para votar");
   }
 
-  // Opcional: Limitar máximo de opciones (ej: 10)
+  
   if (opciones.length > 10) {
     throw new Error("Máximo 10 opciones permitidas");
   }

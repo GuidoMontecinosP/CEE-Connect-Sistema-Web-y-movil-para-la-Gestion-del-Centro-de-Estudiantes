@@ -41,35 +41,23 @@ function CrearVotacion() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async () => {
+  setLoading(true);
+  const opcionesValidas = opciones.filter(op => op.trim() !== '');
 
-    const opcionesValidas = opciones.filter(op => op.trim() !== '');
-    if (opcionesValidas.length < 2) {
-      message.error('Debes ingresar al menos 2 opciones válidas');
-      setLoading(false);
-      return;
+  try {
+    const response = await votacionService.crearVotacion(titulo, opcionesValidas);
+    if (response.success) {
+      alert('Votación creada exitosamente'); //sweetalert
     }
-
-    if (!titulo.trim()) {
-      message.error('El título de la votación es obligatorio');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      await votacionService.crearVotacion(titulo, opcionesValidas);
-      
-      message.success('Votación creada exitosamente');
-      setTitulo('');
-      setOpciones(['', '']);
-    } catch (error) {
-      message.error(`Error: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setTitulo('');
+    setOpciones(['', '']);
+  } catch (error) {
+        console.log('Error al crear votación: ykw'); //sweetalert
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
