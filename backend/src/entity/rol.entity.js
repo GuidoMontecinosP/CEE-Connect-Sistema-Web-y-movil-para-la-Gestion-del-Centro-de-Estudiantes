@@ -1,10 +1,9 @@
-
 "use strict";
 import { EntitySchema } from "typeorm";
 
-const UsuarioSchema = new EntitySchema({
-  name: "Usuario",
-  tableName: "usuarios",
+const RolSchema = new EntitySchema({
+  name: "Rol",
+  tableName: "roles",
   columns: {
     id: {
       primary: true,
@@ -13,23 +12,13 @@ const UsuarioSchema = new EntitySchema({
     },
     nombre: {
       type: "varchar",
-      length: 100,
-    },
-    correo: {
-      type: "varchar",
+      length: 50,
       unique: true,
-    },
-    contrasena: {
-      type: "text",
-    },
-    rolId: {
-      type: "int",
       nullable: false,
     },
-    estado: {
-      type: "varchar",
-      length: 15,
-      default: "activo", // o "inactivo"
+    isAdmin: {
+      type: "boolean",
+      default: false,
       nullable: false,
     },
     createdAt: {
@@ -44,4 +33,4 @@ const UsuarioSchema = new EntitySchema({
   },
 });
 
-export default UsuarioSchema;
+export default RolSchema;
