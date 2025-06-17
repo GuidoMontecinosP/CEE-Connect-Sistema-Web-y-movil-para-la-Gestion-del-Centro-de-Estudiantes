@@ -1,8 +1,8 @@
-import { crearEvento, modificarEvento, eventos } from "../services/eventos.services.js";
+import { crearEvento, modificarEvento, eventos, eliminarEvento } from "../services/eventos.services.js";
 
 export async function crearEventoController(req, res) {
   try {
-    
+    console.log("paso aqui jasjd");
     const { titulo, descripcion, fecha, hora, lugar, tipo } = req.body;
     const evento = await crearEvento({
       titulo,
@@ -57,5 +57,16 @@ export async function eventosController(req, res) {
   } catch (error) {
     console.error("Error al obtener los eventos:", error);
     res.status(500).json({ error: "Error al obtener los eventos" });
+  }
+}
+
+export async function eliminarEventoController(req, res) {
+  try {
+    const { id } = req.params;
+    await eliminarEvento(id);
+    res.status(200).json({ message: "Evento eliminado exitosamente" });
+  } catch (error) {
+    console.error("Error al eliminar el evento:", error);
+    res.status(500).json({ error: "Error al eliminar el evento" });
   }
 }

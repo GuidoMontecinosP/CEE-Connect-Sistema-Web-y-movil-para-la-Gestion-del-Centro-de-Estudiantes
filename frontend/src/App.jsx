@@ -9,11 +9,14 @@ import MenuPrincipal from './pages/MenuPrincipal';
 
 import VerEventos from './pages/VerEventos';
 
+import Noticias from './pages/Noticias';
+
 function App() {
   return (
     <Router>
       <Routes>
-  <Route path="/" element={<MenuPrincipal />} />
+  <Route path="/menu" element={<MenuPrincipal />} />
+  <Route path="/" element={<Noticias />} />
   <Route path="/votaciones" element={<ListarVotaciones />} />
   <Route path="/crear" element={<CrearVotacion />} />
   <Route path="/votacion/:id" element={<VerVotacion />} />

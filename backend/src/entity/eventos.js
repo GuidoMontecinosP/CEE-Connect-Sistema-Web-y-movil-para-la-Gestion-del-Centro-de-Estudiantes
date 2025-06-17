@@ -18,7 +18,7 @@ const EventosSchema = new EntitySchema({
     },
     fecha: {
       type: "date",
-      default: () => "CURRENT_TIMESTAMP",
+      default: () => "CURRENT_DATE",
     },
     hora: {
       type: "time",

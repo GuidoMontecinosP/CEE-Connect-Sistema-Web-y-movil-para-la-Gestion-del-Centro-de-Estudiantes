@@ -14,7 +14,7 @@ export const crearEvento = async (data) => {
   const nuevoEvento = eventoRepo.create({
     titulo,
     descripcion,
-    fecha: new Date(fecha),
+    fecha,
     hora,
     lugar,
     tipo,
@@ -32,7 +32,7 @@ export const modificarEvento = async (id, data) => {
 
     evento.titulo = titulo || evento.titulo;
     evento.descripcion = descripcion || evento.descripcion;
-    evento.fecha = fecha ? new Date(fecha) : evento.fecha;
+    evento.fecha = fecha || evento.fecha;
     evento.hora = hora || evento.hora;
     evento.lugar = lugar || evento.lugar;
     evento.tipo = tipo || evento.tipo;
@@ -42,6 +42,26 @@ export const modificarEvento = async (id, data) => {
 };
 
 export const eventos = async () => {
-    const eventos = await eventoRepo.find();
+    const eventos = await eventoRepo.find({
+      order: {
+        fecha: "ASC",
+        hora: "ASC"
+      }
+    });
     return eventos;
+}
+
+export const eliminarEvento = async (id) => {
+    try {
+      const resultado = await eventoRepo.delete(id);
+      if (resultado.affected === 0) {
+        throw new Error("Evento no encontrado o ya ha sido eliminado");
+      }
+
+      return { message: "Evento eliminado exitosamente" };
+
+    } catch (error) {
+        console.error("Error al eliminar el evento:", error.message);
+        throw new Error("Error al eliminar el evento");  
+    }
 }
