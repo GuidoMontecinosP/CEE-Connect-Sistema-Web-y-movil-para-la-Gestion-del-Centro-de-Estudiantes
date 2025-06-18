@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
@@ -6,13 +5,23 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ Nuevo estado de carga
 
   useEffect(() => {
     const token = Cookies.get("token");
+
     if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUsuario({ ...payload, token });
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUsuario({ ...payload, token });
+      } catch (error) {
+        console.error("Token inválido:", error);
+        Cookies.remove("token");
+        setUsuario(null);
+      }
     }
+
+    setLoading(false); // ✅ Terminar la carga, con o sin token
   }, []);
 
   const login = (userData, token) => {
@@ -26,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout }}>
+    <AuthContext.Provider value={{ usuario, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

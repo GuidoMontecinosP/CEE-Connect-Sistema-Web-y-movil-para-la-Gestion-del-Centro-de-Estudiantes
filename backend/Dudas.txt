@@ -1,6 +1,0 @@
-Login 
-Se puede cambiar rol de administrador a estudiante 
-o espero a crear los otros roles como presidente , tesoreros etc. y que estos puedan modifcarse y
-dejar el rol de administrador intacto.  
-
-------------------------------------------------------

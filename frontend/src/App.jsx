@@ -20,16 +20,17 @@ function App() {
   return (
     <Routes>
       {/* ✅ Ruta raíz ahora redirige al dashboard según sesión o al login */}
-      <Route
-        path="/"
-        element={
-          usuario ? (
-            <Navigate to={usuario.rol === 'administrador' ? '/admin' : '/estudiante'} />
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
+     <Route
+  path="/"
+  element={
+    usuario ? (
+      <Navigate to="/menu" />
+    ) : (
+      <Navigate to="/login" />
+    )
+  }
+/>
+
 
       {/* Rutas públicas */}
       <Route path="/login" element={<Login />} />
@@ -38,7 +39,7 @@ function App() {
       {/* Rutas protegidas - ADMINISTRADOR */}
       <Route element={<PrivateRoute allowedRoles={['administrador']} />}>
         <Route path="/admin" element={<DashboardAdmin />} />
-        <Route path="/votaciones" element={<ListarVotaciones />} />
+       
         <Route path="/crear" element={<CrearVotacion />} />
         <Route path="/votacion/:id/cerrar" element={<CerrarVotacion />} />
       </Route>
@@ -54,6 +55,7 @@ function App() {
       {/* Ruta protegida común, si decides mantener el MenuPrincipal */}
       <Route element={<PrivateRoute allowedRoles={['administrador', 'estudiante']} />}>
         <Route path="/menu" element={<MenuPrincipal />} />
+         <Route path="/votaciones" element={<ListarVotaciones />} />
       </Route>
     </Routes>
   );

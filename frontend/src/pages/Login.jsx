@@ -21,7 +21,7 @@ export default function Login() {
       const token = res.data.data.token;
       const payload = JSON.parse(atob(token.split(".")[1]));
       login(payload, token);
-      navigate(payload.rol === "administrador" ? "/admin" : "/estudiante");
+       navigate("/menu");
     } catch (error) {
       alert("Credenciales inválidas");
     }
