@@ -48,7 +48,7 @@ function App() {
       <Route element={<PrivateRoute allowedRoles={['estudiante']} />}>
         <Route path="/estudiante" element={<DashboardEstudiante />} />
         <Route path="/votacion/:id/votar" element={<Votar />} />
-        <Route path="/votacion/:id/resultados" element={<Resultados />} />
+      
         <Route path="/votacion/:id" element={<VerVotacion />} />
       </Route>
 
@@ -56,6 +56,7 @@ function App() {
       <Route element={<PrivateRoute allowedRoles={['administrador', 'estudiante']} />}>
         <Route path="/menu" element={<MenuPrincipal />} />
          <Route path="/votaciones" element={<ListarVotaciones />} />
+           <Route path="/votacion/:id/resultados" element={<Resultados />} />
       </Route>
     </Routes>
   );
