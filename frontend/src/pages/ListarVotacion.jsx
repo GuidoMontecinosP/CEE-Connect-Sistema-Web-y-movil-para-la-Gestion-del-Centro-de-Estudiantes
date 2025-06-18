@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { votacionService } from '../services/votacion.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Empty, Spin, message, Divider, Radio, Badge } from 'antd';
-import { ArrowLeftOutlined, EyeOutlined, CheckCircleOutlined, BarChartOutlined, StopOutlined, PlusOutlined, CheckOutlined, FilterOutlined } from '@ant-design/icons';
+import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, Menu } from 'antd';
+import { ArrowLeftOutlined, PieChartOutlined, CarryOutOutlined, EyeOutlined, CheckCircleOutlined, BarChartOutlined, StopOutlined, PlusOutlined, CheckOutlined, FilterOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -12,6 +13,7 @@ function ListarVotaciones() {
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('activa');
   const [cerrandoVotacion, setCerrandoVotacion] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     cargarVotaciones();
@@ -58,7 +60,6 @@ function ListarVotaciones() {
 
         await votacionService.cerrarVotacion(votacion.id);
 
-        // Actualizar estado local
         setVotaciones(prevVotaciones => 
           prevVotaciones.map(v => 
             v.id === votacion.id 
@@ -81,7 +82,7 @@ function ListarVotaciones() {
       } catch (error) {
         console.error('Error al cerrar votación:', error);
         setCerrandoVotacion(null);
-        
+
         await Swal.fire({
           title: 'Error al cerrar votación',
           text: `No se pudo cerrar la votación "${votacion.titulo}"`,
@@ -100,7 +101,7 @@ function ListarVotaciones() {
     };
 
     const config = estadoConfig[estado] || { color: 'default', icon: null, text: estado };
-    
+
     return (
       <Tag color={config.color} icon={config.icon}>
         {config.text}
@@ -141,20 +142,42 @@ function ListarVotaciones() {
     }
   ];
 
-  // Filtrar votaciones de acuerdo al estado seleccionado
   const votacionesFiltradas = filtroEstado === 'todas' 
     ? votaciones 
     : votaciones.filter(votacion => votacion.estado === filtroEstado);
 
+  const items = [
+    { key: '0', icon: <HomeOutlined />, label: 'Inicio' },
+    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
+    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
+    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' }
+  ];
+
+  const onMenuClick = (item) => {
+    if (item.key === '0') navigate('/');
+    if (item.key === '1') navigate('/votaciones');
+    if (item.key === '2') navigate('/crear');
+    if (item.key === '3') navigate('/eventos');
+  };
+
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <Sider theme="dark" collapsible>
-        {/* Aquí puedes agregar los items del Sidebar */}
+    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
+       <Sider theme="dark" collapsible>
+        <Menu
+          mode="inline"
+          theme="dark"
+          defaultSelectedKeys={['1']}
+          items={items}
+          onClick={onMenuClick}
+          style={{ 
+            height: '100%', 
+            borderRight: 0
+          }}
+        />
       </Sider>
       <Layout>
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            {/* Header de la página */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
               <div>
                 <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
@@ -184,7 +207,6 @@ function ListarVotaciones() {
               </Button>
             </div>
 
-            {/* Filtro por Estado */}
             <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 32 }} bodyStyle={{ padding: 24 }}>
               <Title level={4} style={{ color: '#1e3a8a', margin: 0, display: 'flex', alignItems: 'center' }}>
                 <FilterOutlined style={{ marginRight: 8 }} />
@@ -203,7 +225,6 @@ function ListarVotaciones() {
               </Radio.Group>
             </Card>
 
-            {/* Mostrar votaciones filtradas */}
             <div style={{ marginBottom: 24 }}>
               <Text style={{ fontSize: 16, color: '#64748b' }}>
                 Mostrando {votacionesFiltradas.length} de {votaciones.length} votaciones
@@ -215,7 +236,6 @@ function ListarVotaciones() {
               </Text>
             </div>
 
-            {/* Votaciones */}
             {loading ? (
               <div style={{ textAlign: 'center', padding: '80px 0' }}>
                 <Spin size="large" />

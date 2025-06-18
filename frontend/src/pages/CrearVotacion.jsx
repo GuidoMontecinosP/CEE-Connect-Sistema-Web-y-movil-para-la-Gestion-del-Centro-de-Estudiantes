@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { votacionService } from '../services/votacion.services';
-import { Layout, Card, Input, Button, Typography, Space, Row, Col, message, Divider } from 'antd';
-import { PlusOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
+import { Layout, Card, Input, Button, Typography, Space, Row, Col, message, Divider, theme, Menu } from 'antd';
+import { PlusOutlined, DeleteOutlined, CheckOutlined, PieChartOutlined, CarryOutOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -10,6 +11,7 @@ function CrearVotacion() {
   const [titulo, setTitulo] = useState('');
   const [opciones, setOpciones] = useState(['', '']); // Comienza con 2 opciones mínimas
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleOpcionChange = (index, value) => {
     const nuevasOpciones = [...opciones];
@@ -48,15 +50,40 @@ function CrearVotacion() {
     }
   };
 
-    const [collapsed, setCollapsed] = useState(false);
-    const {
-      token: { colorBgContainer, borderRadiusLG },
-    } = theme.useToken();
+  const [collapsed, setCollapsed] = useState(false);
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+
+  const items = [
+    { key: '0', icon: <HomeOutlined />, label: 'Inicio' },
+    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
+    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
+    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' }
+  ];
+
+  const onMenuClick = (item) => {
+    if (item.key === '0') navigate('/');
+    if (item.key === '1') navigate('/votaciones');
+    if (item.key === '2') navigate('/crear');
+    if (item.key === '3') navigate('/eventos');
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      {/* Sidebar */}
       <Sider theme="dark" collapsible>
-        {/* Aquí puedes agregar los items del Sidebar, como en las otras páginas */}
+        <Menu
+          mode="inline"
+          theme="dark"
+          defaultSelectedKeys={['2']}
+          items={items}
+          onClick={onMenuClick}
+          style={{ 
+            height: '100%', 
+            borderRight: 0
+          }}
+        />
       </Sider>
       <Layout>
         <Content style={{ padding: '48px 24px' }}>
