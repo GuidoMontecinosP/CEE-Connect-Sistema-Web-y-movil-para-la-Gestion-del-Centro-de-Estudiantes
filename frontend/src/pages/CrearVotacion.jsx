@@ -48,6 +48,11 @@ function CrearVotacion() {
     }
   };
 
+    const [collapsed, setCollapsed] = useState(false);
+    const {
+      token: { colorBgContainer, borderRadiusLG },
+    } = theme.useToken();
+
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       <Sider theme="dark" collapsible>

@@ -7,6 +7,10 @@ import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
 import MenuPrincipal from './pages/MenuPrincipal';
 
+import VerEventos from './pages/VerEventos';
+
+import Noticias from './pages/Noticias';
+
 import Login from './pages/Login';
 import DashboardAdmin from './pages/DashboardAdmin';
 import DashboardEstudiante from './pages/DashboardEstudiante';

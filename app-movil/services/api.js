@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const instance = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
+=======
+const instance = axios.create({ 
+  // baseURL:process.env.EXPO_PUBLIC_API_URL,
+  baseURL: 'http://192.168.150.170:3000/api',
+>>>>>>> 32a0db2f24f8f6b38fb92c06e54afc7a0f0bd171
   headers: {
     'Content-Type': 'application/json',
   },
