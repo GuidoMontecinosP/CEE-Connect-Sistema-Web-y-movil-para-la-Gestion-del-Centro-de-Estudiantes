@@ -9,7 +9,6 @@ import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 export async function loginService(user) {
   try {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
-    const rolRepository = AppDataSource.getRepository(Rol);
     const { correo, password } = user;
 
     const createErrorMessage = (dataInfo, message) => ({
@@ -18,7 +17,8 @@ export async function loginService(user) {
     });
 
     const userFound = await usuarioRepository.findOne({
-      where: { correo }
+      where: { correo },
+      relations: ["rol"], // ✅ Incluye rol completo
     });
 
     if (!userFound) {
@@ -34,26 +34,30 @@ export async function loginService(user) {
       return [null, createErrorMessage("estado", "La cuenta está desactivada")];
     }
 
-    const rol = await rolRepository.findOneBy({ id: userFound.rolId });
-
+    // ✅ Aquí incluimos el objeto "rol" en el payload
     const payload = {
-      id: userFound.id,
       nombre: userFound.nombre,
+      id: userFound.id,
       correo: userFound.correo,
-      rol: rol?.nombre,
-      isAdmin: rol?.isAdmin,
+      rol: {
+        nombre: userFound.rol.nombre,
+        isAdmin: userFound.rol.isAdmin,
+      },
     };
 
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
       expiresIn: "1d",
     });
 
-    return [accessToken, null];
+    const { contrasena, ...userWithoutPassword } = userFound;
+
+    return [{ token: accessToken, user: userWithoutPassword }, null];
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
     return [null, "Error interno del servidor"];
   }
 }
+
 
 export async function registerService(user) {
   try {
@@ -77,7 +81,7 @@ export async function registerService(user) {
       nombre,
       correo,
       contrasena: await encryptPassword(password),
-      rolId,
+      rol:rolFound,
       estado,
     });
 

@@ -27,15 +27,17 @@ export default function DashboardEstudiante() {
     navigate('/login');
   };
 
+  
+  console.log("📊 Usuario en Dashboard:", usuario);
+
   // Menú items basado en el rol del usuario
   const menuItems = [
     { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
     { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    ...(usuario?.rol === 'administrador'
+    ...(usuario?.rol?.nombre === 'administrador'
       ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
       : []),
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    
     { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
   ];
 
@@ -44,7 +46,6 @@ export default function DashboardEstudiante() {
     if (item.key === '1') navigate('/votaciones');
     if (item.key === '2') navigate('/crear');
     if (item.key === '3') navigate('/eventos');
-
     if (item.key === '5') navigate('/dashboard');
   };
 
@@ -58,10 +59,7 @@ export default function DashboardEstudiante() {
           defaultSelectedKeys={['5']}
           items={menuItems}
           onClick={onMenuClick}
-          style={{ 
-            height: '100%', 
-            borderRight: 0
-          }}
+          style={{ height: '100%', borderRight: 0 }}
         />
       </Sider>
       
@@ -87,15 +85,15 @@ export default function DashboardEstudiante() {
                   ¡Bienvenido!
                 </Title>
                 <Title level={3} style={{ color: '#374151', marginBottom: 16 }}>
-                  {usuario?.nombre || 'Estudiante'}
+                  {usuario?.nombre || 'tonto'}
                 </Title>
                 <Paragraph style={{ fontSize: 16, color: '#64748b', marginBottom: 0 }}>
-                  Rol: <strong style={{ color: '#1e3a8a' }}>{usuario?.rol}</strong>
+                  Rol: <strong style={{ color: '#1e3a8a' }}>{usuario?.rol?.nombre}</strong>
                 </Paragraph>
               </div>
 
               {/* Información adicional para estudiantes */}
-              {usuario?.rol === 'estudiante' && (
+              {usuario?.rol?.nombre === 'estudiante' && (
                 <Card 
                   style={{ 
                     backgroundColor: '#f1f5f9', 
@@ -117,7 +115,7 @@ export default function DashboardEstudiante() {
               )}
 
               {/* Información adicional para administradores */}
-              {usuario?.rol === 'administrador' && (
+              {usuario?.rol?.nombre === 'administrador' && (
                 <Card 
                   style={{ 
                     backgroundColor: '#fef3c7', 

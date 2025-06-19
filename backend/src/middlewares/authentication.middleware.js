@@ -5,13 +5,13 @@ import Usuario from "../entity/usuario.entity.js";
 import { AppDataSource } from "../config/configDb.js";
 
 export function authenticateJwt(req, res, next) {
-  passport.authenticate("jwt", { session: false }, async (err, user, info) => {
+  passport.authenticate("jwt", { session: false }, async (err, payload, info) => {
     try {
       if (err) {
         return handleErrorServer(res, 500, "Error de autenticación en el servidor");
       }
 
-      if (!user) {
+      if (!payload) {
         return handleErrorClient(
           res,
           401,
@@ -20,17 +20,21 @@ export function authenticateJwt(req, res, next) {
         );
       }
 
-      // Validar que el usuario exista en la base de datos y esté activo
+      // Buscar al usuario real con su rol asociado
       const usuarioRepository = AppDataSource.getRepository(Usuario);
-      const usuario = await usuarioRepository.findOneBy({ id: user.id });
+      const usuario = await usuarioRepository.findOne({
+        where: { id: payload.id },
+        relations: ["rol"], // ✅ Trae también el rol
+      });
 
       if (!usuario || usuario.estado !== "activo") {
         return handleErrorClient(res, 403, "Cuenta desactivada o no válida");
       }
 
-      req.user = user; // Payload JWT validado previamente
+      req.user = usuario; //
       next();
     } catch (error) {
+      console.error("Error en authenticateJwt:", error);
       return handleErrorServer(res, 500, "Error interno al validar el token");
     }
   })(req, res, next);

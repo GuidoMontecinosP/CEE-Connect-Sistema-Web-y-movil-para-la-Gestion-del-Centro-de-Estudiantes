@@ -11,21 +11,21 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:3000/api/auth/login", {
-        correo,
-        password,
-      });
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:3000/api/auth/login", {
+      correo,
+      password,
+    });
 
-      const token = res.data.data.token;
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      login(payload, token);
-       navigate("/noticias");
-    } catch (error) {
-      alert("Credenciales inválidas");
-    }
-  };
+    const { token, user } = res.data.data;
+    login(user, token); // ✅ Usuario con .rol.nombre disponible
+    navigate("/noticias");
+  } catch (error) {
+    alert("Credenciales inválidas");
+  }
+};
+
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Segoe UI, sans-serif" }}>

@@ -15,20 +15,31 @@ export async function login(req, res) {
     const { body } = req;
 
     const { error } = authValidation.validate(body);
-
     if (error) {
       return handleErrorClient(res, 400, "Error de validación", error.message);
     }
-    const [accessToken, errorToken] = await loginService(body);
 
-    if (errorToken) return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
+    const [result, errorToken] = await loginService(body);
 
-    res.cookie("jwt", accessToken, {
+    if (errorToken) {
+      return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
+    }
+
+    const { token, user } = result;
+
+    // ✅ Guardar el token como cookie httpOnly (opcional)
+    res.cookie("jwt", token, {
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 1 día
+      secure: process.env.NODE_ENV === "production", // Solo en HTTPS en producción
+      sameSite: "Strict",
     });
 
-    handleSuccess(res, 200, "Inicio de sesión exitoso", { token: accessToken });
+    // ✅ Responder con el token y los datos del usuario
+    handleSuccess(res, 200, "Inicio de sesión exitoso", {
+      token,
+      user,
+    });
   } catch (error) {
     handleErrorServer(res, 500, error.message);
   }

@@ -13,7 +13,7 @@ import Noticias from './pages/Noticias';
 
 import Login from './pages/Login';
 import DashboardAdmin from './pages/DashboardAdmin';
-import DashboardEstudiante from './pages/DashboardEstudiante';
+
 import Unauthorized from './pages/Unauthorized';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
@@ -28,7 +28,7 @@ function App() {
         path="/"
         element={
           usuario ? (
-            <Navigate to="/menu" />
+            <Navigate to="/noticias" />
           ) : (
             <Navigate to="/login" />
           )
@@ -49,12 +49,7 @@ function App() {
         
       </Route>
 
-      {/* Rutas protegidas - ESTUDIANTE */}
-      <Route element={<PrivateRoute allowedRoles={['estudiante']} />}>
-        
-        
-      </Route>
-
+    
       {/* Ruta protegida común, si decides mantener el MenuPrincipal */}
       <Route element={<PrivateRoute allowedRoles={['administrador', 'estudiante']} />}>
         <Route path="/menu" element={<MenuPrincipal />} />
