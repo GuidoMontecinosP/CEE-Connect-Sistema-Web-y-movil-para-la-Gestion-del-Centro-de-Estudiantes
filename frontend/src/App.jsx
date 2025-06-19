@@ -23,7 +23,7 @@ function App() {
 
   return (
     <Routes>
-      {/* Ruta raíz redirige al dashboard según sesión o al login */}
+     
       <Route
         path="/"
         element={
@@ -38,21 +38,21 @@ function App() {
       {/* Rutas públicas */}
       <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/noticias" element={<Noticias />} />
-      <Route path="/eventos" element={<VerEventos />} />
+      
 
       {/* Rutas protegidas - ADMINISTRADOR */}
       <Route element={<PrivateRoute allowedRoles={['administrador']} />}>
-        <Route path="/admin" element={<DashboardAdmin />} />
+        
         <Route path="/crear" element={<CrearVotacion />} />
         <Route path="/votacion/:id/cerrar" element={<CerrarVotacion />} />
+        <Route path="/votacion/:id" element={<VerVotacion />} />
+        
       </Route>
 
       {/* Rutas protegidas - ESTUDIANTE */}
       <Route element={<PrivateRoute allowedRoles={['estudiante']} />}>
-        <Route path="/estudiante" element={<DashboardEstudiante />} />
-        <Route path="/votacion/:id/votar" element={<Votar />} />
-        <Route path="/votacion/:id" element={<VerVotacion />} />
+        
+        
       </Route>
 
       {/* Ruta protegida común, si decides mantener el MenuPrincipal */}
@@ -60,6 +60,11 @@ function App() {
         <Route path="/menu" element={<MenuPrincipal />} />
         <Route path="/votaciones" element={<ListarVotaciones />} />
         <Route path="/votacion/:id/resultados" element={<Resultados />} />
+        <Route path="/noticias" element={<Noticias />} />
+      <Route path="/eventos" element={<VerEventos />} />
+      <Route path="/dashboard" element={<DashboardAdmin />} />
+      <Route path = "votacion/:id/votar" element={<Votar />} />
+
       </Route>
     </Routes>
   );

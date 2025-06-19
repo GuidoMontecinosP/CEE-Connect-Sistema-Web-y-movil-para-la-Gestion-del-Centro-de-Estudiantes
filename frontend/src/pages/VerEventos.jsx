@@ -11,7 +11,8 @@ import {
   CarryOutOutlined,
   PieChartOutlined,
   HomeOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  FileTextOutlined,AuditOutlined
 } from '@ant-design/icons';
 import { Breadcrumb, 
          Layout, 
@@ -43,10 +44,12 @@ function getItem(
 }
 
 const items = [
-  getItem('Home', '0', <HomeOutlined /> ),
+   getItem('Inicio', '0', <FileTextOutlined />),
   getItem('Votaciones', '1', <PieChartOutlined />),
   getItem('Crear Votacion', '2', <DesktopOutlined />),
   getItem('Eventos', '3', <CarryOutOutlined />),
+ 
+  getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
 ];
 
 
@@ -145,7 +148,7 @@ function VerEventos() {
 
   const onMenuClick = (item) => {
     if (item.key === '0') {
-      navigate('/');
+      navigate('/noticias');
     }
     if (item.key === '1') {
       navigate('/votaciones');
@@ -155,6 +158,9 @@ function VerEventos() {
     }
     if (item.key === '3') {
       navigate('/eventos');
+    }
+    if (item.key === '5') {
+      navigate('/dashboard');
     }
   };
 

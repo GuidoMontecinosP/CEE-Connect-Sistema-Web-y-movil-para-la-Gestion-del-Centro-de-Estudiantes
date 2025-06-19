@@ -21,7 +21,7 @@ export default function Login() {
       const token = res.data.data.token;
       const payload = JSON.parse(atob(token.split(".")[1]));
       login(payload, token);
-       navigate("/menu");
+       navigate("/noticias");
     } catch (error) {
       alert("Credenciales inválidas");
     }
