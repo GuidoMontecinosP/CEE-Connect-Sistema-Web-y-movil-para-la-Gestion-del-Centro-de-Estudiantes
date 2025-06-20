@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Card, Row, Col, Typography, Button, theme } from 'antd';
-import { CheckCircleOutlined, PlusOutlined, HomeOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined } from '@ant-design/icons';
+import {AuditOutlined,FileTextOutlined, CheckCircleOutlined, PlusOutlined, HomeOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,6 +23,8 @@ function MenuPrincipal() {
       ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
       : []),
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' }
+    , { key: '4', icon: <FileTextOutlined />, label: 'Noticias' },
+    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } // Si decides agregar un dashboard
   ];
 
   const onMenuClick = (item) => {
@@ -38,6 +40,12 @@ function MenuPrincipal() {
         break;
       case '3':
         navigate('/eventos');
+        break;
+      case '4':
+        navigate('/noticias');
+        break;
+      case '5':
+        navigate('/dashboard');
         break;
       default:
         console.log('Ruta no definida para:', item.key);

@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Progress, Spin, message, Divider, Statistic, Empty } from 'antd';
-import { ArrowLeftOutlined, BarChartOutlined, TrophyOutlined, UsergroupAddOutlined, CheckCircleOutlined, StopOutlined, CheckOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Progress, Spin, message, Divider, Statistic, Empty, Menu, theme } from 'antd';
+import {AuditOutlined, ArrowLeftOutlined, BarChartOutlined, TrophyOutlined, UsergroupAddOutlined, CheckCircleOutlined, StopOutlined, CheckOutlined, FileTextOutlined, PieChartOutlined, CarryOutOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 function Resultados() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [resultados, setResultados] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
 
   useEffect(() => {
     votacionService.obtenerResultados(id)
@@ -23,6 +28,23 @@ function Resultados() {
         setLoading(false);
       });
   }, [id]);
+
+  const items = [
+     {key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
+    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
+    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
+    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
+    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } 
+    
+  ];
+
+  const onMenuClick = (item) => {
+    if (item.key === '0') navigate('/noticias');
+    if (item.key === '1') navigate('/votaciones');
+    if (item.key === '2') navigate('/crear');
+    if (item.key === '3') navigate('/eventos');
+    if (item.key === '5') navigate('/dashboard');
+  };
 
   const getEstadoTag = (estado) => {
     const estadoConfig = {
@@ -65,7 +87,17 @@ function Resultados() {
     return (
       <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
         <Sider theme="dark" collapsible>
-          {/* Aquí puedes agregar los items del Sidebar */}
+          <Menu
+            mode="inline"
+            theme="dark"
+            defaultSelectedKeys={['1']}
+            items={items}
+            onClick={onMenuClick}
+            style={{ 
+              height: '100%', 
+              borderRight: 0
+            }}
+          />
         </Sider>
         <Layout>
           <Content style={{ padding: '48px 24px' }}>
@@ -85,7 +117,17 @@ function Resultados() {
     return (
       <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
         <Sider theme="dark" collapsible>
-          {/* Aquí puedes agregar los items del Sidebar */}
+          <Menu
+            mode="inline"
+            theme="dark"
+            defaultSelectedKeys={['1']}
+            items={items}
+            onClick={onMenuClick}
+            style={{ 
+              height: '100%', 
+              borderRight: 0
+            }}
+          />
         </Sider>
         <Layout>
           <Content style={{ padding: '48px 24px' }}>
@@ -124,8 +166,19 @@ function Resultados() {
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      {/* Sidebar */}
       <Sider theme="dark" collapsible>
-        {/* Aquí puedes agregar los items del Sidebar */}
+        <Menu
+          mode="inline"
+          theme="dark"
+          defaultSelectedKeys={['1']}
+          items={items}
+          onClick={onMenuClick}
+          style={{ 
+            height: '100%', 
+            borderRight: 0
+          }}
+        />
       </Sider>
       <Layout>
         <Content style={{ padding: '48px 24px' }}>

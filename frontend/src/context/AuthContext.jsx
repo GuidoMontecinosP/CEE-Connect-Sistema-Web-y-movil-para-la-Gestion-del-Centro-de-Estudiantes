@@ -5,28 +5,29 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
-  const [loading, setLoading] = useState(true); // ✅ Nuevo estado de carga
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = Cookies.get("token");
+  const token = Cookies.get("token");
 
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setUsuario({ ...payload, token });
-      } catch (error) {
-        console.error("Token inválido:", error);
-        Cookies.remove("token");
-        setUsuario(null);
-      }
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setUsuario({ ...payload, token });
+    } catch (error) {
+      console.error("Token inválido:", error);
+      Cookies.remove("token");
+      setUsuario(null);
     }
+  }
 
-    setLoading(false); // ✅ Terminar la carga, con o sin token
-  }, []);
+  setLoading(false); // ✅ siempre se ejecuta, con o sin token
+}, []);
+
 
   const login = (userData, token) => {
     Cookies.set("token", token);
-    setUsuario({ ...userData, token });
+    setUsuario({ ...userData, token }); // Asegúrate que userData incluya .rol.nombre
   };
 
   const logout = () => {

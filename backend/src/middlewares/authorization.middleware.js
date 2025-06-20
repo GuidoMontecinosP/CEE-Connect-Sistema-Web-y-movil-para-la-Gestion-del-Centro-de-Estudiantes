@@ -1,7 +1,4 @@
 "use strict";
-import Usuario from "../entity/usuario.entity.js";
-import Rol from "../entity/rol.entity.js";
-import { AppDataSource } from "../config/configDb.js";
 import {
   handleErrorClient,
   handleErrorServer,
@@ -9,15 +6,8 @@ import {
 
 export async function isAdmin(req, res, next) {
   try {
-    const usuarioRepository = AppDataSource.getRepository(Usuario);
-    const rolRepository = AppDataSource.getRepository(Rol);
+    const rol = req.user?.rol;
 
-    const usuario = await usuarioRepository.findOneBy({ id: req.user.id });
-    if (!usuario) {
-      return handleErrorClient(res, 404, "Usuario no encontrado en la base de datos");
-    }
-
-    const rol = await rolRepository.findOneBy({ id: usuario.rolId });
     if (!rol || !rol.isAdmin) {
       return handleErrorClient(
         res,
@@ -27,8 +17,9 @@ export async function isAdmin(req, res, next) {
       );
     }
 
-    next(); // ✅ Todo OK, continúa
+    next(); // ✅ Usuario es admin, continúa
   } catch (error) {
+    console.error("Error en isAdmin:", error);
     handleErrorServer(res, 500, "Error interno al verificar rol");
   }
 }

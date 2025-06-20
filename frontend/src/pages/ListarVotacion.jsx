@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { votacionService } from '../services/votacion.services';
 import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, Menu } from 'antd';
-import { ArrowLeftOutlined, PieChartOutlined, CarryOutOutlined, EyeOutlined, CheckCircleOutlined, BarChartOutlined, StopOutlined, PlusOutlined, CheckOutlined, FilterOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
+import {AuditOutlined,FileTextOutlined,ArrowLeftOutlined, PieChartOutlined, CarryOutOutlined, EyeOutlined, CheckCircleOutlined, BarChartOutlined, StopOutlined, PlusOutlined, CheckOutlined, FilterOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
@@ -147,17 +147,21 @@ function ListarVotaciones() {
     : votaciones.filter(votacion => votacion.estado === filtroEstado);
 
   const items = [
-    { key: '0', icon: <HomeOutlined />, label: 'Inicio' },
+   { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
     { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
     { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' }
+    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
+    
+    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } 
   ];
 
   const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/');
+    if (item.key === '0') navigate('/noticias');
     if (item.key === '1') navigate('/votaciones');
     if (item.key === '2') navigate('/crear');
     if (item.key === '3') navigate('/eventos');
+   
+    if (item.key === '5') navigate('/dashboard');
   };
 
   return (
