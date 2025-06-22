@@ -44,7 +44,7 @@ function CrearVotacion() {
       setTitulo('');
       setOpciones(['', '']);
     } catch (error) {
-      console.log('Error al crear votación: ykw'); // Aquí podrías usar SweetAlert
+      console.log(error) ;// Aquí podrías usar SweetAlert
     } finally {
       setLoading(false);
     }

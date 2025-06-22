@@ -5,6 +5,7 @@ import { connectDB } from "./config/configDb.js";
 import indexRoutes from "./routes/index.routes.js";
 import passport from "passport";
 import "./config/passport.config.js";
+import cookieParser from "cookie-parser";          
 
 // Cargar variables de entorno
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors({
 
 
 app.use(express.json());
+app.use(cookieParser());     
 app.use(passport.initialize());
 
 // Conectar a la base de datos

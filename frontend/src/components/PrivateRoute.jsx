@@ -9,7 +9,7 @@ const PrivateRoute = ({ allowedRoles }) => {
   if (!usuario) return <Navigate to="/login" />;
 
   const rolNombre = typeof usuario.rol === "string" ? usuario.rol : usuario.rol?.nombre;
- //console.log("🧠 Usuario cargado:", usuario);
+ console.log("🧠 Usuario cargado:", usuario);
 //console.log("🧠 Rol evaluado:", typeof usuario.rol === "string" ? usuario.rol : usuario.rol?.nombre);
 
   return allowedRoles.includes(rolNombre)
