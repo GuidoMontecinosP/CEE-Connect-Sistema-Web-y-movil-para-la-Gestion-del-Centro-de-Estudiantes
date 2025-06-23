@@ -31,7 +31,7 @@ function EventosStack() {
 function VotacionesStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="ListaVotaciones" component={ListaVotaciones} options={{ title: 'Votaciones' }} />
+      <Stack.Screen name="ListaVotaciones" component={ListaVotaciones} options={{ title: 'Votaciones1' }} />
       <Stack.Screen name="Detalle" component={DetalleVotacion} />
       <Stack.Screen name="Votar" component={EmitirVoto} />
       <Stack.Screen name="Resultados" component={Resultados} />

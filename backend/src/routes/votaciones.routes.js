@@ -15,11 +15,12 @@ const router = express.Router();
 
 // Rutas de votaciones
 router.get('/', getVotaciones);      //authenticateJwt,                       
-router.post('/',authenticateJwt, isAdmin,createVotacion);                        
-router.get('/:id', authenticateJwt, getVotacionById);                     
-router.post('/:id/votar',authenticateJwt, votar);                         
-router.get('/:id/mi-voto/:usuarioId', authenticateJwt, verificarVoto);     
-router.patch('/:id/cerrar', authenticateJwt, isAdmin, cerrarVotacionController);     
-router.get('/:id/resultados', authenticateJwt, getResultados);             
+router.post('/',createVotacion);         //authenticateJwt,isAdmin,                
+router.get('/:id', getVotacionById);                     // authenticateJwt,
+router.post('/:id/votar', votar);                         //authenticateJwt,
+router.get('/:id/mi-voto/:usuarioId', verificarVoto);    //  authenticateJwt,
+router.patch('/:id/cerrar',  cerrarVotacionController);     //authenticateJwt, isAdmin,
+router.get('/:id/resultados',getResultados);            
+// comprobar si es que funciona para ver resultados siendo usuario o admin
 
 export default router;

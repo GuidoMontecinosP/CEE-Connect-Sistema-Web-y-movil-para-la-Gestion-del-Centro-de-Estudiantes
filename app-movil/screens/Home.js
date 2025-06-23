@@ -1,26 +1,12 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.titleBox}>
         <Text style={styles.title}>Noticias UBB</Text>
-      </View>
-
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Eventos')}>
-          <Text style={styles.iconPlaceholder}>📅</Text>
-          <Text style={styles.label}>Eventos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Lista')}>
-          <Text style={styles.iconPlaceholder}>🗳️</Text>
-          <Text style={styles.label}>Votaciones</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Perfil')}>
-          <Text style={styles.iconPlaceholder}>👤</Text>
-          <Text style={styles.label}>Perfil</Text>
-        </TouchableOpacity>
+        <Text style={styles.subtitle}>Explora las últimas novedades de la universidad</Text>
       </View>
     </View>
   );
@@ -29,36 +15,23 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: '#f9fafb',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   titleBox: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#1e3a8a',
+    marginBottom: 10,
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  iconPlaceholder: {
-    fontSize: 32,
-    marginBottom: 5,
-  },
-  label: {
-    fontSize: 14,
-    color: '#374151',
+  subtitle: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
   },
 });
