@@ -3,7 +3,7 @@ import { votacionService } from '../services/votacion.services';
 import { Layout, Card, Input, Button, Typography, Space, Row, Col, message, Divider, theme, Menu } from 'antd';
 import { AuditOutlined,FileTextOutlined,PlusOutlined, DeleteOutlined, CheckOutlined, PieChartOutlined, CarryOutOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2';
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
@@ -43,8 +43,13 @@ function CrearVotacion() {
       }
       setTitulo('');
       setOpciones(['', '']);
-    } catch (error) {
-      console.log(error) ;// Aquí podrías usar SweetAlert
+    } catch (err) {
+     await Swal.fire({
+        icon: 'error',
+        title: 'Error al crear votación',
+        text: err.message
+      });
+
     } finally {
       setLoading(false);
     }
