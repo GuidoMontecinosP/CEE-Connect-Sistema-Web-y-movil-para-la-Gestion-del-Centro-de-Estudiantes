@@ -72,7 +72,7 @@ export const registerValidation = Joi.object({
     })
     .custom(domainEmailValidator, "Validación del dominio institucional"),
 
-  password: Joi.string()
+  contrasena: Joi.string()
     .min(8)
     .max(26)
     .pattern(/^[a-zA-Z0-9]+$/)

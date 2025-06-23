@@ -17,6 +17,7 @@ import DashboardAdmin from './pages/DashboardAdmin';
 import Unauthorized from './pages/Unauthorized';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
+import Verificado from './pages/Verificado';
 
 function App() {
   const { usuario } = useAuth();
@@ -38,6 +39,7 @@ function App() {
       {/* Rutas públicas */}
       <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/verificado" element={<Verificado />} />
       
 
       {/* Rutas protegidas - ADMINISTRADOR */}
