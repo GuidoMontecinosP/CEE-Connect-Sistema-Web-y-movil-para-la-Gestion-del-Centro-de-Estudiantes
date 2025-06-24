@@ -8,16 +8,19 @@ import {
   cerrarVotacionController,
   getResultados
 } from '../controllers/votacion.controller.js';
+import { authenticateJwt } from '../middlewares/authentication.middleware.js';
+import { isAdmin } from '../middlewares/authorization.middleware.js';
 
 const router = express.Router();
 
 // Rutas de votaciones
-router.get('/', getVotaciones);                           
-router.post('/', createVotacion);                        
-router.get('/:id', getVotacionById);                     
-router.post('/:id/votar', votar);                         
-router.get('/:id/mi-voto/:usuarioId', verificarVoto);     
-router.patch('/:id/cerrar', cerrarVotacionController);     
-router.get('/:id/resultados', getResultados);             
+router.get('/', getVotaciones);      //authenticateJwt,                       
+router.post('/',createVotacion);         //authenticateJwt,isAdmin,                
+router.get('/:id', getVotacionById);                     // authenticateJwt,
+router.post('/:id/votar', votar);                         //authenticateJwt,
+router.get('/:id/mi-voto/:usuarioId', verificarVoto);    //  authenticateJwt,
+router.patch('/:id/cerrar',  cerrarVotacionController);     //authenticateJwt, isAdmin,
+router.get('/:id/resultados',getResultados);            
+// comprobar si es que funciona para ver resultados siendo usuario o admin
 
 export default router;

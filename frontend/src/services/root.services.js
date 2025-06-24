@@ -1,7 +1,8 @@
 import axios from 'axios';
 import cookies from 'js-cookie';
 
-const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_BASE_URL || 'http://192.168.1.12:3000/api'; // Default to local development URL if not set in environment variables
+
 
 const instance = axios.create({
   baseURL: API_URL,
@@ -13,7 +14,7 @@ const instance = axios.create({
 
 instance.interceptors.request.use(
   (config) => {
-    const token = cookies.get('jwt-auth', { path: '/' });
+    const token = cookies.get('token', { path: '/' });
     if(token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

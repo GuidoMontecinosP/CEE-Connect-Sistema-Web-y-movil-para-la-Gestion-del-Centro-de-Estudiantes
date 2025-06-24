@@ -20,8 +20,10 @@ export const votacionService = {
       });
       return response.data;
     } catch (error) {
-   
-      console.error('Error al crear votación:', error.response.data.errors[0]);
+      const msg = error.response?.data?.errors?.[0] || 'Error desconocido';
+      // Opcional: loguearlo
+      throw new Error(msg);
+
     }
   },
 

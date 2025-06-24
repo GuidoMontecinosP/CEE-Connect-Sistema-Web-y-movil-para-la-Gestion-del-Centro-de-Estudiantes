@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Progress, Spin, message, Divider, Statistic, Empty, Menu, theme } from 'antd';
-import {AuditOutlined, ArrowLeftOutlined, BarChartOutlined, TrophyOutlined, UsergroupAddOutlined, CheckCircleOutlined, StopOutlined, CheckOutlined, FileTextOutlined, PieChartOutlined, CarryOutOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
+import { 
+  Layout, Card, Button, Typography, Space, Row, Col, Tag, Progress, 
+  Spin, message, Divider, Statistic, Empty, Menu, theme 
+} from 'antd';
+import { 
+  AuditOutlined, ArrowLeftOutlined, BarChartOutlined, TrophyOutlined,
+  UsergroupAddOutlined, CheckCircleOutlined, StopOutlined,
+  FileTextOutlined, PieChartOutlined, CarryOutOutlined,
+  DesktopOutlined 
+} from '@ant-design/icons';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -30,12 +38,11 @@ function Resultados() {
   }, [id]);
 
   const items = [
-     {key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
+    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
     { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
     { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } 
-    
+    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
   ];
 
   const onMenuClick = (item) => {
@@ -48,30 +55,24 @@ function Resultados() {
 
   const getEstadoTag = (estado) => {
     const estadoConfig = {
-      'activa': { color: 'success', icon: <CheckCircleOutlined />, text: 'Activa' },
-      'cerrada': { color: 'default', icon: <StopOutlined />, text: 'Cerrada' }
+      activa: { color: 'success', icon: <CheckCircleOutlined />, text: 'Activa' },
+      cerrada: { color: 'default', icon: <StopOutlined />, text: 'Cerrada' },
     };
-
     const config = estadoConfig[estado] || { color: 'default', icon: null, text: estado };
-    
-    return (
-      <Tag color={config.color} icon={config.icon} style={{ fontSize: 14, padding: '4px 12px' }}>
-        {config.text}
-      </Tag>
-    );
+    return <Tag color={config.color} icon={config.icon} style={{ fontSize: 14, padding: '4px 12px' }}>{config.text}</Tag>;
   };
 
-  const getTotalVotos = () => {
-    if (!resultados || !resultados.resultados) return 0;
-    return resultados.resultados.reduce((total, r) => total + r.votos, 0);
+  const getTotalVotos = () => resultados?.resultados?.reduce((sum, r) => sum + r.votos, 0) || 0;
+
+  // Devuelve array de ganadores (puede ser empate)
+  const getGanadores = () => {
+    if (!resultados?.resultados?.length) return [];
+    const votos = resultados.resultados.map(r => r.votos);
+    const maxVotos = Math.max(...votos);
+    return resultados.resultados.filter(r => r.votos === maxVotos);
   };
 
-  const getGanador = () => {
-    if (!resultados || !resultados.resultados || resultados.resultados.length === 0) return null;
-    return resultados.resultados.reduce((max, current) => 
-      current.votos > max.votos ? current : max
-    );
-  };
+  const ganadores = getGanadores();
 
   const getPorcentaje = (votos) => {
     const total = getTotalVotos();
@@ -86,26 +87,14 @@ function Resultados() {
   if (loading) {
     return (
       <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible>
-          <Menu
-            mode="inline"
-            theme="dark"
-            defaultSelectedKeys={['1']}
-            items={items}
-            onClick={onMenuClick}
-            style={{ 
-              height: '100%', 
-              borderRight: 0
-            }}
-          />
+        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
         </Sider>
         <Layout>
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Spin size="large" />
-              <div style={{ marginTop: 16 }}>
-                <Text style={{ color: '#64748b' }}>Cargando resultados...</Text>
-              </div>
+              <Text style={{ color: '#64748b', marginTop: 16 }}>Cargando resultados...</Text>
             </div>
           </Content>
         </Layout>
@@ -116,43 +105,14 @@ function Resultados() {
   if (!resultados) {
     return (
       <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible>
-          <Menu
-            mode="inline"
-            theme="dark"
-            defaultSelectedKeys={['1']}
-            items={items}
-            onClick={onMenuClick}
-            style={{ 
-              height: '100%', 
-              borderRight: 0
-            }}
-          />
+        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
         </Sider>
         <Layout>
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-              <Card
-                style={{
-                  borderRadius: 12,
-                  border: '1px solid #e2e8f0',
-                  textAlign: 'center',
-                  padding: '40px 20px'
-                }}
-              >
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <div>
-                      <Text style={{ fontSize: 18, color: '#64748b', display: 'block', marginBottom: 8 }}>
-                        No se pudieron cargar los resultados
-                      </Text>
-                      <Text style={{ color: '#94a3b8' }}>
-                        La votación no existe o no tienes permisos para verla
-                      </Text>
-                    </div>
-                  }
-                />
+              <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', padding: '40px 20px', textAlign: 'center' }}>
+                <Empty description={<Text style={{ color: '#64748b', fontSize: 18 }}>No se pudieron cargar los resultados</Text>} />
               </Card>
             </div>
           </Content>
@@ -162,214 +122,143 @@ function Resultados() {
   }
 
   const totalVotos = getTotalVotos();
-  const ganador = getGanador();
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* Sidebar */}
-      <Sider theme="dark" collapsible>
-        <Menu
-          mode="inline"
-          theme="dark"
-          defaultSelectedKeys={['1']}
-          items={items}
-          onClick={onMenuClick}
-          style={{ 
-            height: '100%', 
-            borderRight: 0
-          }}
-        />
+      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
       </Sider>
       <Layout>
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            {/* Header de la votación */}
-            <Card
-              style={{
-                borderRadius: 12,
-                border: '1px solid #e2e8f0',
-                marginBottom: 24,
-                background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)'
-              }}
-              bodyStyle={{ padding: 32 }}
-            >
-              <Row align="middle" justify="space-between">
-                <Col flex={1}>
-                  <div>
-                    <Title level={2} style={{ color: 'white', marginBottom: 8 }}>
-                      {resultados.votacion.titulo}
-                    </Title>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: 16 }}></Text>
-                  </div>
-                </Col>
-                <Col>
-                  {getEstadoTag(resultados.votacion.estado)}
-                </Col>
+
+            {/* Header */}
+            <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24, background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' }} bodyStyle={{ padding: 32 }}>
+              <Row justify="space-between" align="middle">
+                <Col><Title level={2} style={{ color: 'white' }}>{resultados.votacion.titulo}</Title></Col>
+                <Col>{getEstadoTag(resultados.votacion.estado)}</Col>
               </Row>
             </Card>
 
-            {/* Estadísticas generales */}
-            <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
-              <Col xs={24} sm={8}>
-                <Card
-                  style={{
-                    borderRadius: 12,
-                    border: '1px solid #e2e8f0',
-                    textAlign: 'center'
-                  }}
-                  bodyStyle={{ padding: 24 }}
-                >
-                  <Statistic
-                    title="Total de Votos"
-                    value={totalVotos}
-                    prefix={<UsergroupAddOutlined style={{ color: '#1e3a8a' }} />}
-                    valueStyle={{ color: '#1e3a8a', fontSize: 28, fontWeight: 600 }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Card
-                  style={{
-                    borderRadius: 12,
-                    border: '1px solid #e2e8f0',
-                    textAlign: 'center'
-                  }}
-                  bodyStyle={{ padding: 24 }}
-                >
-                  <Statistic
-                    title="Opciones"
-                    value={resultados.resultados.length}
-                    prefix={<FileTextOutlined style={{ color: '#3b82f6' }} />}
-                    valueStyle={{ color: '#3b82f6', fontSize: 28, fontWeight: 600 }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={8}>
-                <Card
-                  style={{
-                    borderRadius: 12,
-                    border: '1px solid #e2e8f0',
-                    textAlign: 'center'
-                  }}
-                  bodyStyle={{ padding: 24 }}
-                >
-                  <Statistic
-                    title="Opción Ganadora"
-                    value={ganador ? getPorcentaje(ganador.votos) : 0}
-                    suffix="%"
-                    prefix={<TrophyOutlined style={{ color: '#f59e0b' }} />}
-                    valueStyle={{ color: '#f59e0b', fontSize: 28, fontWeight: 600 }}
-                  />
-                </Card>
-              </Col>
-            </Row>
+            {/* Stats Row con manejo de empate */}
+           <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+  <Col xs={24} sm={8}>
+    <Card
+      style={{ borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}
+      bodyStyle={{ padding: 24 }}
+    >
+      <Statistic
+        title="Total de Votos"
+        value={totalVotos}
+        prefix={<UsergroupAddOutlined style={{ color: '#1e3a8a' }} />}
+        valueStyle={{ color: '#1e3a8a', fontSize: 28, fontWeight: 600 }}
+      />
+    </Card>
+  </Col>
 
-            {/* Ganador destacado */}
-            {ganador && totalVotos > 0 && (
-              <Card
-                style={{
-                  borderRadius: 12,
-                  border: '2px solid #f59e0b',
-                  marginBottom: 32,
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%)'
-                }}
-                bodyStyle={{ padding: 24 }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <TrophyOutlined style={{ fontSize: 48, color: '#f59e0b', marginBottom: 16 }} />
-                  <Title level={3} style={{ color: '#92400e', marginBottom: 8 }}>
-                    🏆 Opción Ganadora
-                  </Title>
-                  <Title level={2} style={{ color: '#92400e', marginBottom: 8 }}>
-                    {ganador.opcion}
-                  </Title>
-                  <Text style={{ fontSize: 18, color: '#a16207' }}>
-                    {ganador.votos} votos ({getPorcentaje(ganador.votos)}%)
-                  </Text>
-                </div>
-              </Card>
-            )}
+  <Col xs={24} sm={8}>
+    <Card
+      style={{ borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}
+      bodyStyle={{ padding: 24 }}
+    >
+      <Statistic
+        title="Opciones"
+        value={resultados.resultados.length}
+        prefix={<FileTextOutlined style={{ color: '#3b82f6' }} />}
+        valueStyle={{ color: '#3b82f6', fontSize: 28, fontWeight: 600 }}
+      />
+    </Card>
+  </Col>
 
-            {/* Resultados detallados */}
-            <Card
-              title={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <BarChartOutlined style={{ marginRight: 8, color: '#1e3a8a' }} />
-                  <span style={{ color: '#1e3a8a', fontWeight: 600 }}>
-                    Resultados Detallados
-                  </span>
-                </div>
-              }
-              style={{
-                borderRadius: 12,
-                border: '1px solid #e2e8f0'
-              }}
-              bodyStyle={{ padding: 32 }}
-            >
+  <Col xs={24} sm={8}>
+    <Card
+      style={{ borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}
+      bodyStyle={{ padding: 24 }}
+    >
+      {ganadores.length > 1 ? (
+        <div>
+          <Title level={4} style={{ marginBottom: 8, color: '#f59e0b' }}>
+            🤝 Empate entre
+          </Title>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '600',
+              color: '#f59e0b',
+              display: 'block',
+            }}
+          >
+            {ganadores.map(g => g.opcion).join(' y ')}
+          </Text>
+        </div>
+      ) : ganadores.length === 1 ? (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <TrophyOutlined style={{ color: '#f59e0b', fontSize: 30, marginRight: 8 }} />
+            <Title level={4} style={{ margin: 0, color: '#f59e0b' }}>
+              Opción Ganadora
+            </Title>
+          </div>
+          <div
+            style={{
+              fontSize: 32,
+              fontWeight: 'bold',
+              color: '#1e3a8a',
+              marginBottom: 8,
+              textAlign: 'center',
+              lineHeight: 1.2
+            }}
+          >
+            {ganadores[0].opcion}
+          </div>
+          <Text
+            style={{
+              fontSize: 14,
+              color: '#64748b',
+              textAlign: 'center'
+            }}
+          >
+            {getPorcentaje(ganadores[0].votos)}% de los votos
+          </Text>
+        </div>
+      ) : (
+        <div>
+          <Title level={4} style={{ marginBottom: 8, color: '#64748b' }}>
+            Sin Votos
+          </Title>
+          <Text style={{ color: '#64748b' }}>
+            No hay votos registrados
+          </Text>
+        </div>
+      )}
+    </Card>
+  </Col>
+</Row>
+
+            {/* Detalle de resultados y demás... */}
+            <Card title={<><BarChartOutlined style={{ marginRight: 8, color: '#1e3a8a' }} />Resultados Detallados</>} style={{ borderRadius: 12, border: '1px solid #e2e8f0' }} bodyStyle={{ padding: 32 }}>
               {resultados.resultados.length === 0 ? (
-                <Empty
-                  description="No hay resultados disponibles"
-                  style={{ padding: '40px 0' }}
-                />
+                <Empty description="No hay resultados disponibles" />
               ) : (
                 <Space direction="vertical" size="large" style={{ width: '100%' }}>
                   {resultados.resultados
-                    .sort((a, b) => b.votos - a.votos)
-                    .map((resultado, index) => (
-                      <div key={index}>
+                    .sort((a,b) => b.votos - a.votos)
+                    .map((res, i) => (
+                      <div key={i}>
                         <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
-                          <Col>
-                            <Text style={{ fontSize: 16, fontWeight: 500, color: '#1e3a8a' }}>
-                              {resultado.opcion}
-                            </Text>
-                          </Col>
-                          <Col>
-                            <Space>
-                              <Text style={{ fontSize: 14, color: '#64748b' }}>
-                                {resultado.votos} votos
-                              </Text>
-                              <Tag color={getColorProgress(index)} style={{ minWidth: 60, textAlign: 'center' }}>
-                                {getPorcentaje(resultado.votos)}%
-                              </Tag>
-                            </Space>
-                          </Col>
+                          <Text style={{ fontSize: 16, fontWeight: 500, color: '#1e3a8a' }}>{res.opcion}</Text>
+                          <Space>
+                            <Text style={{ color: '#64748b' }}>{res.votos} votos</Text>
+                            <Tag color={getColorProgress(i)}>{getPorcentaje(res.votos)}%</Tag>
+                          </Space>
                         </Row>
-                        <Progress
-                          percent={parseFloat(getPorcentaje(resultado.votos))}
-                          strokeColor={getColorProgress(index)}
-                          strokeWidth={12}
-                          style={{ marginBottom: index < resultados.resultados.length - 1 ? 16 : 0 }}
-                          format={() => ''}
-                        />
+                        <Progress percent={parseFloat(getPorcentaje(res.votos))} strokeColor={getColorProgress(i)} strokeWidth={12} format={() => ''} style={{ marginBottom: i < resultados.resultados.length - 1 ? 16 : 0 }} />
                       </div>
                     ))}
                 </Space>
               )}
             </Card>
 
-            {/* Información adicional */}
-            {resultados.votacion.descripcion && (
-              <Card
-                title={
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <FileTextOutlined style={{ marginRight: 8, color: '#1e3a8a' }} />
-                    <span style={{ color: '#1e3a8a', fontWeight: 600 }}>
-                      Descripción
-                    </span>
-                  </div>
-                }
-                style={{
-                  borderRadius: 12,
-                  border: '1px solid #e2e8f0',
-                  marginTop: 24
-                }}
-                bodyStyle={{ padding: 24 }}
-              >
-                <Text style={{ fontSize: 16, color: '#64748b', lineHeight: 1.6 }}>
-                  {resultados.votacion.descripcion}
-                </Text>
-              </Card>
-            )}
           </div>
         </Content>
       </Layout>
