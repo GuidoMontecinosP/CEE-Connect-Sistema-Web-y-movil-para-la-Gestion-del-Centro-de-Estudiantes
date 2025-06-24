@@ -1,22 +1,55 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React from 'react';
 import axios from '../services/api.js';
 
 export default function ListaVotaciones({ navigation }) {
   const [votaciones, setVotaciones] = useState([]);
   const [estadoFiltro, setEstadoFiltro] = useState('todas');
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Carga inicial
   useEffect(() => {
     cargarVotaciones();
   }, []);
 
-  const cargarVotaciones = () => {
-    axios.get('/votacion')
-      .then(res => setVotaciones(res.data.data))
-      .catch(err => console.error("Error al cargar votaciones", err));
+  // Refrescar cuando la pantalla recibe foco
+  useFocusEffect(
+    useCallback(() => {
+      // Solo refrescar si no es la primera carga
+      if (!loading) {
+        cargarVotaciones();
+      }
+    }, [loading])
+  );
+
+  const cargarVotaciones = async () => {
+    try {
+      const res = await axios.get('/votacion');
+      setVotaciones(res.data.data);
+    } catch (err) {
+      console.error("Error al cargar votaciones", err);
+      Alert.alert('Error', 'No se pudieron cargar las votaciones');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const cerrarVotacion = (id) => {
+  // Pull to refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await cargarVotaciones();
+    } catch (error) {
+      console.error('Error al refrescar:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  const cerrarVotacion = useCallback((id) => {
     Alert.alert(
       "Confirmar cierre",
       "¿Estás seguro de que deseas cerrar esta votación?",
@@ -25,52 +58,47 @@ export default function ListaVotaciones({ navigation }) {
         {
           text: "Cerrar",
           style: "destructive",
-          onPress: () => {
-            axios.patch(`/votacion/${id}/cerrar`)
-              .then(() => cargarVotaciones())
-              .catch(() => alert('No se pudo cerrar la votación.'));
+          onPress: async () => {
+            try {
+              await axios.patch(`/votacion/${id}/cerrar`);
+              await cargarVotaciones();
+              Alert.alert('Éxito', 'Votación cerrada correctamente');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo cerrar la votación');
+            }
           }
         }
       ]
     );
+  }, []);
+
+  const votacionesFiltradas = votaciones
+    .filter(v => estadoFiltro === 'todas' || v.estado === estadoFiltro)
+    .sort((a, b) => {
+      if (a.estado === b.estado) return 0;
+      return a.estado === 'activa' ? -1 : 1;
+    });
+
+  const renderItem = useCallback(({ item }) => (
+    <VotacionItem 
+      item={item} 
+      navigation={navigation} 
+      onCerrarVotacion={cerrarVotacion} 
+    />
+  ), [navigation, cerrarVotacion]);
+
+  const keyExtractor = useCallback((item) => item.id.toString(), []);
+
+  const getEstadoCount = (estado) => {
+    if (estado === 'todas') return votaciones.length;
+    return votaciones.filter(v => v.estado === estado).length;
   };
-
-const votacionesFiltradas = votaciones
-  .filter(v => estadoFiltro === 'todas' || v.estado === estadoFiltro)
-  .sort((a, b) => {
-    if (a.estado === b.estado) return 0;
-    return a.estado === 'activa' ? -1 : 1;
-  });
-
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.title}>{item.titulo}</Text>
-      <Text style={styles.description}>Estado: {item.estado}</Text>
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={() => navigation.navigate('Votar', { id: item.id })}>
-          <Text style={styles.link}>🗳️ Emitir Voto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Resultados', { id: item.id })}>
-          <Text style={styles.link}>📊 Ver Resultados</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Detalle', { id: item.id })}>
-          <Text style={styles.link}>🔍 Ver Detalle</Text>
-        </TouchableOpacity>
-
-        {item.estado === 'activa' && (
-          <TouchableOpacity onPress={() => cerrarVotacion(item.id)}>
-            <Text style={styles.dangerLink}>❌ Cerrar Votación</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>🗳️ Votaciones Disponibles</Text>
 
-      {/* Filtros */}
+      {/* Filtros con contadores */}
       <View style={styles.filterRow}>
         {['todas', 'activa', 'cerrada'].map((estado) => (
           <TouchableOpacity
@@ -86,6 +114,7 @@ const votacionesFiltradas = votaciones
               estadoFiltro === estado && styles.activeFilterText
             ]}>
               {estado === 'todas' ? 'Todas' : estado.charAt(0).toUpperCase() + estado.slice(1)}
+              {' '}({getEstadoCount(estado)})
             </Text>
           </TouchableOpacity>
         ))}
@@ -93,13 +122,96 @@ const votacionesFiltradas = votaciones
 
       <FlatList
         data={votacionesFiltradas}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={keyExtractor}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 40 }}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={10}
+        getItemLayout={(data, index) => (
+          { length: 120, offset: 120 * index, index }
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#1e3a8a']} // Android
+            tintColor={'#1e3a8a'}  // iOS
+            title="Actualizando votaciones..."
+            titleColor={'#1e3a8a'}
+          />
+        }
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>📭</Text>
+            <Text style={styles.emptyTitle}>No hay votaciones</Text>
+            <Text style={styles.emptySubtitle}>
+              {estadoFiltro === 'todas' 
+                ? 'Aún no se han creado votaciones' 
+                : `No hay votaciones ${estadoFiltro}s`}
+            </Text>
+          </View>
+        )}
       />
     </View>
   );
 }
+
+// Componente separado y optimizado para cada item
+const VotacionItem = React.memo(({ item, navigation, onCerrarVotacion }) => (
+  <View style={styles.card}>
+    <View style={styles.cardHeader}>
+      <Text style={styles.title}>{item.titulo}</Text>
+      <View style={[
+        styles.statusBadge,
+        item.estado === 'activa' ? styles.activeBadge : styles.closedBadge
+      ]}>
+        <Text style={[
+          styles.statusText,
+          item.estado === 'activa' ? styles.activeText : styles.closedText
+        ]}>
+          {item.estado === 'activa' ? '🟢 Activa' : '🔴 Cerrada'}
+        </Text>
+      </View>
+    </View>
+    
+    <View style={styles.actions}>
+      {item.estado === 'activa' && (
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => navigation.navigate('Votar', { id: item.id })}
+        >
+          <Text style={styles.primaryAction}>🗳️ Emitir Voto</Text>
+        </TouchableOpacity>
+      )}
+      
+      <TouchableOpacity 
+        style={styles.actionButton}
+        onPress={() => navigation.navigate('Resultados', { id: item.id })}
+      >
+        <Text style={styles.secondaryAction}>📊 Ver Resultados</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.actionButton}
+        onPress={() => navigation.navigate('Detalle', { id: item.id })}
+      >
+        <Text style={styles.secondaryAction}>🔍 Ver Detalle</Text>
+      </TouchableOpacity>
+
+      {item.estado === 'activa' && (
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={() => onCerrarVotacion(item.id)}
+        >
+          <Text style={styles.dangerAction}>❌ Cerrar Votación</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  </View>
+));
 
 const styles = StyleSheet.create({
   container: {
@@ -121,17 +233,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   filterButton: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     backgroundColor: '#e5e7eb',
     borderRadius: 20,
+    minWidth: 80,
+    alignItems: 'center',
   },
   activeFilterButton: {
     backgroundColor: '#1e3a8a',
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#374151',
+    fontWeight: '500',
   },
   activeFilterText: {
     color: '#fff',
@@ -148,30 +263,81 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 12,
   },
-  description: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 12,
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  activeBadge: {
+    backgroundColor: '#dcfce7',
+  },
+  closedBadge: {
+    backgroundColor: '#fef2f2',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  activeText: {
+    color: '#166534',
+  },
+  closedText: {
+    color: '#991b1b',
   },
   actions: {
-    gap: 6,
+    gap: 8,
   },
-  link: {
+  actionButton: {
+    paddingVertical: 2,
+  },
+  primaryAction: {
+    fontSize: 16,
+    color: '#1e3a8a',
+    fontWeight: '600',
+  },
+  secondaryAction: {
     fontSize: 16,
     color: '#2563eb',
     fontWeight: '500',
-    paddingVertical: 2,
   },
-  dangerLink: {
+  dangerAction: {
     fontSize: 16,
     color: '#dc2626',
     fontWeight: '500',
-    paddingVertical: 2,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
   },
 });

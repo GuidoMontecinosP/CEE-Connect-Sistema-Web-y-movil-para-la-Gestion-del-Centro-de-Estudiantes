@@ -49,7 +49,7 @@ function Votar() {
   const [enviandoVoto, setEnviandoVoto] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState('1'); // Votaciones por defecto
-  const usuarioId = 1; // Fijo por ahora
+  const usuarioId =  usuario?.id;
 
   // Mapeo de rutas a keys del menú
   const routeToKey = {
@@ -57,7 +57,6 @@ function Votar() {
     '/votaciones': '1',
     '/crear': '2',
     '/eventos': '3',
-    '/noticias': '4',
     '/dashboard': '5'
   };
 
@@ -108,13 +107,13 @@ function Votar() {
 
   // Menú items basado en el rol del usuario
   const menuItems = [
-    { key: '0', icon: <HomeOutlined />, label: 'Inicio' },
+    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
     { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    ...(usuario?.rol === 'administrador'
+    ...(usuario?.rol.nombre === 'administrador'
       ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
       : []),
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <FileTextOutlined />, label: 'Noticias' },
+ 
     { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
   ];
 
@@ -127,7 +126,6 @@ function Votar() {
       if (item.key === '1') navigate('/votaciones');
       if (item.key === '2') navigate('/crear');
       if (item.key === '3') navigate('/eventos');
-      if (item.key === '4') navigate('/noticias');
       if (item.key === '5') navigate('/dashboard');
       return;
     }
