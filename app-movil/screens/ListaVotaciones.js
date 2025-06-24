@@ -96,7 +96,16 @@ export default function ListaVotaciones({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🗳️ Votaciones Disponibles</Text>
+      {/* Header con botón de crear */}
+      <View style={styles.headerContainer}>
+        <Text style={styles.header}>🗳️ Votaciones Disponibles</Text>
+        <TouchableOpacity 
+          style={styles.createButton}
+          onPress={() => navigation.navigate('CrearVotacion')}
+        >
+          <Text style={styles.createButtonText}>+ Nueva</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Filtros con contadores */}
       <View style={styles.filterRow}>
@@ -152,9 +161,23 @@ export default function ListaVotaciones({ navigation }) {
                 ? 'Aún no se han creado votaciones' 
                 : `No hay votaciones ${estadoFiltro}s`}
             </Text>
+            <TouchableOpacity 
+              style={styles.emptyCreateButton}
+              onPress={() => navigation.navigate('CrearVotacion')}
+            >
+              <Text style={styles.emptyCreateButtonText}>➕ Crear primera votación</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
+
+      {/* Botón flotante para crear votación */}
+      <TouchableOpacity 
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('CrearVotacion')}
+      >
+        <Text style={styles.floatingButtonText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -220,12 +243,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 20,
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   header: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#1e3a8a',
-    marginBottom: 20,
-    textAlign: 'center',
+    flex: 1,
+  },
+  createButton: {
+    backgroundColor: '#1e3a8a',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  createButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   filterRow: {
     flexDirection: 'row',
@@ -339,5 +383,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  emptyCreateButton: {
+    backgroundColor: '#1e3a8a',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  emptyCreateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1e3a8a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  floatingButton: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

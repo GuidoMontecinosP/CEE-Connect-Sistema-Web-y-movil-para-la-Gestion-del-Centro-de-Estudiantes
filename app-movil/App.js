@@ -9,6 +9,7 @@ import HomeScreen from './screens/Home.js';
 import Eventos from './screens/Eventos';
 
 import ListaVotaciones from './screens/ListaVotaciones';
+import CrearVotacion from './screens/CrearVotacion'; // Nueva pantalla
 import EmitirVoto from './screens/EmitirVoto';
 import Resultados from './screens/Resultados';
 import DetalleVotacion from './screens/DetalleVotacion';
@@ -31,11 +32,40 @@ function EventosStack() {
 function VotacionesStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="ListaVotaciones" component={ListaVotaciones} options={{ title: 'Votaciones1' }} />
-      <Stack.Screen name="Detalle" component={DetalleVotacion} />
-      <Stack.Screen name="Votar" component={EmitirVoto} />
-      <Stack.Screen name="Resultados" component={Resultados} />
-      {/* */}
+      <Stack.Screen 
+        name="ListaVotaciones" 
+        component={ListaVotaciones} 
+        options={{ title: 'Votaciones' }} 
+      />
+      <Stack.Screen 
+        name="CrearVotacion" 
+        component={CrearVotacion} 
+        options={{ 
+          title: 'Nueva Votación',
+          headerStyle: {
+            backgroundColor: '#1e3a8a',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+        }} 
+      />
+      <Stack.Screen 
+        name="Detalle" 
+        component={DetalleVotacion}
+        options={{ title: 'Detalle de Votación' }}
+      />
+      <Stack.Screen 
+        name="Votar" 
+        component={EmitirVoto}
+        options={{ title: 'Emitir Voto' }}
+      />
+      <Stack.Screen 
+        name="Resultados" 
+        component={Resultados}
+        options={{ title: 'Resultados' }}
+      />
     </Stack.Navigator>
   );
 }
