@@ -70,21 +70,25 @@ export const cerrarVotacion = async (votacionId) => {
     throw new Error("La votación ya está cerrada");
   }
 
-  // Actualizar estado de votación
+  const now = new Date();
+
+  // Actualizar estado y publicar resultados
   await votacionRepo.update(
     { id: votacionId },
     { 
       estado: "cerrada",
-      fechaCierre: new Date()
+      fechaCierre: now,
+      resultadosPublicados: true,
+      fechaPublicacion: now
     }
   );
 
-  // Borrar todos los tokens de esta votación
+  // Borrar todos los tokens
   await AppDataSource.getRepository("TokenVotacion").delete({
     votacion: { id: votacionId }
   });
 
-  return { mensaje: "Votación cerrada correctamente" };
+  return { mensaje: "Votación cerrada y resultados publicados correctamente" };
 };
 
 export const obtenerResultados = async (votacionId) => {
@@ -118,7 +122,8 @@ export const obtenerResultados = async (votacionId) => {
     votacion: {
       id: votacion.id,
       titulo: votacion.titulo,
-      estado: votacion.estado
+      estado: votacion.estado,
+      resultadosPublicados: votacion.resultadosPublicados
     },
     resultados
   };

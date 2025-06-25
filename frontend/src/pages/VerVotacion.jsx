@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
 import {
-  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu
+  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu, Input
 } from 'antd';
 import {
   ArrowLeftOutlined, CheckCircleOutlined, StopOutlined, UserOutlined,
   CalendarOutlined, FileTextOutlined, PieChartOutlined, CarryOutOutlined,
-  EyeOutlined, AuditOutlined, DesktopOutlined
+  EyeOutlined, AuditOutlined, DesktopOutlined, SearchOutlined
 } from '@ant-design/icons';
 
 const { Content, Sider } = Layout;
@@ -20,6 +20,7 @@ function VerVotacion() {
   const [participantes, setParticipantes] = useState([]);
   const [totalVotos, setTotalVotos] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [globalSearchText, setGlobalSearchText] = useState('');
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -69,18 +70,42 @@ function VerVotacion() {
     );
   };
 
+  // Función para filtro global
+  const getFilteredData = () => {
+    if (!globalSearchText) return participantes;
+    
+    return participantes.filter((record) => {
+      const searchIn = [
+        record.usuario?.id?.toString(),
+        record.usuario?.nombre,
+        record.usuario?.correo,
+        record.fechaVoto ? new Date(record.fechaVoto).toLocaleString('es-ES') : ''
+      ].join(' ').toLowerCase();
+      
+      return searchIn.includes(globalSearchText.toLowerCase());
+    });
+  };
+
   const columns = [
     {
       title: 'ID',
       dataIndex: ['usuario', 'id'],
       key: 'id',
       width: 80,
+      sorter: (a, b) => (a.usuario?.id || 0) - (b.usuario?.id || 0),
+      sortDirections: ['descend', 'ascend'],
       render: (id) => <Text strong>{id || 'N/A'}</Text>
     },
     {
       title: 'Nombre',
       dataIndex: ['usuario', 'nombre'],
       key: 'nombre',
+      sorter: (a, b) => {
+        const nameA = a.usuario?.nombre || '';
+        const nameB = b.usuario?.nombre || '';
+        return nameA.localeCompare(nameB);
+      },
+      sortDirections: ['descend', 'ascend'],
       render: (nombre) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <UserOutlined style={{ marginRight: 8, color: '#1e3a8a' }} />
@@ -92,12 +117,25 @@ function VerVotacion() {
       title: 'Correo',
       dataIndex: ['usuario', 'correo'],
       key: 'correo',
+      sorter: (a, b) => {
+        const emailA = a.usuario?.correo || '';
+        const emailB = b.usuario?.correo || '';
+        return emailA.localeCompare(emailB);
+      },
+      sortDirections: ['descend', 'ascend'],
       render: (correo) => <Text type="secondary">{correo || 'Sin correo'}</Text>
     },
     {
       title: 'Fecha de Voto',
       dataIndex: 'fechaVoto',
       key: 'fechaVoto',
+      sorter: (a, b) => {
+        const dateA = new Date(a.fechaVoto || 0);
+        const dateB = new Date(b.fechaVoto || 0);
+        return dateA - dateB;
+      },
+      sortDirections: ['descend', 'ascend'],
+      defaultSortOrder: 'descend',
       render: (fecha) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <CalendarOutlined style={{ marginRight: 8, color: '#1e3a8a' }} />
@@ -170,22 +208,10 @@ function VerVotacion() {
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
               <div style={{ flex: 1 }}>
-                <Button
-                  icon={<ArrowLeftOutlined />}
-                  onClick={() => navigate('/votaciones')}
-                  style={{
-                    marginBottom: 16,
-                    borderColor: '#1e3a8a',
-                    color: '#1e3a8a',
-                    borderRadius: 6
-                  }}
-                >
-                  Volver a Votaciones
-                </Button>
+               
                 <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>{votacion.titulo}</Title>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   {getEstadoTag(votacion.estado)}
-                  
                 </div>
               </div>
             </div>
@@ -239,10 +265,24 @@ function VerVotacion() {
             </Row>
 
             <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 24 }} bodyStyle={{ padding: 24 }}>
-              <Title level={3} style={{ color: '#1e3a8a', marginBottom: 16 }}>
-                <UserOutlined style={{ marginRight: 8 }} />
-                Participantes ({participantes.length})
-              </Title>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <Title level={3} style={{ color: '#1e3a8a', margin: 0 }}>
+                  <UserOutlined style={{ marginRight: 8 }} />
+                  Participantes ({getFilteredData().length})
+                </Title>
+                <Input
+                  placeholder="Buscar en participantes..."
+                  prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+                  value={globalSearchText}
+                  onChange={(e) => setGlobalSearchText(e.target.value)}
+                  style={{ 
+                    width: 300,
+                    borderRadius: 8,
+                    borderColor: '#1e3a8a'
+                  }}
+                  allowClear
+                />
+              </div>
               {participantes.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
                   <Text style={{ color: '#64748b', fontSize: '16px' }}>
@@ -252,14 +292,26 @@ function VerVotacion() {
               ) : (
                 <Table
                   columns={columns}
-                  dataSource={participantes}
+                  dataSource={getFilteredData()}
                   rowKey={(record, index) => record.usuario?.id || index}
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
+                    pageSizeOptions: ['10', '20', '50', '100'],
                     showQuickJumper: true,
                     showTotal: (total, range) =>
-                      `${range[0]}-${range[1]} de ${total} participantes`
+                      `${range[0]}-${range[1]} de ${total} participantes`,
+                  }}
+                  scroll={{ x: 800 }}
+                  size="middle"
+                  bordered
+                  tableLayout="auto"
+                  style={{
+                    '& .ant-table-thead > tr > th': {
+                      backgroundColor: '#f8fafc',
+                      fontWeight: 600,
+                      color: '#1e3a8a'
+                    }
                   }}
                 />
               )}

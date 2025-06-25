@@ -11,11 +11,16 @@ import {
   FileTextOutlined, PieChartOutlined, CarryOutOutlined,
   DesktopOutlined 
 } from '@ant-design/icons';
+import { useAuth } from '../context/AuthContext';
+
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 function Resultados() {
+  const { usuario } = useAuth();
+const esAdministrador = usuario?.rol?.nombre === 'administrador';
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [resultados, setResultados] = useState(null);
@@ -102,24 +107,70 @@ function Resultados() {
     );
   }
 
-  if (!resultados) {
-    return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-        </Sider>
-        <Layout>
-          <Content style={{ padding: '48px 24px' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-              <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', padding: '40px 20px', textAlign: 'center' }}>
-                <Empty description={<Text style={{ color: '#64748b', fontSize: 18 }}>No se pudieron cargar los resultados</Text>} />
-              </Card>
-            </div>
-          </Content>
-        </Layout>
+ if (!resultados) {
+  return (
+    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
+      </Sider>
+      <Layout>
+        <Content style={{ padding: '48px 24px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <Card
+              style={{
+                borderRadius: 12,
+                border: '1px solid #e2e8f0',
+                padding: '40px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <Empty
+                description={
+                  <Text style={{ color: '#64748b', fontSize: 18 }}>
+                    No se pudieron cargar los resultados
+                  </Text>
+                }
+              />
+            </Card>
+          </div>
+        </Content>
       </Layout>
-    );
-  }
+    </Layout>
+  );
+}
+
+// 🚫 Bloqueo a estudiantes si la votación no está publicada
+if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
+  return (
+    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
+      </Sider>
+      <Layout>
+        <Content style={{ padding: '48px 24px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <Card
+              style={{
+                borderRadius: 12,
+                border: '1px solid #e2e8f0',
+                padding: '40px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <Empty
+                description={
+                  <Text style={{ color: '#64748b', fontSize: 18 }}>
+                    Los resultados aún no han sido publicados
+                  </Text>
+                }
+              />
+            </Card>
+          </div>
+        </Content>
+      </Layout>
+    </Layout>
+  );
+}
 
   const totalVotos = getTotalVotos();
 

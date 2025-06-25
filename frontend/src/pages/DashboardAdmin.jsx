@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  HomeOutlined,
+  HomeOutlined,BarChartOutlined,
   PieChartOutlined,
   DesktopOutlined,
   CarryOutOutlined,
@@ -38,6 +38,7 @@ export default function DashboardEstudiante() {
       ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
       : []),
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
+     { key: '4', icon: <BarChartOutlined />, label: 'Resultados' },
     { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
   ];
 
@@ -46,6 +47,7 @@ export default function DashboardEstudiante() {
     if (item.key === '1') navigate('/votaciones');
     if (item.key === '2') navigate('/crear');
     if (item.key === '3') navigate('/eventos');
+    if (item.key === '4') navigate('/resultados-publicados');
     if (item.key === '5') navigate('/dashboard');
   };
 
