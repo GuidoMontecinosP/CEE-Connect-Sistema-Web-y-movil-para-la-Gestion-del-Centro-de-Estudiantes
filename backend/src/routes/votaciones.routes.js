@@ -6,7 +6,7 @@ import {
   votar,
   verificarVoto,
   cerrarVotacionController,
-  getResultados
+  getResultados,getParticipantes
 } from '../controllers/votacion.controller.js';
 import { authenticateJwt } from '../middlewares/authentication.middleware.js';
 import { isAdmin } from '../middlewares/authorization.middleware.js';
@@ -22,5 +22,6 @@ router.get('/:id/mi-voto/:usuarioId', verificarVoto);    //  authenticateJwt,
 router.patch('/:id/cerrar',  cerrarVotacionController);     //authenticateJwt, isAdmin,
 router.get('/:id/resultados',getResultados);            
 // comprobar si es que funciona para ver resultados siendo usuario o admin
-
+//authenticateJwt, isAdmin,
+router.get('/:id/participantes', getParticipantes); //authenticateJwt, isAdmin,
 export default router;

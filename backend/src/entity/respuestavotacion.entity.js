@@ -25,7 +25,17 @@ const RespuestaVotacionSchema = new EntitySchema({
       joinColumn: true,
       onDelete: "CASCADE",
     },
-  },
+    usuario: {
+      type: "many-to-one",
+      target: "Usuario",
+      joinColumn: {
+        name: "usuarioId"
+      },
+      onDelete: "CASCADE",
+    },
+
+  }
+  ,
 });
 
 export default RespuestaVotacionSchema;

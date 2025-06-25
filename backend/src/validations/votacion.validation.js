@@ -6,7 +6,7 @@ export const crearVotacionValidation = Joi.object({
   titulo: Joi.string()
     .min(10)
     .max(300)
-//.trim() // Elimina espacios al inicio y final
+    .trim()
     .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()-]+$/)
     .required()
     .messages({

@@ -1,4 +1,6 @@
 import { AppDataSource } from "../config/configDb.js";
+import { Not, IsNull } from "typeorm";
+
 
 const votacionRepo = AppDataSource.getRepository("Votacion");
 const opcionRepo = AppDataSource.getRepository("OpcionVotacion");
@@ -121,3 +123,42 @@ export const obtenerResultados = async (votacionId) => {
     resultados
   };
 };
+
+export const obtenerParticipantes = async (votacionId) => {
+  // 1) Validar existencia de la votación
+  const votacion = await votacionRepo.findOneBy({ id: votacionId });
+  if (!votacion) throw new Error("Votación no encontrada");
+
+  // 2) Obtener todas las respuestas con su usuario
+  const respuestas = await respuestaRepo.find({
+    where: { opcion: { votacion: { id: votacionId } } },
+    relations: { usuario: true },
+    order: { fechaVoto: "DESC" }
+  });
+
+  // 3) Formatear el array para el frontend
+  const participantes = respuestas.map(r => ({
+    usuario: {
+      id:     r.usuario?.id,
+      nombre: r.usuario?.nombre  || "Sin nombre",
+      correo: r.usuario?.correo  || "Sin correo"
+    },
+    fechaVoto: r.fechaVoto
+  }));
+
+  // 4) Total de votos (incluye todos)
+  const totalVotos = respuestas.length;
+
+  // 5) Devolver el paquete completo
+  return {
+    votacion: {
+      id:     votacion.id,
+      titulo: votacion.titulo,
+      estado: votacion.estado
+    },
+    totalVotos,
+    participantes
+  };
+};
+
+

@@ -61,7 +61,8 @@ export const emitirVoto = async ({ usuarioId, votacionId, opcionId }) => {
   // Registrar voto
   await respuestaRepo.save({
     tokenVotacion: token,
-    opcion: { id: parseInt(opcionId) }
+    opcion: { id: parseInt(opcionId) },
+    usuario: { id: parseInt(usuarioId) }
   });
 
   return { mensaje: "Voto registrado correctamente" };

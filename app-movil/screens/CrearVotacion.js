@@ -61,7 +61,7 @@ export default function CrearVotacion({ navigation }) {
     try {
       // Ajusta esta llamada según tu API
       const response = await axios.post('/votacion', {
-        titulo: titulo, // Título de la votación .trim() para eliminar espacios al inicio y final
+        titulo: titulo.trim(), // Título de la votación .trim() para eliminar espacios al inicio y final
         opciones: opcionesValidas
       });
 

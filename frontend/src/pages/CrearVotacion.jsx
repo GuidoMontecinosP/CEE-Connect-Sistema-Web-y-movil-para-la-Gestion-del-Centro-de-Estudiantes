@@ -39,7 +39,14 @@ function CrearVotacion() {
     try {
       const response = await votacionService.crearVotacion(titulo, opcionesValidas);
       if (response.success) {
-        alert('Votación creada exitosamente'); // Aquí podrías usar SweetAlert
+        Swal.fire({
+          icon: 'success',
+          title: 'Votación creada exitosamente',
+          text: 'La votación ha sido creada correctamente.',
+          confirmButtonText: 'Aceptar'
+        }).then(() => {
+          navigate('/votaciones'); // Redirigir a la lista de votaciones
+        })
       }
       setTitulo('');
       setOpciones(['', '']);

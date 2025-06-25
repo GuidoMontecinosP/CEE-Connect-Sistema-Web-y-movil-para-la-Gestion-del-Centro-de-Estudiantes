@@ -19,8 +19,9 @@ function ListarVotaciones() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
 
-  // Verificar si el usuario es administrador
+  // Verificar roles del usuario
   const esAdministrador = usuario?.rol?.nombre === 'administrador';
+  const esEstudiante = usuario?.rol?.nombre === 'estudiante';
   const usuarioId = usuario?.id;
 
   useEffect(() => {
@@ -150,16 +151,7 @@ function ListarVotaciones() {
   };
 
   // Función para obtener el tag de estado de voto
-  const getVotoTag = (votacionId) => {
-    if (votosUsuario[votacionId]) {
-      return (
-        <Tag color="green" icon={<CheckOutlined />} style={{ marginLeft: 8 }}>
-          Votaste
-        </Tag>
-      );
-    }
-    return null;
-  };
+
 
   // Opciones de filtro disponibles según el rol del usuario
   const getFiltroOptions = () => {
@@ -342,7 +334,7 @@ function ListarVotaciones() {
                           </Title>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                             {getEstadoTag(votacion.estado)}
-                            {votacion.estado === 'activa' && getVotoTag(votacion.id)}
+                            {votacion.estado === 'activa'}
                           </div>
                         </div>
 
@@ -378,27 +370,31 @@ function ListarVotaciones() {
                                 onClick={() => {
                                   if (votacion.estado === 'activa' && !yaVoto) {
                                     window.location.href = `/votacion/${votacion.id}/votar`;
-                                  } else {
+                                  } else if (esAdministrador) {
                                     window.location.href = `/votacion/${votacion.id}/resultados`;
                                   }
                                 }}
-                                disabled={votacion.estado === 'activa' && yaVoto}
+                                disabled={(votacion.estado === 'activa' && yaVoto) || (!esAdministrador && votacion.estado === 'cerrada')}
                                 style={{
                                   backgroundColor: votacion.estado === 'activa' && !yaVoto ? '#1e3a8a' : 
-                                                 yaVoto ? '#f0f0f0' : '#f8f9fa',
+                                                 yaVoto ? '#f0f0f0' : 
+                                                 (!esAdministrador && votacion.estado === 'cerrada') ? '#f0f0f0' : '#f8f9fa',
                                   borderColor: votacion.estado === 'activa' && !yaVoto ? '#1e3a8a' : 
-                                              yaVoto ? '#d9d9d9' : '#64748b',
+                                              yaVoto ? '#d9d9d9' : 
+                                              (!esAdministrador && votacion.estado === 'cerrada') ? '#d9d9d9' : '#64748b',
                                   color: votacion.estado === 'activa' && !yaVoto ? 'white' : 
-                                        yaVoto ? '#00000040' : '#64748b',
+                                        yaVoto ? '#00000040' : 
+                                        (!esAdministrador && votacion.estado === 'cerrada') ? '#00000040' : '#64748b',
                                   borderRadius: 6,
                                   height: 40,
                                   fontWeight: 500,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  cursor: yaVoto ? 'not-allowed' : 'pointer'
+                                  cursor: (yaVoto || (!esAdministrador && votacion.estado === 'cerrada')) ? 'not-allowed' : 'pointer'
                                 }}
-                                title={yaVoto ? 'Ya has votado en esta votación' : ''}
+                                title={yaVoto ? 'Ya has votado en esta votación' : 
+                                       (!esAdministrador && votacion.estado === 'cerrada') ? 'Solo los administradores pueden ver resultados' : ''}
                               >
                                 {votacion.estado === 'activa' ? 
                                   (yaVoto ? 'Votaste' : 'Votar') : 
@@ -453,8 +449,8 @@ function ListarVotaciones() {
                             </Row>
                           )}
 
-                          {/* Fila adicional para usuarios no administradores con votaciones activas */}
-                          {votacion.estado === 'activa' && !esAdministrador && (
+                          {/* Fila adicional solo para estudiantes con votaciones cerradas (sin ser administradores) */}
+                          {votacion.estado === 'cerrada' && !esAdministrador && esEstudiante && (
                             <Row gutter={[8, 8]}>
                               <Col span={24}>
                                 <Button

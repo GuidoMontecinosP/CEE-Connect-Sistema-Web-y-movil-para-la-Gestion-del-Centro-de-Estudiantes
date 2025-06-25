@@ -56,4 +56,14 @@ export const votacionService = {
       throw new Error(error.response?.data?.mensaje || 'Error al obtener resultados');
     }
   }
+  // Obtener participantes de votación
+  , obtenerParticipantes: async (votacionId) => {
+    try {
+      const response = await axios.get(`/votacion/${votacionId}/participantes`);
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener participantes');
+    }
+  }
 };
