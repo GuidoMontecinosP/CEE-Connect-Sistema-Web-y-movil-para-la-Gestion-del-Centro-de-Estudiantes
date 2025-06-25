@@ -3,7 +3,7 @@ import axios from './root.services.js';
 export const obtenerEventos = async () => {
     try {
         const response = await axios.get('/eventos/eventos');
-        // console.log("Respuesta de eventos:", response.data);
+         console.log("Respuesta de eventos:", response.data);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.mensaje || 'Error al obtener eventos');

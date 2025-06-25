@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
+import { useAuth } from '../context/AuthContext';
+
 import dayjs from 'dayjs';
 
 import { obtenerEventos, crearEvento, modificarEvento, eliminarEvento} from "../services/eventos.services.js";
@@ -12,7 +14,8 @@ import {
   PieChartOutlined,
   HomeOutlined,
   CalendarOutlined,
-  FileTextOutlined,AuditOutlined
+  FileTextOutlined,AuditOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
 import { Breadcrumb, 
          Layout, 
@@ -48,8 +51,8 @@ const items = [
   getItem('Votaciones', '1', <PieChartOutlined />),
   getItem('Crear Votación', '2', <DesktopOutlined />),
   getItem('Eventos', '3', <CarryOutOutlined />),
- 
-  getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
+  getItem('Dashboard', '5', <AuditOutlined />),
+  // getItem('Cerrar sesión', 'logout', <LogoutOutlined />), 
 ];
 
 
@@ -146,9 +149,11 @@ function VerEventos() {
     setOpen(false);
   };
 
+  const { logout } = useAuth();
+
   const onMenuClick = (item) => {
     if (item.key === '0') {
-      navigate('/noticias');
+      navigate('/');
     }
     if (item.key === '1') {
       navigate('/votaciones');
@@ -161,6 +166,9 @@ function VerEventos() {
     }
     if (item.key === '5') {
       navigate('/dashboard');
+    }
+    if (item.key === 'logout') {
+      logout();
     }
   };
 
@@ -228,7 +236,6 @@ function VerEventos() {
       }
     })
   };
-
   return (
     <>
      <Layout style={{ minHeight: '100vh' }}>

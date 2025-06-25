@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import { useAuth } from '../context/AuthContext';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -28,19 +29,20 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 
-const items = [
-  getItem('Inicio', '0', <FileTextOutlined />),
-  getItem('Votaciones', '1', <PieChartOutlined />),
-  getItem('Crear Votación', '2', <DesktopOutlined />),
-  getItem('Eventos', '3', <CarryOutOutlined />),
+// const items = [
+//   getItem('Inicio', '0', <FileTextOutlined />),
+//   getItem('Votaciones', '1', <PieChartOutlined />),
+//   getItem('Crear Votación', '2', <DesktopOutlined />),
+//   getItem('Eventos', '3', <CarryOutOutlined />),
  
-   getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
-];
+//    getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
+// ];
 
 function Noticias() {
   const [noticias, setNoticias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { usuario } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -60,10 +62,6 @@ function Noticias() {
       });
   }, []);
 
-  // Extra: obtener imágenes de la noticia (scraping)
-  // Si el backend no entrega imágenes, intentar obtener la imagen de la noticia por Open Graph (og:image) o buscar en el HTML
-  // Si el backend ya entrega imágenes, solo mostrarla aquí
-
   // Renderizado mejorado con tarjetas
   const navigate = useNavigate();
   const onMenuClick = (item) => {
@@ -77,11 +75,14 @@ function Noticias() {
       navigate('/crear');
     }
     if (item.key === '3') {
-      navigate('/eventos');
+      navigate('/verEventos');
     }
     
     if (item.key === '5') {
       navigate('/dashboard');
+    }
+    if (item.key === '4') {
+      navigate('/eventos');
     }
   };
 
@@ -90,11 +91,26 @@ function Noticias() {
       token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
 
+  // Filtrar items del menú según el rol
+  const adminItems = [
+    getItem('Inicio', '0', <FileTextOutlined />),
+    getItem('Votaciones', '1', <PieChartOutlined />),
+    getItem('Crear Votación', '2', <DesktopOutlined />),
+    getItem('Eventos', '3', <CarryOutOutlined />),
+    getItem('Dashboard', '5', <AuditOutlined />),
+  ];
+  const userItems = [
+    getItem('Inicio', '0', <FileTextOutlined />),
+    getItem('Votaciones', '1', <PieChartOutlined />),
+    getItem('Eventos', '4', <CarryOutOutlined />),
+    getItem('Dashboard', '5', <AuditOutlined />),
+  ];
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={['0']} mode="inline" items={items} onClick={onMenuClick} />
+        <Menu theme="dark" defaultSelectedKeys={['0']} mode="inline" items={usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador' ? adminItems : userItems} onClick={onMenuClick} />
       </Sider>
       <Layout>
         <Content style={{ margin: '0 16px' }}>

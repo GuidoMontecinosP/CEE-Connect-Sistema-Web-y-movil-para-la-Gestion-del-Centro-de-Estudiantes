@@ -1,7 +1,7 @@
 import axios from 'axios';
 import cookies from 'js-cookie';
 
-const API_URL = import.meta.env.VITE_BASE_URL || 'http://192.168.1.12:3000/api'; // Default to local development URL if not set in environment variables
+const API_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/api'; // Default to local development URL if not set in environment variables
 
 
 const instance = axios.create({
