@@ -7,7 +7,6 @@ import VerVotacion from './pages/VerVotacion';
 import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
 import MenuPrincipal from './pages/MenuPrincipal';
-import ResultadosPublicados from './pages/ResultadosPublicados';
 
 import VerEventos from './pages/VerEventos';
 import Noticias from './pages/Noticias';
@@ -60,7 +59,7 @@ function App() {
       <Route path="/eventos" element={<VerEventos />} />
       <Route path="/dashboard" element={<DashboardAdmin />} />
       <Route path = "votacion/:id/votar" element={<Votar />} />
-      <Route path="/resultados-publicados" element={<ResultadosPublicados />} />
+   
 
       </Route>
     </Routes>

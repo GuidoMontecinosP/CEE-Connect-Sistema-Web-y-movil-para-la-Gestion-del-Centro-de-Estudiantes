@@ -1,3 +1,4 @@
+
 import axios from './root.services.js';
 
 export const votacionService = {
@@ -64,6 +65,14 @@ export const votacionService = {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.mensaje || 'Error al obtener participantes');
+    }
+  },
+  publicarResultados: async (votacionId) => {
+    try {
+      const response = await axios.put(`/votacion/${votacionId}/publicar-resultados`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al publicar resultados');
     }
   }
 };

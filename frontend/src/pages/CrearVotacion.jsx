@@ -72,7 +72,7 @@ function CrearVotacion() {
     { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
     { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
     { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <BarChartOutlined />, label: 'Resultados' },
+   
    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } 
   ];
 
@@ -81,7 +81,7 @@ function CrearVotacion() {
     if (item.key === '1') navigate('/votaciones');
     if (item.key === '2') navigate('/crear');
     if (item.key === '3') navigate('/eventos');
-    if (item.key === '4') navigate('/resultados-publicados');
+ 
     if (item.key === '5') navigate('/dashboard');
   };
 

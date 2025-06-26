@@ -3,7 +3,7 @@ import {
   crearVotacion, 
   obtenerVotacionPorId, 
   cerrarVotacion, 
-  obtenerResultados,obtenerParticipantes 
+  obtenerResultados,obtenerParticipantes,publicarResultados
 } from "../services/votacion.services.js";
 import { 
   emitirVoto, 
@@ -217,8 +217,6 @@ export const getResultados = async (req, res) => {
   }
 };
 
-
-
 export const getParticipantes = async (req, res) => {
   try {
     const votacionId = parseInt(req.params.id, 10);
@@ -229,6 +227,16 @@ export const getParticipantes = async (req, res) => {
   } catch (error) {
     const code = error.message.includes("no encontrada") ? 404 : 500;
     return res.status(code).json({ success: false, message: error.message });
+  }
+};
+
+export const putPublicarResultados = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const resultado = await publicarResultados(id);
+    res.json(resultado);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
 

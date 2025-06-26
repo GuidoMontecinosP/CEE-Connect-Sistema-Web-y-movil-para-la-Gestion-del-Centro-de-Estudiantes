@@ -78,8 +78,7 @@ export const cerrarVotacion = async (votacionId) => {
     { 
       estado: "cerrada",
       fechaCierre: now,
-      resultadosPublicados: true,
-      fechaPublicacion: now
+    
     }
   );
 
@@ -164,6 +163,35 @@ export const obtenerParticipantes = async (votacionId) => {
     totalVotos,
     participantes
   };
+};
+
+export const publicarResultados = async (votacionId) => {
+  const votacion = await votacionRepo.findOneBy({ id: parseInt(votacionId) });
+  
+  if (!votacion) {
+    throw new Error("Votación no encontrada");
+  }
+
+  if (votacion.estado !== "cerrada") {
+    throw new Error("Solo se pueden publicar resultados de votaciones cerradas");
+  }
+
+  if (votacion.resultadosPublicados) {
+    throw new Error("Los resultados ya han sido publicados");
+  }
+
+  const now = new Date();
+
+  // Publicar resultados
+  await votacionRepo.update(
+    { id: votacionId },
+    { 
+      resultadosPublicados: true,
+      fechaPublicacion: now
+    }
+  );
+
+  return { mensaje: "Resultados publicados correctamente" };
 };
 
 
