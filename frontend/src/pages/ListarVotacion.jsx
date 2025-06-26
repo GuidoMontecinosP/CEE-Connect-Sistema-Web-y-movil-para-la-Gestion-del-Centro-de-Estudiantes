@@ -45,6 +45,7 @@ function ListarVotaciones() {
       }
       
       setVotaciones(votacionesData);
+      
 
       // Verificar qué votaciones ya votó el usuario
       if (usuarioId && votacionesData.length > 0) {
@@ -202,7 +203,7 @@ function ListarVotaciones() {
         setPublicandoResultados(null);
         
         // Recargar las votaciones para actualizar la vista
-        cargarVotaciones();
+        //cargarVotaciones();
       } catch (error) {
         console.error('Error al publicar resultados:', error);
         setPublicandoResultados(null);

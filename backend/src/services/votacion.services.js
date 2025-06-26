@@ -7,7 +7,7 @@ const opcionRepo = AppDataSource.getRepository("OpcionVotacion");
 const respuestaRepo = AppDataSource.getRepository("RespuestaVotacion");
 
 export const obtenerVotaciones = async () => {
-  return await votacionRepo.find({
+  const votaciones = await votacionRepo.find({
     relations: {
       opciones: true,
     },
@@ -15,8 +15,30 @@ export const obtenerVotaciones = async () => {
       fechaCreacion: "DESC",
     },
   });
-};
 
+  // Ordenar: activas primero, luego cerradas por fecha de cierre DESC, luego publicadas por fecha de publicación DESC
+  return votaciones.sort((a, b) => {
+ 
+    // 3. Si ambas están cerradas, separar por si están publicadas o no
+    if (a.estado === "cerrada" && b.estado === "cerrada") {
+      // Las no publicadas van antes que las publicadas
+      if (!a.resultadosPublicados && b.resultadosPublicados) return -1;
+      if (a.resultadosPublicados && !b.resultadosPublicados) return 1;
+      
+      // Si ambas tienen el mismo estado de publicación
+      if (!a.resultadosPublicados && !b.resultadosPublicados) {
+        // Ordenar cerradas no publicadas por fecha de cierre (más recientes primero)
+        return new Date(b.fechaCierre) - new Date(a.fechaCierre);
+      } else {
+        // Ordenar publicadas por fecha de publicación (más recientes primero)
+        return new Date(b.fechaPublicacion) - new Date(a.fechaPublicacion);
+      }
+    }
+    
+    // Fallback: ordenar por fecha de creación
+    return new Date(b.fechaCreacion) - new Date(a.fechaCreacion);
+  });
+};
 export const crearVotacion = async (data) => {
   const { titulo, opciones } = data;
 
