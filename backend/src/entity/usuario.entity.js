@@ -1,6 +1,8 @@
+
+"use strict";
 import { EntitySchema } from "typeorm";
 
-const UsuarioSchema = new EntitySchema({
+export const UsuarioSchema = new EntitySchema({
   name: "Usuario",
   tableName: "usuarios",
   columns: {
@@ -20,10 +22,33 @@ const UsuarioSchema = new EntitySchema({
     contrasena: {
       type: "text",
     },
-    rol: {
+    estado: {
       type: "varchar",
+      length: 15,
+      default: "activo",
+      nullable: false,
+    },
+    createdAt: {
+      type: "timestamp with time zone",
+      default: () => "CURRENT_TIMESTAMP",
+    },
+    updatedAt: {
+      type: "timestamp with time zone",
+      default: () => "CURRENT_TIMESTAMP",
+    },
+  },
+  relations: {
+    rol: {
+      type: "many-to-one",
+      target: "Rol",
+      joinColumn: {
+        name: "rolId",
+      },
+      onDelete: "CASCADE",
+      eager: true,
     },
   },
 });
+
 
 export default UsuarioSchema;

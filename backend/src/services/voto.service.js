@@ -38,10 +38,10 @@ export const emitirVoto = async ({ usuarioId, votacionId, opcionId }) => {
   }
 
   // Verificar si ya votó
-  const tokenExistente = await tokenRepo.findOne({
-    where: { 
-      usuario: { id: parseInt(usuarioId) }, 
-      votacion: { id: parseInt(votacionId) } 
+ const tokenExistente = await tokenRepo.findOne({
+    where: {
+      usuario: { id: parseInt(usuarioId) },
+      votacion: { id: parseInt(votacionId) }
     }
   });
 
@@ -49,25 +49,25 @@ export const emitirVoto = async ({ usuarioId, votacionId, opcionId }) => {
     throw new Error("El usuario ya ha votado en esta votación");
   }
 
-  // Generar token automáticamente
   const token = randomUUID();
   
-  // Guardar token
+  // Guardar token (sin yaVoto)
   await tokenRepo.save({
     token: token,
     usuario: { id: parseInt(usuarioId) },
-    votacion: { id: parseInt(votacionId) },
-    yaVoto: true, // Ya marca como votado directamente
+    votacion: { id: parseInt(votacionId) }
   });
 
-  // Registrar voto (solo con token)
+  // Registrar voto
   await respuestaRepo.save({
     tokenVotacion: token,
     opcion: { id: parseInt(opcionId) },
+    usuario: { id: parseInt(usuarioId) }
   });
 
   return { mensaje: "Voto registrado correctamente" };
 };
+
 
 export const verificarSiYaVoto = async (usuarioId, votacionId) => {
   const token = await tokenRepo.findOne({
@@ -78,6 +78,6 @@ export const verificarSiYaVoto = async (usuarioId, votacionId) => {
   });
 
   return {
-    yaVoto: !!token // Si existe token, ya votó
+    yaVoto: !!token 
   };
 };

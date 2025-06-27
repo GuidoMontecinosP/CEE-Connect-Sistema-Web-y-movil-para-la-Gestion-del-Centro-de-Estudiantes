@@ -18,11 +18,19 @@ const VotacionSchema = new EntitySchema({
       enum: ["activa", "cerrada"],
       default: "activa",
     },
+    resultadosPublicados: {
+      type: "boolean",
+      default: false,
+    },
     fechaCreacion: {
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP",
     },
     fechaCierre: {
+      type: "timestamp",
+      nullable: true,
+    },
+    fechaPublicacion: {
       type: "timestamp",
       nullable: true,
     },

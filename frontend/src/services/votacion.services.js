@@ -1,3 +1,4 @@
+
 import axios from './root.services.js';
 
 export const votacionService = {
@@ -20,7 +21,10 @@ export const votacionService = {
       });
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.mensaje || 'Error al crear votación');
+      const msg = error.response?.data?.errors?.[0] || 'Error desconocido';
+      // Opcional: loguearlo
+      throw new Error(msg);
+
     }
   },
 
@@ -51,6 +55,24 @@ export const votacionService = {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.mensaje || 'Error al obtener resultados');
+    }
+  }
+  // Obtener participantes de votación
+  , obtenerParticipantes: async (votacionId) => {
+    try {
+      const response = await axios.get(`/votacion/${votacionId}/participantes`);
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener participantes');
+    }
+  },
+  publicarResultados: async (votacionId) => {
+    try {
+      const response = await axios.put(`/votacion/${votacionId}/publicar-resultados`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al publicar resultados');
     }
   }
 };

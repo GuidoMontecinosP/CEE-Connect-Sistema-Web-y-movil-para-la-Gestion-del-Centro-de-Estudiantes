@@ -1,11 +1,13 @@
 import { AppDataSource } from "../config/configDb.js";
+import { Not, IsNull } from "typeorm";
+
 
 const votacionRepo = AppDataSource.getRepository("Votacion");
 const opcionRepo = AppDataSource.getRepository("OpcionVotacion");
 const respuestaRepo = AppDataSource.getRepository("RespuestaVotacion");
 
 export const obtenerVotaciones = async () => {
-  return await votacionRepo.find({
+  const votaciones = await votacionRepo.find({
     relations: {
       opciones: true,
     },
@@ -13,8 +15,30 @@ export const obtenerVotaciones = async () => {
       fechaCreacion: "DESC",
     },
   });
-};
 
+  // Ordenar: activas primero, luego cerradas por fecha de cierre DESC, luego publicadas por fecha de publicación DESC
+  return votaciones.sort((a, b) => {
+ 
+    // 3. Si ambas están cerradas, separar por si están publicadas o no
+    if (a.estado === "cerrada" && b.estado === "cerrada") {
+      // Las no publicadas van antes que las publicadas
+      if (!a.resultadosPublicados && b.resultadosPublicados) return -1;
+      if (a.resultadosPublicados && !b.resultadosPublicados) return 1;
+      
+      // Si ambas tienen el mismo estado de publicación
+      if (!a.resultadosPublicados && !b.resultadosPublicados) {
+        // Ordenar cerradas no publicadas por fecha de cierre (más recientes primero)
+        return new Date(b.fechaCierre) - new Date(a.fechaCierre);
+      } else {
+        // Ordenar publicadas por fecha de publicación (más recientes primero)
+        return new Date(b.fechaPublicacion) - new Date(a.fechaPublicacion);
+      }
+    }
+    
+    // Fallback: ordenar por fecha de creación
+    return new Date(b.fechaCreacion) - new Date(a.fechaCreacion);
+  });
+};
 export const crearVotacion = async (data) => {
   const { titulo, opciones } = data;
 
@@ -23,7 +47,7 @@ export const crearVotacion = async (data) => {
     throw new Error("Debe haber al menos 2 opciones para votar");
   }
 
-  // Opcional: Limitar máximo de opciones (ej: 10)
+  
   if (opciones.length > 10) {
     throw new Error("Máximo 10 opciones permitidas");
   }
@@ -68,21 +92,24 @@ export const cerrarVotacion = async (votacionId) => {
     throw new Error("La votación ya está cerrada");
   }
 
-  // Actualizar estado de votación
+  const now = new Date();
+
+  // Actualizar estado y publicar resultados
   await votacionRepo.update(
     { id: votacionId },
     { 
       estado: "cerrada",
-      fechaCierre: new Date()
+      fechaCierre: now,
+    
     }
   );
 
-  // Borrar todos los tokens de esta votación
+  // Borrar todos los tokens
   await AppDataSource.getRepository("TokenVotacion").delete({
     votacion: { id: votacionId }
   });
 
-  return { mensaje: "Votación cerrada correctamente" };
+  return { mensaje: "Votación cerrada y resultados publicados correctamente" };
 };
 
 export const obtenerResultados = async (votacionId) => {
@@ -116,8 +143,77 @@ export const obtenerResultados = async (votacionId) => {
     votacion: {
       id: votacion.id,
       titulo: votacion.titulo,
-      estado: votacion.estado
+      estado: votacion.estado,
+      resultadosPublicados: votacion.resultadosPublicados
     },
     resultados
   };
 };
+
+export const obtenerParticipantes = async (votacionId) => {
+  // 1) Validar existencia de la votación
+  const votacion = await votacionRepo.findOneBy({ id: votacionId });
+  if (!votacion) throw new Error("Votación no encontrada");
+
+  // 2) Obtener todas las respuestas con su usuario
+  const respuestas = await respuestaRepo.find({
+    where: { opcion: { votacion: { id: votacionId } } },
+    relations: { usuario: true },
+    order: { fechaVoto: "DESC" }
+  });
+
+  // 3) Formatear el array para el frontend
+  const participantes = respuestas.map(r => ({
+    usuario: {
+      id:     r.usuario?.id,
+      nombre: r.usuario?.nombre  || "Sin nombre",
+      correo: r.usuario?.correo  || "Sin correo"
+    },
+    fechaVoto: r.fechaVoto
+  }));
+
+  // 4) Total de votos (incluye todos)
+  const totalVotos = respuestas.length;
+
+  // 5) Devolver el paquete completo
+  return {
+    votacion: {
+      id:     votacion.id,
+      titulo: votacion.titulo,
+      estado: votacion.estado
+    },
+    totalVotos,
+    participantes
+  };
+};
+
+export const publicarResultados = async (votacionId) => {
+  const votacion = await votacionRepo.findOneBy({ id: parseInt(votacionId) });
+  
+  if (!votacion) {
+    throw new Error("Votación no encontrada");
+  }
+
+  if (votacion.estado !== "cerrada") {
+    throw new Error("Solo se pueden publicar resultados de votaciones cerradas");
+  }
+
+  if (votacion.resultadosPublicados) {
+    throw new Error("Los resultados ya han sido publicados");
+  }
+
+  const now = new Date();
+
+  // Publicar resultados
+  await votacionRepo.update(
+    { id: votacionId },
+    { 
+      resultadosPublicados: true,
+      fechaPublicacion: now
+    }
+  );
+
+  return { mensaje: "Resultados publicados correctamente" };
+};
+
+
