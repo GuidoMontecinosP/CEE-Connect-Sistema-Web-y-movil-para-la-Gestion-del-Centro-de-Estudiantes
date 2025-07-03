@@ -5,6 +5,8 @@ import authRoutes from "./auth.routes.js";
 
 import eventosRouter from "./eventos.routes.js";
 
+import sugerenciasRoutes from "./sugerencias.routes.js";
+
 import { NoticiasController } from "../controllers/noticias.controller.js";
 
 const router = Router();
@@ -20,4 +22,6 @@ router.use("/eventos", eventosRouter);
 
 router.get("/noticias", NoticiasController);
 
+
+router.use("/sugerencias", sugerenciasRoutes);
 export default router;
