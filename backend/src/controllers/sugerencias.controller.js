@@ -189,3 +189,69 @@ export async function obtenerMisSugerencias(req, res) {
     handleErrorServer(res, 500, "Error interno del servidor");
   }
 }
+
+export async function actualizarRespuestaAdmin(req, res) {
+  try {
+    const { id } = req.params;
+    const { respuesta, estado } = req.body;
+    const adminId = req.user.id;
+
+    const sugerenciaActualizada = await sugerenciasService.actualizarRespuestaAdmin(
+      parseInt(id),
+      respuesta,
+      estado,
+      adminId
+    );
+
+    handleSuccess(res, 200, "Respuesta actualizada exitosamente", sugerenciaActualizada);
+  } catch (error) {
+    console.error("Error al actualizar respuesta:", error);
+    if (error.message.includes("no encontrada") || error.message.includes("no tiene respuesta")) {
+      handleErrorClient(res, 404, error.message);
+    } else {
+      handleErrorServer(res, 500, "Error interno del servidor");
+    }
+  }
+}
+
+export async function eliminarRespuestaAdmin(req, res) {
+  try {
+    const { id } = req.params;
+
+    const sugerenciaActualizada = await sugerenciasService.eliminarRespuestaAdmin(parseInt(id));
+
+    handleSuccess(res, 200, "Respuesta eliminada exitosamente", sugerenciaActualizada);
+  } catch (error) {
+    console.error("Error al eliminar respuesta:", error);
+    if (error.message.includes("no encontrada") || error.message.includes("no tiene respuesta")) {
+      handleErrorClient(res, 404, error.message);
+    } else {
+      handleErrorServer(res, 500, "Error interno del servidor");
+    }
+  }
+}
+
+export async function cambiarEstadoSugerencia(req, res) {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    const adminId = req.user.id;
+
+    const sugerenciaActualizada = await sugerenciasService.cambiarEstadoSugerencia(
+      parseInt(id),
+      estado,
+      adminId
+    );
+
+    handleSuccess(res, 200, "Estado actualizado exitosamente", sugerenciaActualizada);
+  } catch (error) {
+    console.error("Error al cambiar estado:", error);
+    if (error.message.includes("no encontrada")) {
+      handleErrorClient(res, 404, error.message);
+    } else if (error.message.includes("Estado no válido")) {
+      handleErrorClient(res, 400, error.message);
+    } else {
+      handleErrorServer(res, 500, "Error interno del servidor");
+    }
+  }
+}

@@ -11,7 +11,10 @@ import {
   reportarSugerencia,
   responderSugerencia,
   obtenerSugerenciasReportadas,
-  obtenerMisSugerencias
+  obtenerMisSugerencias,
+  actualizarRespuestaAdmin,
+  eliminarRespuestaAdmin,
+  cambiarEstadoSugerencia
 } from "../controllers/sugerencias.controller.js";
 
 import { authenticateJwt } from "../middlewares/authentication.middleware.js";
@@ -23,7 +26,9 @@ import {
   validarResponderSugerencia,
   validarIdSugerencia,
   validarPaginacion,
-  validarFiltrosAdmin
+  validarFiltrosAdmin,
+  validarActualizarRespuesta,
+  validarCambiarEstado
 } from "../validations/sugerencias.validation.js";
 
 const router = Router();
@@ -104,6 +109,33 @@ router.get(
   isAdmin,
   validarFiltrosAdmin,
   obtenerSugerenciasReportadas
+);
+
+// Actualizar respuesta de administrador
+router.put(
+  "/:id/respuesta",
+  authenticateJwt,
+  isAdmin,
+  validarActualizarRespuesta,
+  actualizarRespuestaAdmin
+);
+
+// Eliminar respuesta de administrador
+router.delete(
+  "/:id/respuesta",
+  authenticateJwt,
+  isAdmin,
+  validarIdSugerencia,
+  eliminarRespuestaAdmin
+);
+
+// Cambiar estado de sugerencia
+router.patch(
+  "/:id/estado",
+  authenticateJwt,
+  isAdmin,
+  validarCambiarEstado,
+  cambiarEstadoSugerencia
 );
 
 export default router;

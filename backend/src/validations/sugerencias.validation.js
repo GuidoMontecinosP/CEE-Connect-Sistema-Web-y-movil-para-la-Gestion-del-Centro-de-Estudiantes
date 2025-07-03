@@ -164,4 +164,38 @@ export const validarFiltrosAdmin = [
   handleValidationErrors
 ];
 
+export const validarActualizarRespuesta = [
+  param("id")
+    .isInt({ min: 1 })
+    .withMessage("ID debe ser un número entero positivo"),
+  
+  body("respuesta")
+    .notEmpty()
+    .withMessage("La respuesta es obligatoria")
+    .isLength({ min: 10, max: 1000 })
+    .withMessage("La respuesta debe tener entre 10 y 1000 caracteres")
+    .trim(),
+  
+  body("estado")
+    .optional()
+    .isIn(ESTADOS_VALIDOS)
+    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+
+  handleValidationErrors
+];
+
+export const validarCambiarEstado = [
+  param("id")
+    .isInt({ min: 1 })
+    .withMessage("ID debe ser un número entero positivo"),
+  
+  body("estado")
+    .notEmpty()
+    .withMessage("El estado es obligatorio")
+    .isIn(ESTADOS_VALIDOS)
+    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+
+  handleValidationErrors
+];
+
 export { CATEGORIAS_VALIDAS, ESTADOS_VALIDOS };

@@ -240,6 +240,93 @@ class SugerenciasService {
       reportadas
     };
   }
+
+  async actualizarRespuestaAdmin(id, respuesta, estado, adminId) {
+    const sugerencia = await this.sugerenciaRepository.findOne({
+      where: { id },
+      relations: ["autor", "adminResponsable"]
+    });
+
+    if (!sugerencia) {
+      throw new Error("Sugerencia no encontrada");
+    }
+
+    if (!sugerencia.respuestaAdmin) {
+      throw new Error("Esta sugerencia no tiene respuesta para actualizar");
+    }
+
+    const admin = await this.usuarioRepository.findOne({
+      where: { id: adminId },
+      relations: ["rol"]
+    });
+
+    // Actualizar la respuesta
+    sugerencia.respuestaAdmin = respuesta;
+    
+    // Actualizar el estado si se proporciona
+    if (estado) {
+      sugerencia.estado = estado;
+    }
+    
+    sugerencia.fechaRespuesta = new Date();
+    sugerencia.adminResponsable = admin;
+    sugerencia.updatedAt = new Date();
+
+    return await this.sugerenciaRepository.save(sugerencia);
+  }
+
+  async eliminarRespuestaAdmin(id) {
+    const sugerencia = await this.sugerenciaRepository.findOne({
+      where: { id },
+      relations: ["autor", "adminResponsable"]
+    });
+
+    if (!sugerencia) {
+      throw new Error("Sugerencia no encontrada");
+    }
+
+    if (!sugerencia.respuestaAdmin) {
+      throw new Error("Esta sugerencia no tiene respuesta para eliminar");
+    }
+
+    // Limpiar la respuesta y datos relacionados
+    sugerencia.respuestaAdmin = null;
+    sugerencia.fechaRespuesta = null;
+    sugerencia.adminResponsable = null;
+    sugerencia.estado = "pendiente"; // Regresar a estado pendiente
+    sugerencia.updatedAt = new Date();
+
+    return await this.sugerenciaRepository.save(sugerencia);
+  }
+
+  async cambiarEstadoSugerencia(id, estado, adminId) {
+    const sugerencia = await this.sugerenciaRepository.findOne({
+      where: { id },
+      relations: ["autor", "adminResponsable"]
+    });
+
+    if (!sugerencia) {
+      throw new Error("Sugerencia no encontrada");
+    }
+
+    // Validar que el estado sea válido
+    const estadosValidos = ["pendiente", "en proceso", "resuelta", "archivada"];
+    if (!estadosValidos.includes(estado)) {
+      throw new Error("Estado no válido");
+    }
+
+    const admin = await this.usuarioRepository.findOne({
+      where: { id: adminId },
+      relations: ["rol"]
+    });
+
+    // Actualizar el estado
+    sugerencia.estado = estado;
+    sugerencia.adminResponsable = admin;
+    sugerencia.updatedAt = new Date();
+
+    return await this.sugerenciaRepository.save(sugerencia);
+  }
 }
 
 export const sugerenciasService = new SugerenciasService();
