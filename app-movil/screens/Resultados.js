@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback,useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -11,18 +11,23 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from '../services/api';
+import { AuthContext } from '../context/Authcontext';
 
 const { width } = Dimensions.get('window');
 
 export default function Resultados({ route }) {
-  const { id } = route.params;
+  const { votacionId } = route.params;
   const [resultados, setResultados] = useState(null);
   const [animatedValues, setAnimatedValues] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { usuario } = useContext(AuthContext);
+  
+
+const esAdministrador = usuario?.rol?.nombre === 'administrador'; 
 
   const fetchResultados = async () => {
     try {
-      const res = await axios.get(`/votacion/${id}/resultados`);
+const res = await axios.get(`/votacion/${votacionId}/resultados`);
       setResultados(res.data.data);
     } catch (err) {
       Alert.alert('Error', 'No se pudo cargar resultados');
@@ -31,19 +36,19 @@ export default function Resultados({ route }) {
 
   useEffect(() => {
     fetchResultados();
-  }, [id]);
+  }, [votacionId]);
 
   useFocusEffect(
     useCallback(() => {
       fetchResultados();
-    }, [id])
+    }, [votacionId])
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchResultados();
     setRefreshing(false);
-  }, [id]);
+  }, [votacionId]);
 
   useEffect(() => {
     if (!resultados) return;
@@ -72,6 +77,20 @@ export default function Resultados({ route }) {
       </View>
     );
   }
+  if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.restrictedContainer}>
+          <Text style={styles.restrictedEmoji}>🔒</Text>
+          <Text style={styles.restrictedTitle}>Resultados no disponibles</Text>
+          <Text style={styles.restrictedText}>
+            Los resultados aún no han sido publicados
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
 
   const totalVotos = resultados.resultados.reduce((sum, r) => sum + r.votos, 0);
   const maxVotos = Math.max(...resultados.resultados.map(r => r.votos));
@@ -397,4 +416,28 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontWeight: '500',
   },
+  restrictedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  restrictedEmoji: {
+    fontSize: 64,
+    marginBottom: 24,
+  },
+  restrictedTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  restrictedText: {
+    fontSize: 18,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 26,
+  },
+
 });

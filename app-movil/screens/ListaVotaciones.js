@@ -1,440 +1,670 @@
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
-import { useEffect, useState, useCallback, useContext } from 'react';
-import { AuthContext } from '../context/Authcontext.js';
-import { useFocusEffect } from '@react-navigation/native';
-import React from 'react';
-import axios from '../services/api.js';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
+  Dimensions,
+  StatusBar,
+} from 'react-native';
+import { votacionService } from '../services/votacion.services.js';
+import { votoService } from '../services/voto.services.js';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../context/Authcontext';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-export default function ListaVotaciones({ navigation }) {
+const { width } = Dimensions.get('window');
+
+const ListaVotaciones = () => {
   const [votaciones, setVotaciones] = useState([]);
-  const [estadoFiltro, setEstadoFiltro] = useState('todas');
-  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const{ usuario } = useContext(AuthContext);
-  const esAdmin = usuario?.rol?.nombre === 'admin' || usuario?.rol?.nombre === 'administrador';
+  const [filtroEstado, setFiltroEstado] = useState('activa');
+  const [cerrandoVotacion, setCerrandoVotacion] = useState(null);
+  const [publicandoResultados, setPublicandoResultados] = useState(null);
+  const [votosUsuario, setVotosUsuario] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
+  const { usuario } = useContext(AuthContext);
 
-  // Carga inicial
+  // Verificar roles del usuario
+  const esAdministrador = usuario?.rol?.nombre === 'administrador';
+  const esEstudiante = usuario?.rol?.nombre === 'estudiante';
+  const usuarioId = usuario?.id;
+
   useEffect(() => {
     cargarVotaciones();
   }, []);
 
-  // Refrescar cuando la pantalla recibe foco
-  useFocusEffect(
-    useCallback(() => {
-      // Solo refrescar si no es la primera carga
-      if (!loading) {
-        cargarVotaciones();
-      }
-    }, [loading])
-  );
-
   const cargarVotaciones = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get('/votacion');
-      setVotaciones(res.data.data);
+      const res = await votacionService.obtenerVotaciones();
+      let votacionesData = res.data;
+      
+      // Si no es administrador, mostrar votaciones activas y cerradas con resultados publicados
+      if (!esAdministrador) {
+        votacionesData = votacionesData.filter(votacion => 
+          votacion.estado === 'activa' || 
+          (votacion.estado === 'cerrada' && votacion.resultadosPublicados)
+        );
+      }
+      
+      setVotaciones(votacionesData);
+
+      // Verificar qué votaciones ya votó el usuario
+      if (usuarioId && votacionesData.length > 0) {
+        const votosStatus = {};
+        
+        // Crear promesas para verificar cada votación
+        const verificaciones = votacionesData.map(async (votacion) => {
+          try {
+            const yaVotoRes = await votoService.verificarSiYaVoto(usuarioId, votacion.id);
+            votosStatus[votacion.id] = yaVotoRes.data.yaVoto;
+          } catch (error) {
+            console.error(`Error verificando voto para votación ${votacion.id}:`, error);
+            votosStatus[votacion.id] = false;
+          }
+        });
+
+        await Promise.all(verificaciones);
+        setVotosUsuario(votosStatus);
+      }
+      
+      setLoading(false);
     } catch (err) {
-      console.error("Error al cargar votaciones", err);
-      Alert.alert('Error', 'No se pudieron cargar las votaciones');
-    } finally {
+      Alert.alert('Error', `Error al cargar votaciones: ${err.message}`);
       setLoading(false);
     }
   };
 
-  // Pull to refresh
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    try {
-      await cargarVotaciones();
-    } catch (error) {
-      console.error('Error al refrescar:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+    await cargarVotaciones();
+    setRefreshing(false);
+  };
 
-  const cerrarVotacion = useCallback((id) => {
+  const handleCerrarVotacion = async (votacion) => {
+    // Solo permitir cerrar votaciones si es administrador
+    if (!esAdministrador) {
+      Alert.alert('Error', 'No tienes permisos para cerrar votaciones');
+      return;
+    }
+
     Alert.alert(
-      "Confirmar cierre",
-      "¿Estás seguro de que deseas cerrar esta votación?",
+      '¿Cerrar votación?',
+      `Votación: ${votacion.titulo}\n\nEsta acción no se puede deshacer. Una vez cerrada, no se podrán registrar más votos.\n\nNota: Los resultados no se publicarán automáticamente. Podrás publicarlos cuando desees.`,
       [
-        { text: "Cancelar", style: "cancel" },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: "Cerrar",
-          style: "destructive",
+          text: 'Sí, cerrar',
+          style: 'destructive',
           onPress: async () => {
             try {
-              await axios.patch(`/votacion/${id}/cerrar`);
-              await cargarVotaciones();
-              Alert.alert('Éxito', 'Votación cerrada correctamente');
+              setCerrandoVotacion(votacion.id);
+
+              await votacionService.cerrarVotacion(votacion.id);
+
+              setVotaciones(prevVotaciones => 
+                prevVotaciones.map(v => 
+                  v.id === votacion.id 
+                    ? { ...v, estado: 'cerrada', resultadosPublicados: false }
+                    : v
+                )
+              );
+
+              Alert.alert(
+                '¡Votación cerrada!',
+                `La votación "${votacion.titulo}" ha sido cerrada exitosamente. Ahora puedes publicar los resultados cuando desees.`
+              );
+
+              setCerrandoVotacion(null);
             } catch (error) {
-              Alert.alert('Error', 'No se pudo cerrar la votación');
+              console.error('Error al cerrar votación:', error);
+              setCerrandoVotacion(null);
+              Alert.alert('Error', `No se pudo cerrar la votación "${votacion.titulo}"`);
             }
           }
         }
       ]
     );
-  }, []);
+  };
 
-  const votacionesFiltradas = votaciones
-    .filter(v => estadoFiltro === 'todas' || v.estado === estadoFiltro)
-    .sort((a, b) => {
-      if (a.estado === b.estado) return 0;
-      return a.estado === 'activa' ? -1 : 1;
-    });
+  const handlePublicarResultados = async (votacion) => {
+    // Solo permitir publicar si es administrador
+    if (!esAdministrador) {
+      Alert.alert('Error', 'No tienes permisos para publicar resultados');
+      return;
+    }
 
-  const renderItem = useCallback(({ item }) => (
-    <VotacionItem 
-      item={item} 
-      navigation={navigation} 
-      onCerrarVotacion={cerrarVotacion} 
-      esAdmin={esAdmin}
-    />
-  ), [navigation, cerrarVotacion]);
+    Alert.alert(
+      '¿Publicar resultados?',
+      `Votación: ${votacion.titulo}\n\nUna vez publicados, los resultados serán visibles para todos los usuarios.\n\nNota: Los estudiantes podrán ver los resultados de esta votación.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sí, publicar',
+          onPress: async () => {
+            try {
+              setPublicandoResultados(votacion.id);
 
-  const keyExtractor = useCallback((item) => item.id.toString(), []);
+              await votacionService.publicarResultados(votacion.id);
 
-  const getEstadoCount = (estado) => {
-    if (estado === 'todas') return votaciones.length;
-    return votaciones.filter(v => v.estado === estado).length;
+              // Actualizar el estado local
+              setVotaciones(prevVotaciones => 
+                prevVotaciones.map(v => 
+                  v.id === votacion.id 
+                    ? { ...v, resultadosPublicados: true }
+                    : v
+                )
+              );
+
+              Alert.alert(
+                '¡Resultados publicados!',
+                `Los resultados de "${votacion.titulo}" ahora son visibles para todos los usuarios.`
+              );
+
+              setPublicandoResultados(null);
+            } catch (error) {
+              console.error('Error al publicar resultados:', error);
+              setPublicandoResultados(null);
+              Alert.alert('Error', error.message || `No se pudieron publicar los resultados de "${votacion.titulo}"`);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const getEstadoInfo = (estado, resultadosPublicados) => {
+    if (estado === 'activa') {
+      return {
+        text: 'Activa',
+        color: '#52c41a',
+        icon: 'check-circle'
+      };
+    } else if (estado === 'cerrada') {
+      if (resultadosPublicados) {
+        return {
+          text: 'Publicada',
+          color: '#1890ff',
+          icon: 'bar-chart'
+        };
+      } else {
+        return {
+          text: 'Cerrada',
+          color: '#8c8c8c',
+          icon: 'stop'
+        };
+      }
+    }
+    
+    return {
+      text: estado,
+      color: '#8c8c8c',
+      icon: 'help'
+    };
+  };
+
+  // Opciones de filtro disponibles según el rol del usuario
+  const getFiltroOptions = () => {
+    if (esAdministrador) {
+      return [
+        { label: 'Activas', value: 'activa', icon: 'check-circle', color: '#52c41a' },
+        { label: 'Cerradas', value: 'cerrada', icon: 'stop', color: '#8c8c8c' },
+        { label: 'Todas', value: 'todas', icon: 'filter-list', color: '#1e3a8a' }
+      ];
+    } else {
+      return [
+        { label: 'Activas', value: 'activa', icon: 'check-circle', color: '#52c41a' },
+        { label: 'Publicadas', value: 'publicadas', icon: 'bar-chart', color: '#1890ff' },
+        { label: 'Todas', value: 'todas', icon: 'filter-list', color: '#1e3a8a' }
+      ];
+    }
+  };
+
+  const filtroOptions = getFiltroOptions();
+
+  // Filtrar votaciones
+  const votacionesFiltradas = () => {
+    if (filtroEstado === 'todas') {
+      return votaciones;
+    } else if (filtroEstado === 'activa') {
+      return votaciones.filter(votacion => votacion.estado === 'activa');
+    } else if (filtroEstado === 'cerrada') {
+      return votaciones.filter(votacion => votacion.estado === 'cerrada');
+    } else if (filtroEstado === 'publicadas') {
+      return votaciones.filter(votacion => votacion.estado === 'cerrada' && votacion.resultadosPublicados);
+    }
+    return votaciones;
+  };
+
+  const renderVotacionCard = (votacion) => {
+    const yaVoto = votosUsuario[votacion.id];
+    const estadoInfo = getEstadoInfo(votacion.estado, votacion.resultadosPublicados);
+
+    return (
+      <View key={votacion.id} style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {votacion.titulo}
+          </Text>
+          <View style={[styles.badge, { backgroundColor: estadoInfo.color }]}>
+            <Icon name={estadoInfo.icon} size={16} color="#fff" />
+            <Text style={styles.badgeText}>{estadoInfo.text}</Text>
+          </View>
+        </View>
+
+        <View style={styles.cardActions}>
+          {esEstudiante ? (
+            // Botones para estudiantes
+            <>
+              {votacion.estado === 'activa' && (
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    yaVoto ? styles.buttonDisabled : styles.buttonPrimary
+                  ]}
+                  onPress={() => {
+                    if (!yaVoto) {
+                      navigation.navigate('Votar', { votacionId: votacion.id });
+                    }
+                  }}
+                  disabled={yaVoto}
+                >
+                  <Icon 
+                    name={yaVoto ? 'check' : 'check-circle'} 
+                    size={20} 
+                    color={yaVoto ? '#666' : '#fff'} 
+                  />
+                  <Text style={[styles.buttonText, yaVoto && styles.buttonTextDisabled]}>
+                    {yaVoto ? 'Votaste' : 'Votar'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {votacion.estado === 'cerrada' && votacion.resultadosPublicados && (
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={() => navigation.navigate('Resultados', { votacionId: votacion.id })}
+                >
+                  <Icon name="bar-chart" size={20} color="#fff" />
+                  <Text style={styles.buttonText}>Ver Resultados</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            // Botones para administradores
+            <>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonOutline, styles.buttonHalf]}
+                  onPress={() => navigation.navigate('Detalle', { votacionId: votacion.id })}
+                >
+                  <Icon name="visibility" size={18} color="#1e3a8a" />
+                  <Text style={[styles.buttonText, styles.buttonTextOutline]}>Ver Detalle</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary, styles.buttonHalf]}
+                  onPress={() => navigation.navigate('Resultados', { votacionId: votacion.id })}
+                >
+                  <Icon name="bar-chart" size={18} color="#64748b" />
+                  <Text style={[styles.buttonText, styles.buttonTextSecondary]}>Resultados</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.buttonHalf,
+                    votacion.estado === 'activa' && !yaVoto ? styles.buttonPrimary : styles.buttonDisabled
+                  ]}
+                  onPress={() => {
+                    if (votacion.estado === 'activa' && !yaVoto) {
+                      navigation.navigate('Votar', { votacionId: votacion.id });
+                    }
+                  }}
+                  disabled={yaVoto || votacion.estado === 'cerrada'}
+                >
+                  <Icon 
+                    name={yaVoto ? 'check' : 'check-circle'} 
+                    size={18} 
+                    color={votacion.estado === 'activa' && !yaVoto ? '#fff' : '#666'} 
+                  />
+                  <Text style={[
+                    styles.buttonText,
+                    votacion.estado === 'activa' && !yaVoto ? {} : styles.buttonTextDisabled
+                  ]}>
+                    {yaVoto ? 'Votaste' : 'Votar'}
+                  </Text>
+                </TouchableOpacity>
+                
+                {votacion.estado === 'activa' && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonDanger, styles.buttonHalf]}
+                    onPress={() => handleCerrarVotacion(votacion)}
+                    disabled={cerrandoVotacion === votacion.id}
+                  >
+                    {cerrandoVotacion === votacion.id ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Icon name="stop" size={18} color="#fff" />
+                    )}
+                    <Text style={styles.buttonText}>
+                      {cerrandoVotacion === votacion.id ? 'Cerrando...' : 'Cerrar'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {votacion.estado === 'cerrada' && !votacion.resultadosPublicados && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonSuccess, styles.buttonHalf]}
+                    onPress={() => handlePublicarResultados(votacion)}
+                    disabled={publicandoResultados === votacion.id}
+                  >
+                    {publicandoResultados === votacion.id ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Icon name="send" size={18} color="#fff" />
+                    )}
+                    <Text style={styles.buttonText}>
+                      {publicandoResultados === votacion.id ? 'Publicando...' : 'Publicar'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {votacion.estado === 'cerrada' && votacion.resultadosPublicados && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonDisabled, styles.buttonHalf]}
+                    disabled={true}
+                  >
+                    <Icon name="check" size={18} color="#666" />
+                    <Text style={styles.buttonTextDisabled}>Publicada</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
+        </View>
+      </View>
+    );
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header con botón de crear */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>🗳️ Votaciones Disponibles</Text>
-        
-       {esAdmin && (
-  <TouchableOpacity 
-    style={styles.createButton}
-    onPress={() => navigation.navigate('CrearVotacion')}
-  >
-    <Text style={styles.createButtonText}>+ Nueva</Text>
-  </TouchableOpacity>
-)}
-      </View>
-
-      {/* Filtros con contadores */}
-      <View style={styles.filterRow}>
-    {(esAdmin ? ['todas', 'activa', 'cerrada'] : ['activa']).map((estado) => (
-          <TouchableOpacity
-            key={estado}
-            style={[
-              styles.filterButton,
-              estadoFiltro === estado && styles.activeFilterButton
-            ]}
-            onPress={() => setEstadoFiltro(estado)}
-          >
-            <Text style={[
-              styles.filterText,
-              estadoFiltro === estado && styles.activeFilterText
-            ]}>
-              {estado === 'todas' ? 'Todas' : estado.charAt(0).toUpperCase() + estado.slice(1)}
-              {' '}({getEstadoCount(estado)})
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <FlatList
-        data={votacionesFiltradas}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        updateCellsBatchingPeriod={50}
-        initialNumToRender={10}
-        windowSize={10}
-        getItemLayout={(data, index) => (
-          { length: 120, offset: 120 * index, index }
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#1e3a8a']} // Android
-            tintColor={'#1e3a8a'}  // iOS
-            title="Actualizando votaciones..."
-            titleColor={'#1e3a8a'}
-          />
-        }
-       ListEmptyComponent={() => (
-  <View style={styles.emptyContainer}>
-    <Text style={styles.emptyText}>📭</Text>
-    <Text style={styles.emptyTitle}>No hay votaciones</Text>
-    <Text style={styles.emptySubtitle}>
-      {estadoFiltro === 'todas' 
-        ? 'Aún no se han creado votaciones' 
-        : `No hay votaciones ${estadoFiltro}s`}
-    </Text>
-
-    {esAdmin && (
-      <TouchableOpacity 
-        style={styles.emptyCreateButton}
-        onPress={() => navigation.navigate('CrearVotacion')}
-      >
-        <Text style={styles.emptyCreateButtonText}>➕ Crear primera votación</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-)}
-      />
-
-      {/* Botón flotante para crear votación */}
-      {esAdmin && (
-  <TouchableOpacity 
-    style={styles.floatingButton}
-    onPress={() => navigation.navigate('CrearVotacion')}
-  >
-    <Text style={styles.floatingButtonText}>+</Text>
-  </TouchableOpacity>
-)}
-    </View>
-  );
-}
-
-// Componente separado y optimizado para cada item
-const VotacionItem = React.memo(({ item, navigation, onCerrarVotacion,esAdmin }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.title}>{item.titulo}</Text>
-      <View style={[
-        styles.statusBadge,
-        item.estado === 'activa' ? styles.activeBadge : styles.closedBadge
-      ]}>
-        <Text style={[
-          styles.statusText,
-          item.estado === 'activa' ? styles.activeText : styles.closedText
-        ]}>
-          {item.estado === 'activa' ? '🟢 Activa' : '🔴 Cerrada'}
-        </Text>
-      </View>
-    </View>
-    
-    <View style={styles.actions}>
-      {item.estado === 'activa' && (
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Votar', { id: item.id })}
-        >
-          <Text style={styles.primaryAction}>🗳️ Emitir Voto</Text>
-        </TouchableOpacity>
-      )}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
       
-     {esAdmin && (
-  <>
-    <TouchableOpacity 
-      style={styles.actionButton}
-      onPress={() => navigation.navigate('Resultados', { id: item.id })}
-    >
-      <Text style={styles.secondaryAction}>📊 Ver Resultados</Text>
-    </TouchableOpacity>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Listado de Votaciones</Text>
+          <Text style={styles.subtitle}>
+            {esAdministrador 
+              ? 'Gestiona y monitorea todas las votaciones del sistema'
+              : 'Consulta las votaciones activas y resultados publicados'
+            }
+          </Text>
+        </View>
+        {esAdministrador && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('CrearVotacion')}
+          >
+            <Icon name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+      </View>
 
-    <TouchableOpacity 
-      style={styles.actionButton}
-      onPress={() => navigation.navigate('Detalle', { id: item.id })}
-    >
-      <Text style={styles.secondaryAction}>🔍 Ver Detalle</Text>
-    </TouchableOpacity>
-  </>
-)}
-     {esAdmin && item.estado === 'activa' && (
-  <TouchableOpacity 
-    style={styles.actionButton}
-    onPress={() => onCerrarVotacion(item.id)}
-  >
-    <Text style={styles.dangerAction}>❌ Cerrar Votación</Text>
-  </TouchableOpacity>
-)}
-    </View>
-  </View>
-));
+      {/* Filtros */}
+      <View style={styles.filtersContainer}>
+        <View style={styles.filtersHeader}>
+          <Icon name="filter-list" size={20} color="#1e3a8a" />
+          <Text style={styles.filtersTitle}>Filtrar por Estado</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+          {filtroOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.filterButton,
+                filtroEstado === option.value && styles.filterButtonActive
+              ]}
+              onPress={() => setFiltroEstado(option.value)}
+            >
+              <Icon 
+                name={option.icon} 
+                size={16} 
+                color={filtroEstado === option.value ? '#fff' : option.color} 
+              />
+              <Text style={[
+                styles.filterButtonText,
+                filtroEstado === option.value && styles.filterButtonTextActive
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Lista de votaciones */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text style={styles.loadingText}>Cargando votaciones...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        >
+          {votacionesFiltradas().map(renderVotacionCard)}
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#1e3a8a',
+    backgroundColor: '#1e3a8a',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerContent: {
     flex: 1,
   },
-  createButton: {
-    backgroundColor: '#1e3a8a',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  createButtonText: {
-    color: '#fff',
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    fontSize: 14,
+    color: '#fff',
+    marginBottom: 4,
   },
-  filterRow: {
+  subtitle: {
+    fontSize: 14,
+    color: '#cbd5e1',
+    lineHeight: 20,
+  },
+  addButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    padding: 8,
+    marginLeft: 16,
+  },
+  filtersContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  filtersHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  filtersTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e3a8a',
+    marginLeft: 8,
+  },
+  filtersScroll: {
+    flexGrow: 0,
   },
   filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 20,
-    minWidth: 80,
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#fff',
   },
-  activeFilterButton: {
+  filterButtonActive: {
     backgroundColor: '#1e3a8a',
+    borderColor: '#1e3a8a',
   },
-  filterText: {
-    fontSize: 12,
-    color: '#374151',
+  filterButtonText: {
+    fontSize: 14,
     fontWeight: '500',
+    color: '#64748b',
+    marginLeft: 6,
   },
-  activeFilterText: {
+  filterButtonTextActive: {
     color: '#fff',
-    fontWeight: 'bold',
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
   card: {
     backgroundColor: '#fff',
-    padding: 20,
     borderRadius: 12,
-    marginBottom: 16,
-    elevation: 2,
+    padding: 20,
+    marginVertical: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
-  title: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: '#1e3a8a',
     flex: 1,
     marginRight: 12,
   },
-  statusBadge: {
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    minWidth: 80,
-    alignItems: 'center',
   },
-  activeBadge: {
-    backgroundColor: '#dcfce7',
-  },
-  closedBadge: {
-    backgroundColor: '#fef2f2',
-  },
-  statusText: {
+  badgeText: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#fff',
+    marginLeft: 4,
   },
-  activeText: {
-    color: '#166534',
-  },
-  closedText: {
-    color: '#991b1b',
-  },
-  actions: {
+  cardActions: {
     gap: 8,
   },
-  actionButton: {
-    paddingVertical: 2,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  primaryAction: {
-    fontSize: 16,
-    color: '#1e3a8a',
-    fontWeight: '600',
-  },
-  secondaryAction: {
-    fontSize: 16,
-    color: '#2563eb',
-    fontWeight: '500',
-  },
-  dangerAction: {
-    fontSize: 16,
-    color: '#dc2626',
-    fontWeight: '500',
-  },
-  emptyContainer: {
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  emptyCreateButton: {
-    backgroundColor: '#1e3a8a',
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 25,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    borderRadius: 8,
+    gap: 8,
   },
-  emptyCreateButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+  buttonHalf: {
+    flex: 1,
   },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  buttonPrimary: {
     backgroundColor: '#1e3a8a',
+  },
+  buttonSecondary: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#64748b',
+  },
+  buttonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
+  },
+  buttonDanger: {
+    backgroundColor: '#dc3545',
+  },
+  buttonSuccess: {
+    backgroundColor: '#28a745',
+  },
+  buttonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#d9d9d9',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  buttonTextOutline: {
+    color: '#1e3a8a',
+  },
+  buttonTextSecondary: {
+    color: '#64748b',
+  },
+  buttonTextDisabled: {
+    color: '#666',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    paddingVertical: 40,
   },
-  floatingButtonText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
+  loadingText: {
+    fontSize: 16,
+    color: '#64748b',
+    marginTop: 12,
+  },
+  bottomPadding: {
+    height: 20,
   },
 });
+
+export default ListaVotaciones;

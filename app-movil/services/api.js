@@ -53,17 +53,17 @@ instance.interceptors.request.use(
 //   }
 // );
 
-// Función de prueba - agrégala temporalmente
-export const testConnection = async () => {
-  try {
-    console.log('🔍 Testing connection...');
-    const response = await instance.get('/'); // Prueba la raíz primero
-    console.log('🔍 Root connection successful');
-    return response;
-  } catch (error) {
-    console.error('🔍 Test connection failed:', error.message);
-    throw error;
-  }
-};
+// Función de prueba - 
+// export const testConnection = async () => {
+//   try {
+//     console.log('🔍 Testing connection...');
+//     const response = await instance.get('/'); // Prueba la raíz primero
+//     console.log('🔍 Root connection successful');
+//     return response;
+//   } catch (error) {
+//     console.error('🔍 Test connection failed:', error.message);
+//     throw error;
+//   }
+// };
 
 export default instance; 
