@@ -48,7 +48,7 @@ export async function loginService(user) {
     const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, {
       expiresIn: "1d",
     });
-
+    
     const { contrasena, ...userWithoutPassword } = userFound;
 
     return [{ token: accessToken, user: userWithoutPassword }, null];

@@ -1,12 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, Button, StyleSheet } from 'react-native';
+import { AuthContext } from '../context/Authcontext'; // 
 
 export default function HomeScreen() {
+  const { logout } = useContext(AuthContext);
+
   return (
     <View style={styles.container}>
       <View style={styles.titleBox}>
         <Text style={styles.title}>Noticias UBB</Text>
         <Text style={styles.subtitle}>Explora las últimas novedades de la universidad</Text>
+      </View>
+
+      <View style={{ marginTop: 30 }}>
+        <Button title="Cerrar sesión" onPress={logout} color="#dc2626" />
       </View>
     </View>
   );

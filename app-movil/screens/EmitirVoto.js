@@ -1,12 +1,13 @@
 import { View, Text, Button, TextInput } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
+import { AuthContext } from '../context/Authcontext.js';
 import axios from '../services/api.js';
 
 export default function EmitirVoto({ route }) {
   const { id } = route.params;
   const [votacion, setVotacion] = useState(null);
   const [opcionId, setOpcionId] = useState(null);
-  const [usuarioId, setUsuarioId] = useState('');
+  const { usuario } = useContext(AuthContext);
 
   useEffect(() => {
     axios.get(`/votacion/${id}`).then(res => setVotacion(res.data.data));
@@ -15,7 +16,7 @@ export default function EmitirVoto({ route }) {
   const votar = async () => {
     try {
       await axios.post(`/votacion/${id}/votar`, {
-        usuarioId: Number(usuarioId),
+        usuarioId: usuario.id, 
         opcionId
       });
       alert('Voto registrado');
@@ -29,13 +30,11 @@ export default function EmitirVoto({ route }) {
   return (
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 20 }}>{votacion.titulo}</Text>
-      <TextInput
-        placeholder="ID de usuario"
-        keyboardType="numeric"
-        value={usuarioId}
-        onChangeText={setUsuarioId}
-        style={{ marginVertical: 10, borderBottomWidth: 1 }}
-      />
+      
+      {/* Mostrar información del usuario */}
+      <Text style={{ marginVertical: 10, fontSize: 16 }}>
+        Votante: {usuario.nombre}
+      </Text>
 
       {votacion.opciones.map(op => (
         <Button
@@ -46,7 +45,7 @@ export default function EmitirVoto({ route }) {
         />
       ))}
 
-      <Button title="Votar" onPress={votar} disabled={!opcionId || !usuarioId} />
+      <Button title="Votar" onPress={votar} disabled={!opcionId} />
     </View>
   );
 }

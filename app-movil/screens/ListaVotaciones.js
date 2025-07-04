@@ -1,5 +1,6 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useContext } from 'react';
+import { AuthContext } from '../context/Authcontext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
 import axios from '../services/api.js';
@@ -9,6 +10,8 @@ export default function ListaVotaciones({ navigation }) {
   const [estadoFiltro, setEstadoFiltro] = useState('todas');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const{ usuario } = useContext(AuthContext);
+  const esAdmin = usuario?.rol?.nombre === 'admin' || usuario?.rol?.nombre === 'administrador';
 
   // Carga inicial
   useEffect(() => {
@@ -84,6 +87,7 @@ export default function ListaVotaciones({ navigation }) {
       item={item} 
       navigation={navigation} 
       onCerrarVotacion={cerrarVotacion} 
+      esAdmin={esAdmin}
     />
   ), [navigation, cerrarVotacion]);
 
@@ -99,17 +103,20 @@ export default function ListaVotaciones({ navigation }) {
       {/* Header con botón de crear */}
       <View style={styles.headerContainer}>
         <Text style={styles.header}>🗳️ Votaciones Disponibles</Text>
-        <TouchableOpacity 
-          style={styles.createButton}
-          onPress={() => navigation.navigate('CrearVotacion')}
-        >
-          <Text style={styles.createButtonText}>+ Nueva</Text>
-        </TouchableOpacity>
+        
+       {esAdmin && (
+  <TouchableOpacity 
+    style={styles.createButton}
+    onPress={() => navigation.navigate('CrearVotacion')}
+  >
+    <Text style={styles.createButtonText}>+ Nueva</Text>
+  </TouchableOpacity>
+)}
       </View>
 
       {/* Filtros con contadores */}
       <View style={styles.filterRow}>
-        {['todas', 'activa', 'cerrada'].map((estado) => (
+    {(esAdmin ? ['todas', 'activa', 'cerrada'] : ['activa']).map((estado) => (
           <TouchableOpacity
             key={estado}
             style={[
@@ -152,38 +159,43 @@ export default function ListaVotaciones({ navigation }) {
             titleColor={'#1e3a8a'}
           />
         }
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>📭</Text>
-            <Text style={styles.emptyTitle}>No hay votaciones</Text>
-            <Text style={styles.emptySubtitle}>
-              {estadoFiltro === 'todas' 
-                ? 'Aún no se han creado votaciones' 
-                : `No hay votaciones ${estadoFiltro}s`}
-            </Text>
-            <TouchableOpacity 
-              style={styles.emptyCreateButton}
-              onPress={() => navigation.navigate('CrearVotacion')}
-            >
-              <Text style={styles.emptyCreateButtonText}>➕ Crear primera votación</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+       ListEmptyComponent={() => (
+  <View style={styles.emptyContainer}>
+    <Text style={styles.emptyText}>📭</Text>
+    <Text style={styles.emptyTitle}>No hay votaciones</Text>
+    <Text style={styles.emptySubtitle}>
+      {estadoFiltro === 'todas' 
+        ? 'Aún no se han creado votaciones' 
+        : `No hay votaciones ${estadoFiltro}s`}
+    </Text>
+
+    {esAdmin && (
+      <TouchableOpacity 
+        style={styles.emptyCreateButton}
+        onPress={() => navigation.navigate('CrearVotacion')}
+      >
+        <Text style={styles.emptyCreateButtonText}>➕ Crear primera votación</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+)}
       />
 
       {/* Botón flotante para crear votación */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={() => navigation.navigate('CrearVotacion')}
-      >
-        <Text style={styles.floatingButtonText}>+</Text>
-      </TouchableOpacity>
+      {esAdmin && (
+  <TouchableOpacity 
+    style={styles.floatingButton}
+    onPress={() => navigation.navigate('CrearVotacion')}
+  >
+    <Text style={styles.floatingButtonText}>+</Text>
+  </TouchableOpacity>
+)}
     </View>
   );
 }
 
 // Componente separado y optimizado para cada item
-const VotacionItem = React.memo(({ item, navigation, onCerrarVotacion }) => (
+const VotacionItem = React.memo(({ item, navigation, onCerrarVotacion,esAdmin }) => (
   <View style={styles.card}>
     <View style={styles.cardHeader}>
       <Text style={styles.title}>{item.titulo}</Text>
@@ -210,28 +222,31 @@ const VotacionItem = React.memo(({ item, navigation, onCerrarVotacion }) => (
         </TouchableOpacity>
       )}
       
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={() => navigation.navigate('Resultados', { id: item.id })}
-      >
-        <Text style={styles.secondaryAction}>📊 Ver Resultados</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={() => navigation.navigate('Detalle', { id: item.id })}
-      >
-        <Text style={styles.secondaryAction}>🔍 Ver Detalle</Text>
-      </TouchableOpacity>
+     {esAdmin && (
+  <>
+    <TouchableOpacity 
+      style={styles.actionButton}
+      onPress={() => navigation.navigate('Resultados', { id: item.id })}
+    >
+      <Text style={styles.secondaryAction}>📊 Ver Resultados</Text>
+    </TouchableOpacity>
 
-      {item.estado === 'activa' && (
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => onCerrarVotacion(item.id)}
-        >
-          <Text style={styles.dangerAction}>❌ Cerrar Votación</Text>
-        </TouchableOpacity>
-      )}
+    <TouchableOpacity 
+      style={styles.actionButton}
+      onPress={() => navigation.navigate('Detalle', { id: item.id })}
+    >
+      <Text style={styles.secondaryAction}>🔍 Ver Detalle</Text>
+    </TouchableOpacity>
+  </>
+)}
+     {esAdmin && item.estado === 'activa' && (
+  <TouchableOpacity 
+    style={styles.actionButton}
+    onPress={() => onCerrarVotacion(item.id)}
+  >
+    <Text style={styles.dangerAction}>❌ Cerrar Votación</Text>
+  </TouchableOpacity>
+)}
     </View>
   </View>
 ));
@@ -417,7 +432,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-  floatingButton: {
+  floatingButtonText: {
     fontSize: 24,
     color: '#fff',
     fontWeight: 'bold',

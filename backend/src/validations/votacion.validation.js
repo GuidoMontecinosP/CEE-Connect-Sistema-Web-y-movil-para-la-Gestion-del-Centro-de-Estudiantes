@@ -29,7 +29,6 @@ opciones: Joi.array()
       .required()
       .messages({
         "string.empty": "El texto de la opción no puede estar vacío.",
-        "string.min": "El texto de la opción debe tener al menos 1 caracter.",
         "string.max": "El texto de la opción no puede exceder 100 caracteres.",
         "string.pattern.base": "El texto de la opción contiene caracteres no permitidos.",
         "any.required": "El texto de la opción es obligatorio.",
@@ -45,6 +44,7 @@ opciones: Joi.array()
     "array.min": "Debe haber al menos 2 opciones.",
     "array.max": "No puede haber más de 10 opciones.",
     "any.required": "Las opciones son obligatorias.",
+    
   }),
 
 });
