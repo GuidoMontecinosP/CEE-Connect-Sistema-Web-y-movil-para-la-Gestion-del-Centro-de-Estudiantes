@@ -19,9 +19,9 @@ export default function LoginScreen() {
     try {
       const { token, user } = await loginRequest(correo, password);
       login(token, user);
-      Alert.alert('Bienvenido', user.rol.nombre);
+      Alert.alert('Bienvenido a CEE Connect', user.rol.nombre);
     } catch (err) {
-      console.log('🛑 Error en login:', err);
+    //  console.log('🛑 Error en login:', err);
       Alert.alert('Error', err.message);
     }
   };
@@ -31,14 +31,14 @@ export default function LoginScreen() {
       <Text style={styles.title}>Bienvenido a CEE Connect</Text>
 
       <TextInput
-        placeholder="Correo institucional"
+        placeholder="Ingrese su correo institucional"
         value={correo}
         onChangeText={setCorreo}
         autoCapitalize="none"
         style={styles.input}
       />
       <TextInput
-        placeholder="Contraseña"
+        placeholder="Ingrese su contraseña"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -46,7 +46,7 @@ export default function LoginScreen() {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
+        <Text style={styles.buttonText}>Ingresar</Text>
       </TouchableOpacity>
     </View>
   );

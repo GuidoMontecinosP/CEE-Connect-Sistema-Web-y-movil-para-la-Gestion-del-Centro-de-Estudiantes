@@ -11,7 +11,8 @@ export const login = async (correo, password) => {
 
     return { token, user };
   } catch (error) {
-    const msg = error.response?.data?.message || 'Error al iniciar sesión';
+    
+    const msg = error.response?.data?.details;
     throw new Error(msg);
   }
 };

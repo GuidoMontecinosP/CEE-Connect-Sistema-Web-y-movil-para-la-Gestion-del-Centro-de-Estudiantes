@@ -30,7 +30,7 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
 const res = await axios.get(`/votacion/${votacionId}/resultados`);
       setResultados(res.data.data);
     } catch (err) {
-      Alert.alert('Error', 'No se pudo cargar resultados');
+      Alert.alert('Error', 'No se pudo cargar los resultados');
     }
   };
 
@@ -77,19 +77,27 @@ const res = await axios.get(`/votacion/${votacionId}/resultados`);
       </View>
     );
   }
-  if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.restrictedContainer}>
-          <Text style={styles.restrictedEmoji}>🔒</Text>
-          <Text style={styles.restrictedTitle}>Resultados no disponibles</Text>
-          <Text style={styles.restrictedText}>
-            Los resultados aún no han sido publicados
-          </Text>
-        </View>
+if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.restrictedContainer}>
+        <Text style={styles.restrictedEmoji}>🔒</Text>
+        <Text style={styles.restrictedTitle}>Resultados no disponibles</Text>
+        <Text style={styles.restrictedText}>
+          Los resultados aún no han sido publicados
+        </Text>
+        
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.navigate('ListaVotaciones')}
+        >
+          <Text style={styles.backButtonText}>Ver todas las votaciones</Text>
+        </TouchableOpacity>
       </View>
-    );
-  }
+    </View>
+  );
+}
+
 
 
   const totalVotos = resultados.resultados.reduce((sum, r) => sum + r.votos, 0);
@@ -440,4 +448,24 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
 
+
+
+  backButton: {
+  backgroundColor: '#3b82f6',
+  paddingHorizontal: 24,
+  paddingVertical: 14,
+  borderRadius: 12,
+  marginTop: 24,
+  alignItems: 'center',
+  elevation: 2,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
+backButtonText: {
+  color: '#ffffff',
+  fontSize: 16,
+  fontWeight: '600',
+},
 });

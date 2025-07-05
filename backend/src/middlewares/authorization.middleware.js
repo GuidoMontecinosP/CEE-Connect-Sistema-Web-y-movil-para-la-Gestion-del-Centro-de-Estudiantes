@@ -7,7 +7,7 @@ import {
 export async function isAdmin(req, res, next) {
   try {
     const rol = req.user?.rol;
-    console.log("Rol del usuario:", rol);
+    //console.log("Rol del usuario:", rol);
 
     if (!rol || !rol.isAdmin) {
       return handleErrorClient(

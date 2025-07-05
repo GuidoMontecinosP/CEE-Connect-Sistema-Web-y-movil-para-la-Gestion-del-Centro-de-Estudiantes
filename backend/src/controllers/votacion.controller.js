@@ -29,13 +29,13 @@ export const getVotaciones = async (req, res) => {
 };
 
 export const createVotacion = async (req, res) => {
-  console.log('Datos recibidos:', req.body); // Para depuración, ver qué datos se reciben
+  //console.log('Datos recibidos:', req.body); // Para depuración, ver qué datos se reciben
   try {
     // VALIDAR datos con Joi
     const { error, value } = crearVotacionValidation.validate(req.body);
     
     if (error) {
-      console.log('Errores de validación:', error.details);
+    //  console.log('Errores de validación:', error.details);
       return res.status(400).json({
         success: false,
         message: "Datos de entrada inválidos",
