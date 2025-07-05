@@ -9,7 +9,6 @@ import {
   obtenerSugerenciaPorId,
   actualizarSugerencia,
   eliminarSugerencia,
-  reportarSugerencia,
   responderSugerencia,
   obtenerSugerenciasReportadas,
   obtenerMisSugerencias,
@@ -79,13 +78,6 @@ router.delete(
   eliminarSugerencia
 );
 
-// Reportar una sugerencia
-router.post(
-  "/:id/reportar",
-  authenticateJwt,
-  validarIdSugerencia,
-  reportarSugerencia
-);
 
 // Obtener mis sugerencias
 router.get(

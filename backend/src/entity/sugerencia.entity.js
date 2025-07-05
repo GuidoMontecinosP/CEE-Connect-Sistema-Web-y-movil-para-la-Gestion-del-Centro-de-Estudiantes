@@ -42,11 +42,6 @@ const SugerenciaSchema = new EntitySchema({
       default: false,
       nullable: false,
     },
-    reportes: {
-      type: "int",
-      default: 0,
-      nullable: false,
-    },
     respuestaAdmin: {
       type: "text",
       nullable: true,

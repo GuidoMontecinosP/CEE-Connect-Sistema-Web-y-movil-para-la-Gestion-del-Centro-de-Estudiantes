@@ -123,27 +123,7 @@ class SugerenciasService {
     await this.sugerenciaRepository.remove(sugerencia);
   }
 
-  async reportarSugerencia(id, userId) {
-    const sugerencia = await this.sugerenciaRepository.findOne({
-      where: { id },
-      relations: ["autor"]
-    });
 
-    if (!sugerencia) {
-      throw new Error("Sugerencia no encontrada");
-    }
-
-    // No permitir que el autor reporte su propia sugerencia
-    if (sugerencia.autor.id === userId) {
-      throw new Error("No puedes reportar tu propia sugerencia");
-    }
-
-    // Incrementar contador de reportes
-    sugerencia.reportes += 1;
-    sugerencia.isReportada = true;
-
-    return await this.sugerenciaRepository.save(sugerencia);
-  }
 
   async responderSugerencia(id, respuesta, estado, adminId) {
     const sugerencia = await this.sugerenciaRepository.findOne({

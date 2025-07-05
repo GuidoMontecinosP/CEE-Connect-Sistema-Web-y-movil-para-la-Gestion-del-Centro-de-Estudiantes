@@ -114,23 +114,7 @@ export async function eliminarSugerencia(req, res) {
   }
 }
 
-export async function reportarSugerencia(req, res) {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
 
-    const sugerenciaReportada = await sugerenciasService.reportarSugerencia(parseInt(id), userId);
-    
-    handleSuccess(res, 200, "Sugerencia reportada exitosamente", sugerenciaReportada);
-  } catch (error) {
-    console.error("Error al reportar sugerencia:", error);
-    if (error.message.includes("no encontrada") || error.message.includes("ya reportaste")) {
-      handleErrorClient(res, error.message.includes("no encontrada") ? 404 : 400, error.message);
-    } else {
-      handleErrorServer(res, 500, "Error interno del servidor");
-    }
-  }
-}
 
 export async function responderSugerencia(req, res) {
   try {
