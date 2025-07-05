@@ -6,6 +6,7 @@ import authRoutes from "./auth.routes.js";
 import eventosRouter from "./eventos.routes.js";
 
 import sugerenciasRoutes from "./sugerencias.routes.js";
+import usuarioMuteadoRoutes from "./usuarioMuteado.routes.js";
 
 import { NoticiasController } from "../controllers/noticias.controller.js";
 
@@ -24,4 +25,6 @@ router.get("/noticias", NoticiasController);
 
 
 router.use("/sugerencias", sugerenciasRoutes);
+router.use("/muteo", usuarioMuteadoRoutes);
 export default router;
+

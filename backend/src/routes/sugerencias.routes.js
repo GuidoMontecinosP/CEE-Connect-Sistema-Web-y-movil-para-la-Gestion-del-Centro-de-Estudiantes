@@ -1,5 +1,6 @@
 // backend/src/routes/sugerencias.routes.js
 "use strict";
+import { verificarMuteo } from "../middlewares/verificarMuteo.middleware.js";
 
 import { Router } from "express";
 import {
@@ -40,7 +41,9 @@ router.post(
   "/",
   authenticateJwt,
   validarCrearSugerencia,
+  verificarMuteo, // Verifica si el usuario está muteado antes de permitir crear sugerencias
   crearSugerencia
+  
 );
 
 // Obtener todas las sugerencias (público, con paginación y filtros)
@@ -64,6 +67,7 @@ router.put(
   "/:id",
   authenticateJwt,
   validarActualizarSugerencia,
+  verificarMuteo, // Verifica si el usuario está muteado antes de permitir actualizar sugerencias
   actualizarSugerencia
 );
 
