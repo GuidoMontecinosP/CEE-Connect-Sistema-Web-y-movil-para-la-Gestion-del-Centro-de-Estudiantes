@@ -1,48 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Breadcrumb, theme, Typography } from 'antd';
+import MainLayout from '../components/MainLayout.jsx';
 
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
-import { useAuth } from '../context/AuthContext';
-
-const { Header, Content, Footer, Sider } = Layout;
-
-function getItem(
-  label,
-  key,
-  icon,
-  children,
-) {
-  return {
-    key,
-    icon,
-    children,
-    label,
-  };
-}
-
-import {
-  AuditOutlined,
-  DesktopOutlined,
-  CarryOutOutlined,
-  PieChartOutlined,
-  HomeOutlined,
-  FileTextOutlined,
-} from '@ant-design/icons';
-
-// const items = [
-//   getItem('Inicio', '0', <FileTextOutlined />),
-//   getItem('Votaciones', '1', <PieChartOutlined />),
-//   getItem('Crear Votación', '2', <DesktopOutlined />),
-//   getItem('Eventos', '3', <CarryOutOutlined />),
- 
-//    getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
-// ];
+const { Title, Text } = Typography;
 
 function Noticias() {
   const [noticias, setNoticias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { usuario } = useAuth();
 
   useEffect(() => {
     setLoading(true);
@@ -62,107 +27,61 @@ function Noticias() {
       });
   }, []);
 
-  // Renderizado mejorado con tarjetas
-  const navigate = useNavigate();
-  const onMenuClick = (item) => {
-    if (item.key === '0') {
-      navigate('/noticias');
-    }
-    if (item.key === '1') {
-      navigate('/votaciones');
-    }
-    if (item.key === '2') {
-      navigate('/crear');
-    }
-    if (item.key === '3') {
-      navigate('/verEventos');
-    }
-    
-    if (item.key === '5') {
-      navigate('/dashboard');
-    }
-    if (item.key === '4') {
-      navigate('/eventos');
-    }
-  };
-
-    const [collapsed, setCollapsed] = useState(false);
     const {
       token: { colorBgContainer, borderRadiusLG },
     } = theme.useToken();
 
-  // Filtrar items del menú según el rol
-  const adminItems = [
-    getItem('Inicio', '0', <FileTextOutlined />),
-    getItem('Votaciones', '1', <PieChartOutlined />),
-    getItem('Crear Votación', '2', <DesktopOutlined />),
-    getItem('Eventos', '3', <CarryOutOutlined />),
-    getItem('Dashboard', '5', <AuditOutlined />),
-  ];
-  const userItems = [
-    getItem('Inicio', '0', <FileTextOutlined />),
-    getItem('Votaciones', '1', <PieChartOutlined />),
-    getItem('Eventos', '4', <CarryOutOutlined />),
-    getItem('Dashboard', '5', <AuditOutlined />),
-  ];
-
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-        <div className="demo-logo-vertical" />
-        <Menu theme="dark" defaultSelectedKeys={['0']} mode="inline" items={usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador' ? adminItems : userItems} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
-        <Content style={{ margin: '0 16px' }}>
-          <Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Noticias' }]} />
-          <div
-            style={{
-              padding: 22,
-              minHeight: 360,
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
-            }}
-          >
-            <h1>Ultimas Noticias UBB</h1>
-            {loading && <p>Cargando noticias...</p>}
-            {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-            {!loading && !error && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '24px',
-                marginTop: 24
-              }}>
-                {noticias.map((n, i) => (
-                  <div key={i} style={{
-                    background: '#fff',
-                    borderRadius: 12,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    padding: 18,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: 180
-                  }}>
-                    {/* Imagen de la noticia si existe */}
-                    {n.imagen ? (
-                      <img src={n.imagen} alt={n.titulo} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
-                    ) : (
-                      <div style={{ width: '100%', height: 160, background: '#eee', borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 18 }}>
-                        Sin imagen
-                      </div>
-                    )}
-                    <a href={n.enlace} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', fontSize: 18, color: '#1677ff', textDecoration: 'none', marginBottom: 8 }}>{n.titulo}</a>
-                  </div>
-                ))}
-              </div>
-            )}
+    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Noticias' }]} /> }>
+      <div
+        style={{
+          padding: 22,
+          minHeight: 360,
+          background: colorBgContainer,
+          borderRadius: borderRadiusLG,
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
+              Ultimas Noticias UBB
+            </Title>
+           
           </div>
-        </Content>
-        <Footer style={{ textAlign: 'center' }}>
-          ¡¡¡Created by Team Guido!!!
-        </Footer>
-      </Layout>
-    </Layout>
+
+        {loading && <p>Cargando noticias...</p>}
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+        {!loading && !error && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '24px',
+            marginTop: 24
+          }}>
+            {noticias.map((n, i) => (
+              <div key={i} style={{
+                background: '#fff',
+                borderRadius: 12,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                padding: 18,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 180
+              }}>
+                {/* Imagen de la noticia si existe */}
+                {n.imagen ? (
+                  <img src={n.imagen} alt={n.titulo} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
+                ) : (
+                  <div style={{ width: '100%', height: 160, background: '#eee', borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 18 }}>
+                    Sin imagen
+                  </div>
+                )}
+                <a href={n.enlace} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', fontSize: 18, color: '#1677ff', textDecoration: 'none', marginBottom: 8 }}>{n.titulo}</a>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </MainLayout>
   );
 }
 

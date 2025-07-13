@@ -10,6 +10,7 @@ import MenuPrincipal from './pages/MenuPrincipal';
 
 import Eventos from './pages/Eventos';
 import VerEventos from './pages/VerEventos';
+import CrearEvento from './pages/CrearEventos';
 import Noticias from './pages/Noticias';
 
 import Login from './pages/Login';
@@ -48,6 +49,7 @@ function App() {
         <Route path="/votacion/:id/cerrar" element={<CerrarVotacion />} />
         <Route path="/votacion/:id" element={<VerVotacion />} />
         <Route path="/verEventos" element={<VerEventos />} />
+        <Route path="/crearEvento" element={<CrearEvento />} />
         
       </Route>
 

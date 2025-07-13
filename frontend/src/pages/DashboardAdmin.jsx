@@ -1,4 +1,4 @@
-import { Card, Typography, Button, Layout, Menu, theme } from 'antd';
+import { Card, Typography, Button, Breadcrumb } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
@@ -10,17 +10,14 @@ import {
   FileTextOutlined,
   AuditOutlined,
 } from '@ant-design/icons';
+import MainLayout from '../components/MainLayout.jsx';
 
 const { Title, Paragraph } = Typography;
-const { Content, Sider } = Layout;
 
 export default function DashboardEstudiante() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
 
   const handleLogout = () => {
     logout();
@@ -50,22 +47,8 @@ export default function DashboardEstudiante() {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* Sidebar */}
-      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-        <Menu
-          mode="inline"
-          theme="dark"
-          defaultSelectedKeys={['5']}
-          items={menuItems}
-          onClick={onMenuClick}
-          style={{ height: '100%', borderRight: 0 }}
-        />
-      </Sider>
-      
-      <Layout>
-        <Content style={{ padding: '48px 24px' }}>
-          <div style={{ 
+    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Dashboard' }]} /> }>
+      <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center',
@@ -153,8 +136,6 @@ export default function DashboardEstudiante() {
               </Button>
             </Card>
           </div>
-        </Content>
-      </Layout>
-    </Layout>
+    </MainLayout>
   );
 }
