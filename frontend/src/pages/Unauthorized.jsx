@@ -9,7 +9,7 @@ export default function Unauthorized() {
       status="403"
       title="403 - Acceso no autorizado"
       subTitle="No tienes permisos para ver esta página."
-      extra={<Button type="primary" onClick={() => navigate('/menu')}>Volver al Menu Antiguo </Button>}
+      extra={<Button type="primary" onClick={() => navigate('/noticias')}>Volver al Menu  </Button>}
     />
   );
 }

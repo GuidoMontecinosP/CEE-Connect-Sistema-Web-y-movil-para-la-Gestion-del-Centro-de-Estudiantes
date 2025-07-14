@@ -12,6 +12,7 @@ createRoot(document.getElementById('root')).render(
     <ConfigProvider
       theme={{
         algorithm: theme.defaultAlgorithm,
+        //algorithm: theme.darkAlgorithm,
         token: {
           colorPrimary: '#1677ff',
           colorSuccess: '#52c41a',

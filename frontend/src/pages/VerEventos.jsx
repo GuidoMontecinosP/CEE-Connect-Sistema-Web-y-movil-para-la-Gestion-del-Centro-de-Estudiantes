@@ -1,168 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
-import dayjs from 'dayjs';
+import MainLayout from "../components/MainLayout.jsx";
 
-import { obtenerEventos, crearEvento, modificarEvento, eliminarEvento} from "../services/eventos.services.js";
+import { obtenerEventos, modificarEvento, eliminarEvento} from "../services/eventos.services.js";
 
-import {
-  DesktopOutlined,
-  CarryOutOutlined,
-  PieChartOutlined,
-  HomeOutlined,
-  CalendarOutlined,
-  FileTextOutlined,AuditOutlined
-} from '@ant-design/icons';
 import { Breadcrumb, 
-         Layout, 
-         Menu, 
-         theme, 
          Button, 
          Modal, 
          Input, 
          DatePicker, 
          Space, 
          TimePicker,
-         Card
+         Card,
+         Typography      
 } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 
-const { Header, Content, Footer, Sider } = Layout;
-
-function getItem(
-  label,
-  key,
-  icon,
-  children,
-) {
-  return {
-    key,
-    icon,
-    children,
-    label,
-  };
-}
-
-const items = [
-   getItem('Inicio', '0', <FileTextOutlined />),
-  getItem('Votaciones', '1', <PieChartOutlined />),
-  getItem('Crear Votación', '2', <DesktopOutlined />),
-  getItem('Eventos', '3', <CarryOutOutlined />),
- 
-  getItem('Dashboard', '5', <AuditOutlined />), // Si decides agregar un dashboard
-];
-
+const { Title, Text } = Typography;
 
 function VerEventos() {
-  const navigate = useNavigate();
   const [eventos, setEventos] = useState([]);
-  const [registerData, setRegisterData] = useState({
-        titulo: '',
-        descripcion: '',
-        fecha: '',
-        hora: '',
-        lugar: '',
-        tipo: ''
-    });
-
 
   useEffect(() => {
     obtenerEventos()
-      .then(res => setEventos(res))
-      .catch(err => alert(err.message));
+      .then(setEventos)
+      .catch(() => Swal.fire('Error', 'Hubo un problema al cargar los eventos.', 'error'));
   }, []);
-
-   const handleRegisterChange = (e) => {
-        setRegisterData({ ...registerData, [e.target.name]: e.target.value });
-    };
-  const handleRegisterSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!registerData.fecha) {
-      Swal.fire({
-        title: '¡¡¡Falta la fecha!!!.',
-        text: 'No se puede registrar un evento sin fecha.',
-        icon: 'warning',
-      })
-      return;
-    }
-    if (!registerData.hora) {
-      Swal.fire({
-        title: '¡¡¡Falta la hora!!!.',
-        text: 'No se puede registrar un evento sin hora.',
-        icon: 'warning',
-      })
-      return;
-    }
-    try {
-      await crearEvento(registerData);
-      setLoading(true);
-
-      Swal.fire({
-        title: 'Evento registrado',
-        text: 'El evento ha sido registrado correctamente.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-      });
-
-      setTimeout(() => {
-        setLoading(false);
-        setOpen(false);
-      }, 2000);
-
-      // Recargar eventos después de crear uno nuevo
-      const nuevosEventos = await obtenerEventos();
-      setEventos(nuevosEventos);
-      // alert('Evento registrado exitosamente');
-      setRegisterData({
-        titulo: '',
-        descripcion: '',
-        fecha: '',
-        hora: '',
-        lugar: '',
-        tipo: ''
-      });
-    } catch (err) {
-      Swal.fire({
-        title: 'Error al registrar el evento',
-        text: err.message || 'Hubo un problema al registrar el evento.',
-        icon: 'error',
-      });
-    }
-  };
-
-  const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const showModal = () => {
-    setOpen(true);
-  };
-  const handleCancel = () => {
-    setOpen(false);
-  };
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') {
-      navigate('/noticias');
-    }
-    if (item.key === '1') {
-      navigate('/votaciones');
-    }
-    if (item.key === '2') {
-      navigate('/crear');
-    }
-    if (item.key === '3') {
-      navigate('/eventos');
-    }
-    if (item.key === '5') {
-      navigate('/dashboard');
-    }
-  };
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState(null);
@@ -228,107 +92,72 @@ function VerEventos() {
       }
     })
   };
-
   return (
-    <>
-     <Layout style={{ minHeight: '100vh' }}>
-        <Sider collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-          <div className="demo-logo-vertical" />
-          <Menu theme="dark" defaultSelectedKeys={['3']} mode="inline" items={items} onClick={onMenuClick} />
-        </Sider>
-        <Layout>
-            <Content style={{ margin: '0 16px' }}>
-              <Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Gestion de Eventos' }]} />
-              <div
-                style={{
-                  padding: 22,
-                  minHeight: 360,
-                  background: colorBgContainer,
-                  borderRadius: borderRadiusLG,
-                }}
-              >
-                <h1>Eventos Proximos</h1>
-              <Button onClick={showModal}>Ingresar Nuevo Evento</Button>
-              {eventos.length === 0 ? (
-                <p>No hay eventos registrados.</p>
-              ) : (
-                <div style={{
+    <>     
+      <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Eventos' }]} />}>
+        <div >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
+          <div>
+            <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
+              Listado de Eventos
+             
+            </Title>
+            <Text style={{ fontSize: 16, color: '#64748b' }}>
+              Aquí puedes ver, registrar, modificar y eliminar eventos.
+            </Text>
+          </div>
+          
+          <Button  type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => window.location.href = '/crearEvento'}
+            style={{
+                backgroundColor: '#1e3a8a',
+                borderColor: '#1e3a8a',
+                borderRadius: 8,
+                height: 48,
+                paddingLeft: 24,
+                paddingRight: 24,
+                fontSize: 16,
+                fontWeight: 500
+              }}>
+                Ingresar Nuevo Evento
+            </Button>
+          </div>
+            {eventos.length === 0 ? (
+              <p>No hay eventos registrados.</p>
+            ) : (
+              <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                   flexWrap: 'wrap',
                   gap: 30,
                   marginTop: 24,
-                  marginLeft: '20px',
-                  
+                  marginLeft: '20px',            
                 }}>
-                  {eventos.map(e => {
-                    // Formatear fecha de YYYY-MM-DD a DD-MM-YYYY
-                    let fechaFormateada = e.fecha ? e.fecha.split('-').reverse().join('-') : '';
-                    return (
-                      <Card key={e.id} size="small" title={e.titulo} extra={
-                        <>
+                
+                {eventos.map(e => {
+                // Formatear fecha de YYYY-MM-DD a DD-MM-YYYY
+                  let fechaFormateada = e.fecha ? e.fecha.split('-').reverse().join('-') : '';
+                  return (
+                    <Card key={e.id} size="small" title={e.titulo} extra={
+                      <>
                         <a href="#" onClick={() => handleEditClick(e)} style={{ marginRight: 8}}>Modificar</a>
                         <a href="#" onClick={() => handleDeleteClick(e.id)} style={{color: 'red'}}>eliminar</a>
-                        </>
+                      </>
                       }
                       style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
                         Fecha: {fechaFormateada} - Hora: {e.hora ?? ''}  <br />
                         Descripción: {e.descripcion} <br />
                         Lugar: {e.lugar} <br />
                         Tipo: {e.tipo} <br />
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
+                    </Card>
+                  );
+                })}
               </div>
-            </Content>
-            <Footer style={{ textAlign: 'center' }}>
-              ¡¡¡Created by Team Guido!!!
-            </Footer>
-          </Layout>
-          
-        <Modal 
-          open={open}
-          title="Registrar un Nuevo Evento"
-          onCancel={handleCancel}
-          footer={null}
-        >
-          <form onSubmit={handleRegisterSubmit}>
-            <div >
-                <Input type="text"  placeholder="Título" name="titulo" value={registerData.titulo} onChange={handleRegisterChange} required />
-              <Input type="text"  placeholder="Descripción" name="descripcion" value={registerData.descripcion} onChange={handleRegisterChange} required />
-              <Space.Compact block>
-                {/* <Input type="date"  placeholder="Fecha" name="fecha" value={registerData.fecha} onChange={handleRegisterChange} required /> */}
-                <DatePicker 
-                style={{ width: '100%' }} 
-                value={registerData.fecha ? dayjs(registerData.fecha, 'YYYY-MM-DD') : null}
-                onChange={(date) => setRegisterData({ ...registerData, fecha: date ? date.format('YYYY-MM-DD') : '' })} />
-              </Space.Compact>
-              <Space.Compact block>
-                {/* <Input type="time"  placeholder="Hora" name="hora" value={registerData.hora} onChange={handleRegisterChange} required /> */}
-                <TimePicker
-                  style={{ width: '100%' }}
-                  value={registerData.hora ? dayjs(registerData.hora, 'HH:mm:ss') : null}
-                  onChange={(time, timeString) => setRegisterData({ ...registerData, hora: timeString })}
-                  format="HH:mm:ss"
-                  placeholder="Selecciona la hora"
-                />
-              </Space.Compact>
-              
-              <Input type="text"  placeholder="Lugar" name="lugar" value={registerData.lugar} onChange={handleRegisterChange} required />
-              <Input type="text"  placeholder="Tipo" name="tipo" value={registerData.tipo} onChange={handleRegisterChange} required />
-            </div>
-            <div  style={{ marginTop: 16, textAlign: 'right' }}>
-              <Button  onClick={handleCancel} style={{ marginRight: 8 }}>
-                Cancelar
-              </Button>
-              <Button type="primary" htmlType="submit" loading={loading} >
-                Registrar
-              </Button>
-            </div>
-          </form>
-        </Modal> 
+            )}
+        </div>
+      
         {/* Modal para Modificar */}
         <Modal
           open={editModalOpen}
@@ -363,7 +192,7 @@ function VerEventos() {
             </form>
           )}
         </Modal>
-      </Layout>
+      </MainLayout>
     </>
   );
 }

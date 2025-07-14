@@ -1,17 +1,36 @@
 import React, { useState } from 'react';
-import { votacionService } from '../services/votacion.services';
-import { Layout, Card, Input, Button, Typography, Space, Row, Col, message, Divider, theme, Menu } from 'antd';
-import {BarChartOutlined, AuditOutlined,FileTextOutlined,PlusOutlined, DeleteOutlined, CheckOutlined, PieChartOutlined, CarryOutOutlined, HomeOutlined, DesktopOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { votacionService } from '../services/votacion.services';
 import Swal from 'sweetalert2';
-const { Content, Sider } = Layout;
+import MainLayout from '../components/MainLayout.jsx';
+
+import {
+  Layout,
+  Card,
+  Input,
+  Button,
+  Typography,
+  Space,
+  Row,
+  Col,
+  Divider,
+  Breadcrumb,
+  message 
+} from 'antd';
+
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  CheckOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../context/AuthContext.jsx';
+
 const { Title, Text } = Typography;
 
 function CrearVotacion() {
   const [titulo, setTitulo] = useState('');
   const [opciones, setOpciones] = useState(['', '']); // Comienza con 2 opciones mínimas
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleOpcionChange = (index, value) => {
     const nuevasOpciones = [...opciones];
@@ -62,50 +81,13 @@ function CrearVotacion() {
     }
   };
 
-  const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-
-  const items = [
-     { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-   
-   { key: '5', icon: <AuditOutlined />, label: 'Dashboard' } 
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
- 
-    if (item.key === '5') navigate('/dashboard');
-  };
-
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* Sidebar */}
-      <Sider theme="dark" collapsible>
-        <Menu
-          mode="inline"
-          theme="dark"
-          defaultSelectedKeys={['2']}
-          items={items}
-          onClick={onMenuClick}
-          style={{ 
-            height: '100%', 
-            borderRight: 0
-          }}
-        />
-      </Sider>
-      <Layout>
-        <Content style={{ padding: '48px 24px' }}>
-          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <>
+    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }}/>}>
+          <div >
+             <div style={{ maxWidth: 800, margin: '0 auto',  }}> 
             {/* Header de la página */}
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 , }}>
               <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
                 Crear Nueva Votación
               </Title>
@@ -288,9 +270,9 @@ function CrearVotacion() {
               </ul>
             </Card>
           </div>
-        </Content>
-      </Layout>
-    </Layout>
+      </div>
+    </MainLayout>
+    </>
   );
 }
 

@@ -8,7 +8,10 @@ import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
 import MenuPrincipal from './pages/MenuPrincipal';
 import ListaSugerencias from './pages/ListaSugerencias';
+
+import Eventos from './pages/Eventos';
 import VerEventos from './pages/VerEventos';
+import CrearEvento from './pages/CrearEventos';
 import Noticias from './pages/Noticias';
 import CrearSugerencia from './pages/CrearSugerencia';
 import MisSugerencias from './pages/MisSugerencias';
@@ -24,7 +27,7 @@ function App() {
 
   return (
     <Routes>
-     
+    
       <Route
         path="/"
         element={
@@ -47,6 +50,8 @@ function App() {
         <Route path="/crear" element={<CrearVotacion />} />
         <Route path="/votacion/:id/cerrar" element={<CerrarVotacion />} />
         <Route path="/votacion/:id" element={<VerVotacion />} />
+        <Route path="/verEventos" element={<VerEventos />} />
+        <Route path="/crearEvento" element={<CrearEvento />} />
         
       </Route>
 
@@ -57,7 +62,7 @@ function App() {
         <Route path="/votaciones" element={<ListarVotaciones />} />
         <Route path="/votacion/:id/resultados" element={<Resultados />} />
         <Route path="/noticias" element={<Noticias />} />
-      <Route path="/eventos" element={<VerEventos />} />
+      <Route path="/eventos" element={<Eventos />} />
       <Route path="/dashboard" element={<DashboardAdmin />} />
       <Route path = "votacion/:id/votar" element={<Votar />} />
    <Route path="/sugerencias" element={<ListaSugerencias />} />

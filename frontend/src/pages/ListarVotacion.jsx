@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { votacionService } from '../services/votacion.services';
 import { votoService } from '../services/voto.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, Menu, ConfigProvider } from 'antd';
-import {AuditOutlined,FileTextOutlined,ArrowLeftOutlined, PieChartOutlined, CarryOutOutlined, EyeOutlined, CheckCircleOutlined, BarChartOutlined, StopOutlined, PlusOutlined, CheckOutlined, FilterOutlined, HomeOutlined, DesktopOutlined, SendOutlined } from '@ant-design/icons';
+import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, ConfigProvider,Breadcrumb } from 'antd';
+import { CheckCircleOutlined, StopOutlined, BarChartOutlined, FilterOutlined, PlusOutlined, EyeOutlined, CheckOutlined,FileTextOutlined,PieChartOutlined,DesktopOutlined,CarryOutOutlined,AuditOutlined,SendOutlined  } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import esES from 'antd/locale/es_ES';
-
+import MainLayout from '../components/MainLayout';    
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
@@ -365,21 +365,11 @@ function ListarVotaciones() {
 
   return (
     <ConfigProvider locale={esES}>
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-         <Sider theme="dark" collapsible>
-          <Menu
-            mode="inline"
-            theme="dark"
-            defaultSelectedKeys={['1']}
-            items={items}
-            onClick={onMenuClick}
-            style={{ 
-              height: '100%', 
-              borderRight: 0
-            }}
-          />
-        </Sider>
-        <Layout>
+      <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
@@ -680,8 +670,7 @@ function ListarVotaciones() {
               )}
             </div>
           </Content>
-        </Layout>
-      </Layout>
+        </MainLayout>
     </ConfigProvider>
   );
 }
