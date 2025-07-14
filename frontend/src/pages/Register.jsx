@@ -22,7 +22,7 @@ export default function Register() {
     }
 
     try {
-      await axios.post("http://localhost:3000/api/auth/register", {
+      await axios.post("/auth/register", {
         nombre,
         correo,
         contrasena,

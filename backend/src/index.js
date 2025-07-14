@@ -12,7 +12,7 @@ import authRoutes from "./routes/auth.routes.js"
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = 3000; //80
 
 // Middlewares
 app.use(cors({

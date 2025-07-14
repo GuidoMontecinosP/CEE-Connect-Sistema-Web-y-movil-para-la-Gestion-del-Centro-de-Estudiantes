@@ -44,7 +44,7 @@ function App() {
       {/* Rutas públicas */}
       <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/verificado" element={<Verificado />} />
+      <Route path="/verificar" element={<Verificado />} />
       <Route path="/register" element={<Register />} /> 
 
       {/* Rutas protegidas - ADMINISTRADOR */}

@@ -116,7 +116,7 @@ export async function register(req, res) {
 
     // 📨 Generar token y enviar correo
     const tokenVerificacion = generarTokenVerificacion(usuarioCreado);
-    const urlVerificacion = `http://localhost:5173/verificado?token=${tokenVerificacion}`;
+    const urlVerificacion = `http://localhost:3000/api/auth/verificar/${tokenVerificacion}`; //cambiar por url de producción
 
     await transporter.sendMail({
       from: '"CEE Connect" <no-reply@ceeconnect.cl>',

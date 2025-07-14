@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
+import axios from "../services/root.services";
 
 function Verificado() {
   const [searchParams] = useSearchParams();
@@ -14,7 +14,7 @@ function Verificado() {
     }
 
     axios
-      .get(`http://localhost:3000/api/auth/verificar/${token}`)
+      .get(`/auth/verificar/${token}`)
       .then(() => setEstado("verificado"))
       .catch(() => setEstado("invalido"));
   }, [token]);
