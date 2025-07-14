@@ -51,7 +51,7 @@ export async function updateUserService(query, body, currentUserId) {
     if (!userFound) return [null, "Usuario no encontrado"];
     
     if (body.correo) {
-    const existingCorreo = await userRepository.findOneBy({ correo: body.correo });
+    const existingCorreo = await usuarioRepository.findOneBy({ correo: body.correo });
     if (existingCorreo && existingCorreo.id !== userFound.id) {
     return [null, "Ya existe un usuario con ese correo"];
     }
