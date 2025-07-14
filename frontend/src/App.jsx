@@ -7,13 +7,14 @@ import VerVotacion from './pages/VerVotacion';
 import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
 import MenuPrincipal from './pages/MenuPrincipal';
-
+import ListaSugerencias from './pages/ListaSugerencias';
 import VerEventos from './pages/VerEventos';
 import Noticias from './pages/Noticias';
-
+import CrearSugerencia from './pages/CrearSugerencia';
+import MisSugerencias from './pages/MisSugerencias';
 import Login from './pages/Login';
 import DashboardAdmin from './pages/DashboardAdmin';
-
+import EditarSugerencia from './pages/EditarSugerencia';
 import Unauthorized from './pages/Unauthorized';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
@@ -59,8 +60,11 @@ function App() {
       <Route path="/eventos" element={<VerEventos />} />
       <Route path="/dashboard" element={<DashboardAdmin />} />
       <Route path = "votacion/:id/votar" element={<Votar />} />
-   
-
+   <Route path="/sugerencias" element={<ListaSugerencias />} />
+   <Route path="/sugerencias/nueva" element={<CrearSugerencia />} />
+<Route path="/sugerencias/nueva" element={<CrearSugerencia />} />
+<Route path="/mis-sugerencias" element={<MisSugerencias />} />
+<Route path="/sugerencias/:id/editar" element={<EditarSugerencia />} />
       </Route>
     </Routes>
   );

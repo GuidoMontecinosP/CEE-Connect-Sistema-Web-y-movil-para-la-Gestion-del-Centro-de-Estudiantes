@@ -36,6 +36,7 @@ const ListaVotaciones = () => {
   const esEstudiante = usuario?.rol?.nombre === 'estudiante';
   const usuarioId = usuario?.id;
 
+  // Carga inicial
   useEffect(() => {
     cargarVotaciones();
   }, []);
