@@ -18,6 +18,7 @@ import Unauthorized from './pages/Unauthorized';
 import PrivateRoute from './components/PrivateRoute';
 import { useAuth } from './context/AuthContext';
 import Verificado from './pages/Verificado';
+import Register from './pages/Register'; 
 
 function App() {
   const { usuario } = useAuth();
@@ -40,7 +41,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/verificado" element={<Verificado />} />
-      
+      <Route path="/register" element={<Register />} /> 
 
       {/* Rutas protegidas - ADMINISTRADOR */}
       <Route element={<PrivateRoute allowedRoles={['administrador']} />}>

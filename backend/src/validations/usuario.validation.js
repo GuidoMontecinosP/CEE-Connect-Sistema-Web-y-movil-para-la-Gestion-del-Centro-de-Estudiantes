@@ -72,7 +72,7 @@ export const userBodyValidation = Joi.object({
   contrasena: Joi.string()
     .min(8)
     .max(26)
-    .pattern(/^[a-zA-Z0-9]+$/)
+    .pattern(/^[a-zA-Z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]+$/)
     .messages({
       "string.empty": "La contraseña actual no puede estar vacía.",
       "string.base": "La contraseña debe ser un texto.",
@@ -85,7 +85,7 @@ export const userBodyValidation = Joi.object({
     .min(8)
     .max(26)
     .allow("")
-    .pattern(/^[a-zA-Z0-9]+$/)
+    .pattern(/^[a-zA-Z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]+$/)
     .messages({
       "string.base": "La nueva contraseña debe ser un texto.",
       "string.min": "Debe tener al menos 8 caracteres.",

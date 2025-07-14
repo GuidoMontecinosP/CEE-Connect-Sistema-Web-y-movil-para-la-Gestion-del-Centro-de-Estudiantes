@@ -1,3 +1,4 @@
+
 "use strict";
 import { loginService, registerService } from "../services/auth.service.js";
 import {
@@ -40,14 +41,19 @@ export const verificarCorreo = async (req, res) => {
 
     const usuario = await repo.findOneBy({ id: decoded.id });
 
-    if (!usuario) return res.status(404).json({ message: "Usuario no encontrado" });
-    if (usuario.verificado) return res.status(400).json({ message: "Ya está verificado" });
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    if (usuario.verificado) {
+      return res.status(400).json({ message: "Ya está verificado" });
+    }
 
     usuario.verificado = true;
     await repo.save(usuario);
 
     res.status(200).json({ message: "Cuenta verificada con éxito." });
   } catch (err) {
+    console.error("Error:", err);
     res.status(400).json({ message: "Token inválido o expirado." });
   }
 };
@@ -59,13 +65,21 @@ export async function login(req, res) {
 
     const { error } = authValidation.validate(body);
     if (error) {
-      return handleErrorClient(res, 400, "Error de validación", error.message);
+      return handleErrorClient(res, 400, "Error de validación.", error.message);
     }
 
     const [result, errorToken] = await loginService(body);
 
     if (errorToken) {
-      return handleErrorClient(res, 400, "Error iniciando sesión", errorToken);
+      if (errorToken.dataInfo === "verificado") {
+        return handleErrorClient(
+          res,
+          400,
+          "Debes verificar tu correo institucional antes de iniciar sesión.",
+          errorToken.message
+        );
+      }
+      return handleErrorClient(res, 400, "Error iniciando sesión", errorToken.message || errorToken);
     }
 
     const { token, user } = result;
@@ -77,12 +91,10 @@ export async function login(req, res) {
       sameSite: "Strict",
     });
 
-    handleSuccess(res, 200, "Inicio de sesión exitoso", {
-      token,
-      user,
-    });
+    handleSuccess(res, 200, "Inicio de sesión exitoso", { token, user });
   } catch (error) {
-    handleErrorServer(res, 500, error.message);
+    console.error("Error en el login:", error);
+    handleErrorServer(res, 500, "Error interno del servidor");
   }
 }
 
@@ -92,13 +104,15 @@ export async function register(req, res) {
     const { body } = req;
     const { error } = registerValidation.validate(body);
 
-    if (error)
+    if (error) {
       return handleErrorClient(res, 400, "Error de validación", error.message);
+    }
 
     const [usuarioCreado, errorNewUser] = await registerService(body);
 
-    if (errorNewUser)
+    if (errorNewUser) {
       return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
+    }
 
     // 📨 Generar token y enviar correo
     const tokenVerificacion = generarTokenVerificacion(usuarioCreado);
@@ -118,7 +132,8 @@ export async function register(req, res) {
 
     handleSuccess(res, 201, "Usuario registrado con éxito. Verifica tu correo.", usuarioCreado);
   } catch (error) {
-    handleErrorServer(res, 500, error.message);
+    console.error("Error al registrar un usuario:", error);
+    handleErrorServer(res, 500, "Error interno del servidor");
   }
 }
 
@@ -128,6 +143,7 @@ export async function logout(req, res) {
     res.clearCookie("jwt", { httpOnly: true });
     handleSuccess(res, 200, "Sesión cerrada exitosamente");
   } catch (error) {
-    handleErrorServer(res, 500, error.message);
+    console.error("Error en logout:", error);
+    handleErrorServer(res, 500, "Error interno del servidor");
   }
 }

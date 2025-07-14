@@ -1,3 +1,4 @@
+
 "use strict";
 import Usuario from "../entity/usuario.entity.js";
 import Rol from "../entity/rol.entity.js";
@@ -6,16 +7,15 @@ import { AppDataSource } from "../config/configDb.js";
 import { comparePassword, encryptPassword } from "../helpers/bcrypt.helper.js";
 import { ACCESS_TOKEN_SECRET } from "../config/configEnv.js";
 
+const createErrorMessage = (dataInfo, message) => ({
+  dataInfo,
+  message
+});
 
 export async function loginService(user) {
   try {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
-    const { correo, password } = user;
-
-    const createErrorMessage = (dataInfo, message) => ({
-      dataInfo,
-      message
-    });
+    const { correo, contrasena } = user;
 
     const userFound = await usuarioRepository.findOne({
       where: { correo },
@@ -26,23 +26,19 @@ export async function loginService(user) {
       return [null, createErrorMessage("correo", "El correo electrónico es incorrecto")];
     }
 
-    // ⚠️ Validar verificación antes de cualquier otra acción
     if (!userFound.verificado) {
       return [null, createErrorMessage("verificado", "Debes verificar tu correo institucional antes de iniciar sesión.")];
     }
 
-    // 🔐 Validar contraseña
-    const isMatch = await comparePassword(password, userFound.contrasena);
+    const isMatch = await comparePassword(contrasena, userFound.contrasena);
     if (!isMatch) {
       return [null, createErrorMessage("contrasena", "La contraseña es incorrecta")];
     }
 
-    // ⛔ Verificar estado
     if (userFound.estado !== "activo") {
       return [null, createErrorMessage("estado", "La cuenta está desactivada")];
     }
 
-    // 🎯 Payload para el token
     const payload = {
       id: userFound.id,
       nombre: userFound.nombre,
@@ -68,8 +64,6 @@ export async function loginService(user) {
   }
 }
 
-
-
 export async function registerService(user) {
   try {
     const usuarioRepository = AppDataSource.getRepository(Usuario);
@@ -77,27 +71,25 @@ export async function registerService(user) {
 
     const { nombre, correo, contrasena, rolId, estado = "activo" } = user;
 
-    const createErrorMessage = (dataInfo, message) => ({
-      dataInfo,
-      message
-    });
-
     const existingUser = await usuarioRepository.findOne({ where: { correo } });
-    if (existingUser) return [null, createErrorMessage("correo", "Correo en uso")];
+    if (existingUser) {
+      return [null, createErrorMessage("correo", "Correo en uso")];
+    }
 
     const rolFound = await rolRepository.findOneBy({ id: rolId });
-    if (!rolFound) return [null, createErrorMessage("rolId", "Rol no válido")];
+    if (!rolFound) {
+      return [null, createErrorMessage("rolId", "Rol no válido")];
+    }
 
     const newUser = usuarioRepository.create({
       nombre,
       correo,
       contrasena: await encryptPassword(contrasena),
-      rol:rolFound,
+      rol: rolFound,
       estado,
     });
 
     await usuarioRepository.save(newUser);
-
     const { contrasena: _, ...userData } = newUser;
 
     return [userData, null];
