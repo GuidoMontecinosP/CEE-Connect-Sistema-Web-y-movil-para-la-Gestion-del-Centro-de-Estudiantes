@@ -1,8 +1,7 @@
-
 "use strict";
 import { EntitySchema } from "typeorm";
 
-export const UsuarioSchema = new EntitySchema({
+const UsuarioSchema = new EntitySchema({
   name: "Usuario",
   tableName: "usuarios",
   columns: {
@@ -28,6 +27,11 @@ export const UsuarioSchema = new EntitySchema({
       default: "activo",
       nullable: false,
     },
+    verificado: {
+      type: "boolean",
+      default: false,
+      nullable: false,
+    },
     createdAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",
@@ -49,6 +53,5 @@ export const UsuarioSchema = new EntitySchema({
     },
   },
 });
-
 
 export default UsuarioSchema;
