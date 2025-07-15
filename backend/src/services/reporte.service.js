@@ -1,4 +1,3 @@
-//src/services/reporte.service.js
 
 import { AppDataSource } from "../config/configDb.js";
 import ReporteSugerenciaSchema from "../entity/reporteSugerencia.entity.js";
@@ -63,4 +62,16 @@ export const reporteService = {
     sugerencia.isReportada = false;
     await sugerenciaRepo.save(sugerencia);
   }
+  ,
+  async obtenerReportesPorUsuario(userId) {
+    const reportes = await reporteRepo.find({
+      where: { usuario: { id: userId } },
+      relations: ['sugerencia']
+    });
+    
+    // Devolver solo los IDs de las sugerencias reportadas por este usuario
+    return reportes.map(r => r.sugerencia.id);
+  },
 };
+
+ 
