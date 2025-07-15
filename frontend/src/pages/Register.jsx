@@ -169,6 +169,7 @@ const inputStyle = {
   marginBottom: "1rem",
   borderRadius: "6px",
   border: "1px solid #ccc",
+   lineHeight: "1.5",
 };
 
 const buttonStyle = {

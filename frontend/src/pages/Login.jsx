@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../services/root.services.js";
 import { useAuth } from "../context/AuthContext";
 import ubbFondo from "../assets/portal.png";
-
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 export default function Login() {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -127,15 +127,21 @@ export default function Login() {
               style={{
                 position: "absolute",
                 right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
+                top: "12px",
+               
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                color: "#666"
+                color: "#666",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px"
+
               }}
             >
-              {showPassword ? "👁️" : "👁️‍🗨️"}
+               {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             </button>
           </div>
 
@@ -196,6 +202,7 @@ const inputStyle = {
   borderRadius: "6px",
   border: "1px solid #ccc",
   fontSize: "16px",
+  lineHeight: "1.5",
   transition: "border-color 0.3s",
 };
 

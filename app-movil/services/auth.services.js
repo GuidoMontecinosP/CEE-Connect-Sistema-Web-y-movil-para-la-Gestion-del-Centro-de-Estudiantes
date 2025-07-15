@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const login = async (correo, password) => {
   try {
-    const res = await axios.post('/auth/login', { correo, password });
+    const res = await axios.post('/auth/login', { correo, contrasena: password });
     const { token, user } = res.data.data;
 
     await AsyncStorage.setItem('token', token);
