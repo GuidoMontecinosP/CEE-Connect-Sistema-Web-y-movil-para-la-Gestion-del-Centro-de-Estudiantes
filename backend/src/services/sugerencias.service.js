@@ -39,7 +39,7 @@ class SugerenciasService {
     return await this.sugerenciaRepository.save(nuevaSugerencia);
   }
 
-  async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
+async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
   const skip = (page - 1) * limit;
   
   let whereConditions = {};
@@ -57,15 +57,44 @@ class SugerenciasService {
   if (filtros.busqueda) {
     const busqueda = filtros.busqueda.trim();
     if (busqueda) {
+      // Crear condiciones de búsqueda que incluyan los filtros existentes
       const searchConditions = [
-        { ...whereConditions, titulo: ILike(`%${busqueda}%`) },
-        { ...whereConditions, mensaje: ILike(`%${busqueda}%`) },
-        { ...whereConditions, categoria: ILike(`%${busqueda}%`) }
+        { 
+          ...whereConditions, 
+          titulo: ILike(`%${busqueda}%`) 
+        },
+        { 
+          ...whereConditions, 
+          mensaje: ILike(`%${busqueda}%`) 
+        },
+        { 
+          ...whereConditions, 
+          categoria: ILike(`%${busqueda}%`) 
+        }
       ];
-      whereConditions = searchConditions;
+      
+      // Usar el array de condiciones para búsqueda OR
+      const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
+        where: searchConditions,
+        relations: ["autor", "adminResponsable"],
+        order: { createdAt: "DESC" },
+        skip,
+        take: limit
+      });
+      
+      return {
+        data: sugerencias,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      };
     }
   }
-
+  
+  // Si no hay búsqueda, usar las condiciones normales
   const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
     where: whereConditions,
     relations: ["autor", "adminResponsable"],
@@ -73,7 +102,7 @@ class SugerenciasService {
     skip,
     take: limit
   });
-
+  
   return {
     data: sugerencias,
     pagination: {
@@ -84,7 +113,6 @@ class SugerenciasService {
     }
   };
 }
-
 
 
   async obtenerSugerenciaPorId(id) {

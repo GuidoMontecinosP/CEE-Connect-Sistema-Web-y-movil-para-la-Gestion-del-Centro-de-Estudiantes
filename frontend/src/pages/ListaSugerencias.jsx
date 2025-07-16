@@ -222,14 +222,15 @@ useEffect(() => {
 
 const limpiarBusqueda = () => {
   setSearchText('');
+  setCategoriaFiltro(null);
+  setEstadoFiltro(null);
   setCurrentPage(1);
   cargar(1, pageSize, { 
-    categoria: categoriaFiltro, 
-    estado: estadoFiltro, 
+    categoria: null, 
+    estado: null, 
     busqueda: '' 
   });
 };
-
 
 
   // const filtered = sugerencias.filter(s =>
@@ -437,13 +438,22 @@ const limpiarBusqueda = () => {
 
   // Responder o editar respuesta
   const abrirResponder = s => {
-    setSugerenciaSel(s);
-    form.resetFields();
-    if (tieneResp(s)) {
-      form.setFieldsValue({ estado: s.estado, respuesta: s.respuestaAdmin });
-    }
-    setRespModalVisible(true);
-  };
+  setSugerenciaSel(s);
+  form.resetFields();
+  if (tieneResp(s)) {
+    form.setFieldsValue({ 
+      estado: s.estado, 
+      respuesta: s.respuestaAdmin 
+    });
+  } else {
+    // Para nuevas respuestas, establecer el valor por defecto
+    form.setFieldsValue({ 
+      estado: 'resuelta' 
+    });
+  }
+  setRespModalVisible(true);
+};
+
 
   // Abrir modal de reporte
   const abrirReportar = (sugerencia) => {
@@ -591,7 +601,20 @@ const limpiarBusqueda = () => {
       key: 'titulo', 
       render: (titulo) => <Text strong>{titulo}</Text>
     },
-    { title: 'Categoría', dataIndex: 'categoria', key: 'categoria' },
+   { 
+  title: 'Categoría', 
+  dataIndex: 'categoria', 
+  key: 'categoria',
+  render: (categoria) => {
+    const categorias = {
+      'eventos': 'Eventos',
+      'infraestructura': 'Infraestructura',
+      'bienestar': 'Bienestar',
+      'otros': 'Otros'
+    };
+    return categorias[categoria] || categoria;
+  }
+},
     { title: 'Estado', dataIndex: 'estado', key: 'estado', render: e => <Tag color={tagColor(e)}>{e.toUpperCase()}</Tag> },
     { title: 'Fecha', dataIndex: 'createdAt', key: 'createdAt', render: f => f
         ? new Date(f).toLocaleString('es-CL', { year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false })
@@ -740,18 +763,70 @@ const limpiarBusqueda = () => {
         )}
         
         <Title level={2} style={{ color: '#1e3a8a', marginBottom: 24 }}>
-          {esAdmin ? 'Sugerencias Recibidas' : 'Mis Sugerencias'}
+          {esAdmin ? 'Sugerencias Recibidas' : 'Sugerencias'}
         </Title>
         
-       <Input
-  placeholder='Buscar sugerencias...'
-  prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
-  value={searchText}
-  onChange={e => buscarSugerencias(e.target.value)} // CAMBIAR ESTA LÍNEA
-  style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
-  allowClear
-  onClear={() => buscarSugerencias('')} // AGREGAR ESTA LÍNEA
-/>
+      
+<div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
+  <Input
+    placeholder='Buscar sugerencias...'
+    prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+    value={searchText}
+    onChange={e => buscarSugerencias(e.target.value)}
+    style={{ width: 300, borderRadius: 8 }}
+    allowClear
+    onClear={() => buscarSugerencias('')}
+  />
+  
+  <Select
+    placeholder="Filtrar por categoría"
+    value={categoriaFiltro}
+    onChange={(value) => {
+      setCategoriaFiltro(value);
+      setCurrentPage(1);
+    }}
+    style={{ width: 200 }}
+    allowClear
+  >
+   
+    <Option value="infraestructura">Infraestructura</Option>
+    <Option value="eventos">Eventos</Option>
+    
+    <Option value="bienestar">Bienestar</Option>
+    <Option value="otros">Otros</Option>
+  </Select>
+  
+  <Select
+    placeholder="Filtrar por estado"
+    value={estadoFiltro}
+    onChange={(value) => {
+      setEstadoFiltro(value);
+      setCurrentPage(1);
+    }}
+    style={{ width: 200 }}
+    allowClear
+  >
+    <Option value="pendiente">Pendiente</Option>
+    <Option value="en proceso">En proceso</Option>
+    <Option value="resuelta">Resuelta</Option>
+    <Option value="archivada">Archivada</Option>
+  </Select>
+  
+  {/* Botón para limpiar todos los filtros */}
+  {(categoriaFiltro || estadoFiltro || searchText) && (
+    <Button
+      onClick={() => {
+        setCategoriaFiltro(null);
+        setEstadoFiltro(null);
+        setSearchText('');
+        setCurrentPage(1);
+      }}
+      style={{ marginLeft: 8 }}
+    >
+      Limpiar filtros
+    </Button>
+  )}
+</div>
         
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
@@ -759,6 +834,7 @@ const limpiarBusqueda = () => {
             <div style={{ marginTop: 16 }}><Text>Cargando...</Text></div>
           </div>
         ) : (
+          
          <Table
   columns={columns}
   dataSource={sugerencias} // Cambiar de 'filtered' a 'sugerencias'
@@ -1162,42 +1238,49 @@ const limpiarBusqueda = () => {
 
         {/* Modal para responder/editar respuesta admin */}
         <Modal
-          title={tieneResp(sugerenciaSel) ? 'Editar Respuesta' : 'Responder Sugerencia'}
-          open={respModalVisible}
-          onCancel={() => setRespModalVisible(false)}
-          footer={null}
-          width={600}
-        >
-          <Form form={form} layout='vertical' onFinish={enviarRespuesta}>
-            <Form.Item 
-              name='respuesta' 
-              label='Respuesta'
-              rules={[{ required: true, message: 'Ingresa una respuesta' }]}
-            >
-              <Input.TextArea rows={4} placeholder='Escribe tu respuesta aquí...' />
-            </Form.Item>
-            <Form.Item 
-              name='estado' 
-              label='Estado'
-              rules={[{ required: true, message: 'Selecciona un estado' }]}
-            >
-              <Select placeholder='Selecciona el estado'>
-                <Option value='pendiente'>Pendiente</Option>
-                <Option value='en proceso'>En proceso</Option>
-                <Option value='resuelta'>Resuelta</Option>
-                <Option value='archivada'>Archivada</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item style={{ textAlign: 'right' }}>
-              <Button onClick={() => setRespModalVisible(false)} style={{ marginRight: 8 }}>
-                Cancelar
-              </Button>
-              <Button type='primary' htmlType='submit' loading={loadingResp}>
-                {tieneResp(sugerenciaSel) ? 'Actualizar' : 'Enviar'} Respuesta
-              </Button>
-            </Form.Item>
-          </Form>
-        </Modal>
+  title={tieneResp(sugerenciaSel) ? 'Editar Respuesta' : 'Responder Sugerencia'}
+  open={respModalVisible}
+  onCancel={() => setRespModalVisible(false)}
+  footer={null}
+  width={600}
+>
+  <Form 
+    form={form} 
+    layout='vertical' 
+    onFinish={enviarRespuesta}
+    initialValues={{ estado: 'resuelta' }}
+  >
+    <Form.Item 
+      name='respuesta' 
+      label='Respuesta'
+      rules={[{ required: true, message: 'Ingresa una respuesta' }]}
+    >
+      <Input.TextArea rows={4} placeholder='Escribe tu respuesta aquí...' />
+    </Form.Item>
+
+    <Form.Item 
+      name='estado' 
+      label='Estado'
+      rules={[{ required: true, message: 'Selecciona un estado' }]}
+    >
+      <Select placeholder='Selecciona el estado'>
+        <Option value='pendiente'>Pendiente</Option>
+        <Option value='en proceso'>En proceso</Option>
+        <Option value='resuelta'>Resuelta</Option>
+        <Option value='archivada'>Archivada</Option>
+      </Select>
+    </Form.Item>
+
+    <Form.Item style={{ textAlign: 'right' }}>
+      <Button onClick={() => setRespModalVisible(false)} style={{ marginRight: 8 }}>
+        Cancelar
+      </Button>
+      <Button type='primary' htmlType='submit' loading={loadingResp}>
+        {tieneResp(sugerenciaSel) ? 'Actualizar' : 'Enviar'} Respuesta
+      </Button>
+    </Form.Item>
+  </Form>
+</Modal>
       </Content>
     </MainLayout>
   );
