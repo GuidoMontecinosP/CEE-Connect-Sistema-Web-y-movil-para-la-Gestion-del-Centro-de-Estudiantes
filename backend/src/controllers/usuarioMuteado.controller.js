@@ -42,12 +42,12 @@ export const desmutearUsuario = async (req, res) => {
         
     if (!muteo) return handleErrorClient(res, 404, "El usuario no está muteado");
         
-    console.log("Desmuteando usuario:", muteo);
+  //  console.log("Desmuteando usuario:", muteo);
         
     // Cambiar el estado del objeto y guardarlo
     muteo.activo = false;
     await muteadoRepo.save(muteo);
-        console.log("Usuario desmuteado:", muteo);
+    //    console.log("Usuario desmuteado:", muteo);
     handleSuccess(res, 200, "Usuario desmuteado exitosamente", muteo);
   } catch (err) {
     console.error("Error al desmutear:", err);

@@ -1,4 +1,3 @@
-//middlewares/verificarMuteo.middleware.js
 "use strict";
 
 import { AppDataSource } from "../config/configDb.js";
@@ -43,8 +42,8 @@ export const verificarMuteo = async (req, res, next) => {
         );
       }
 
-      // ✅ Si llegamos aquí, el muteo ya expiró
-      console.log("Muteo expirado, desactivando automáticamente...");
+      //  Si llegamos aquí, el muteo ya expiró
+      //console.log("Muteo expirado, desactivando automáticamente...");
       muteo.activo = false;
       await usuarioMuteadoRepo.save(muteo);
     }
