@@ -70,6 +70,8 @@ export default function ListaSugerencias() {
   const [infoReporteVisible, setInfoReporteVisible] = useState(false);
   const [reporteInfo, setReporteInfo] = useState(null);
   const [loadingEliminarReporte, setLoadingEliminarReporte] = useState(false);
+  const [loadingDesmuteo, setLoadingDesmuteo] = useState(false);
+
 
   // Estados para muteo
   const [muteoModalVisible, setMuteoModalVisible] = useState(false);
@@ -107,17 +109,58 @@ export default function ListaSugerencias() {
       
       // NUEVO: Cargar reportes disponibles (solo si es admin)
       if (esAdmin) {
+  try {
+    const reportesRes = await reportesService.obtenerReportes(1, 100);
+    const reportesData = reportesRes.data?.data || [];
+    
+    // Obtener estado de muteo para cada usuario en los reportes
+    const reportesConMuteo = await Promise.all(
+      reportesData.map(async (reporte) => {
         try {
-          const reportesRes = await reportesService.obtenerReportes(1, 100);
-          const reportesData = reportesRes.data?.data || [];
-          setReportesDisponibles(reportesData);
-          setReporteActualIndex(0); // Resetear al primer reporte
-          console.log('Reportes disponibles:', reportesData.length);
+          // Verificar muteo del usuario que reportó
+          let usuarioMuteado = false;
+          if (reporte.usuario?.id) {
+            const muteoUsuario = await muteoService.obtenerEstadoMuteo(reporte.usuario.id);
+            usuarioMuteado = muteoUsuario.data?.isMuted || false;
+          }
+          
+          // Verificar muteo del autor de la sugerencia
+          let autorMuteado = false;
+          if (reporte.sugerencia?.autor?.id) {
+            const muteoAutor = await muteoService.obtenerEstadoMuteo(reporte.sugerencia.autor.id);
+            autorMuteado = muteoAutor.data?.isMuted || false;
+          }
+          
+          return {
+            ...reporte,
+            usuario: {
+              ...reporte.usuario,
+              isMuted: usuarioMuteado
+            },
+            sugerencia: {
+              ...reporte.sugerencia,
+              autor: {
+                ...reporte.sugerencia?.autor,
+                isMuted: autorMuteado
+              }
+            }
+          };
         } catch (error) {
-          console.error('Error al cargar reportes:', error);
-          setReportesDisponibles([]);
+          console.error('Error al verificar muteo:', error);
+          return reporte; // Devolver el reporte original si hay error
         }
-      }
+      })
+    );
+    
+    setReportesDisponibles(reportesConMuteo);
+    setReporteActualIndex(0);
+    console.log('Reportes disponibles:', reportesConMuteo.length);
+  } catch (error) {
+    console.error('Error al cargar reportes:', error);
+    setReportesDisponibles([]);
+  }
+}
+
       
       arr.length
         ? message.success(`${arr.length} sugerencias cargadas`)
@@ -181,7 +224,8 @@ export default function ListaSugerencias() {
         valores.razon, 
         valores.fecha_fin
       );
-      message.success(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
+      //console.log('Usuario muteado:', usuarioAMutear);
+      console.log(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
       setMuteoModalVisible(false);
       await cargar(); // Recargar datos
     } catch (error) {
@@ -194,7 +238,7 @@ export default function ListaSugerencias() {
 
   const desmutearUsuario = async (userId, nombreUsuario) => {
     try {
-      setLoadingMuteo(true);
+      setLoadingDesmuteo(true);
       await muteoService.desmutearUsuario(userId);
       message.success(`Usuario ${nombreUsuario} desmuteado exitosamente`);
       await cargar(); // Recargar datos
@@ -202,7 +246,7 @@ export default function ListaSugerencias() {
       console.error('Error al desmutear usuario:', error);
       message.error(error.message || 'Error al desmutear usuario');
     } finally {
-      setLoadingMuteo(false);
+      setLoadingDesmuteo(false);
     }
   };
 
@@ -751,7 +795,7 @@ export default function ListaSugerencias() {
         type="link" 
         size="small"
         onClick={() => desmutearUsuario(reporteInfo.usuario?.id, reporteInfo.usuario?.nombre)}
-        loading={loadingMuteo}
+        loading={loadingDesmuteo}
       >
         Desmutear usuario
       </Button>
@@ -785,7 +829,7 @@ export default function ListaSugerencias() {
                         type="link" 
                         size="small"
                         onClick={() => desmutearUsuario(reporteInfo.sugerencia?.autor?.id, reporteInfo.sugerencia?.autor?.nombre)}
-                        loading={loadingMuteo}
+                        loading={loadingDesmuteo}
                       >
                         Desmutear autor
                       </Button>
