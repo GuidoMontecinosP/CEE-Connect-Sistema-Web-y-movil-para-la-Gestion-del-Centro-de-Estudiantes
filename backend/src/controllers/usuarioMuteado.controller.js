@@ -1,4 +1,4 @@
-//controllers/usuarioMuteado.controller.js
+
 "use strict";
 
 import { AppDataSource } from "../config/configDb.js";

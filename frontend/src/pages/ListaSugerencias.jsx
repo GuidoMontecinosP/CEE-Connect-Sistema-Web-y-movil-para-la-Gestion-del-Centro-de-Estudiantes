@@ -12,7 +12,8 @@ import {
   Select,
   Typography,
   Tag,
-  Breadcrumb
+  Breadcrumb,
+  DatePicker
 } from 'antd';
 import {
   SearchOutlined,
@@ -22,8 +23,11 @@ import {
 } from '@ant-design/icons';
 import { sugerenciasService } from '../services/sugerencia.services.js';
 import { reportesService } from '../services/reporte.services.js';
+import { muteoService } from '../services/muteado.services.js';
 import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/MainLayout.jsx';
+import dayjs from 'dayjs';
+
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -66,6 +70,13 @@ export default function ListaSugerencias() {
   const [infoReporteVisible, setInfoReporteVisible] = useState(false);
   const [reporteInfo, setReporteInfo] = useState(null);
   const [loadingEliminarReporte, setLoadingEliminarReporte] = useState(false);
+
+  // Estados para muteo
+  const [muteoModalVisible, setMuteoModalVisible] = useState(false);
+  const [muteoForm] = Form.useForm();
+  const [usuarioAMutear, setUsuarioAMutear] = useState(null);
+  const [loadingMuteo, setLoadingMuteo] = useState(false);
+  const [tipoMuteo, setTipoMuteo] = useState(''); // 'reportador' o 'autor'
 
   const navigate = useNavigate();
   const { usuario } = useAuth();
@@ -154,6 +165,47 @@ export default function ListaSugerencias() {
     return true;
   };
 
+  // Funciones para muteo
+  const abrirMuteoModal = (usuario, tipo) => {
+    setUsuarioAMutear(usuario);
+    setTipoMuteo(tipo);
+    muteoForm.resetFields();
+    setMuteoModalVisible(true);
+  };
+
+  const mutearUsuario = async (valores) => {
+    try {
+      setLoadingMuteo(true);
+      await muteoService.mutearUsuario(
+        usuarioAMutear.id, 
+        valores.razon, 
+        valores.fecha_fin
+      );
+      message.success(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
+      setMuteoModalVisible(false);
+      await cargar(); // Recargar datos
+    } catch (error) {
+      console.error('Error al mutear usuario:', error);
+      message.error(error.message || 'Error al mutear usuario');
+    } finally {
+      setLoadingMuteo(false);
+    }
+  };
+
+  const desmutearUsuario = async (userId, nombreUsuario) => {
+    try {
+      setLoadingMuteo(true);
+      await muteoService.desmutearUsuario(userId);
+      message.success(`Usuario ${nombreUsuario} desmuteado exitosamente`);
+      await cargar(); // Recargar datos
+    } catch (error) {
+      console.error('Error al desmutear usuario:', error);
+      message.error(error.message || 'Error al desmutear usuario');
+    } finally {
+      setLoadingMuteo(false);
+    }
+  };
+
   // Ver mensaje de sugerencia
   const abrirVerMensaje = s => {
     setMensajeActivo(s.mensaje);
@@ -186,8 +238,6 @@ export default function ListaSugerencias() {
 
   // Abrir modal de reporte
   const abrirReportar = (sugerencia) => {
-    // Verificación adicional antes de abrir el modal
-   
     setSugerenciaAReportar(sugerencia);
     reportForm.resetFields();
     setReportModalVisible(true);
@@ -222,6 +272,10 @@ export default function ListaSugerencias() {
       const reporte = reportesDisponibles.find(r => r.sugerencia?.id === sugerencia.id);
       
       if (reporte) {
+        // NUEVO: Actualizar el índice actual basado en el reporte encontrado
+        const nuevoIndex = reportesDisponibles.findIndex(r => r.id === reporte.id);
+        setReporteActualIndex(nuevoIndex >= 0 ? nuevoIndex : 0);
+        
         setReporteInfo(reporte);
         setInfoReporteVisible(true);
       } else {
@@ -326,17 +380,7 @@ export default function ListaSugerencias() {
       title: 'Título', 
       dataIndex: 'titulo', 
       key: 'titulo', 
-      render: (titulo, record) => (
-        <div>
-          <Text strong>{titulo}</Text>
-          {/* Indicador de sugerencia reportada */}
-          {record.isReportada && (
-            <Tag color="red" style={{ marginLeft: 8 }}>
-              <ExclamationCircleOutlined /> Reportada
-            </Tag>
-          )}
-        </div>
-      )
+      render: (titulo) => <Text strong>{titulo}</Text>
     },
     { title: 'Categoría', dataIndex: 'categoria', key: 'categoria' },
     { title: 'Estado', dataIndex: 'estado', key: 'estado', render: e => <Tag color={tagColor(e)}>{e.toUpperCase()}</Tag> },
@@ -544,6 +588,8 @@ export default function ListaSugerencias() {
               style={{ display: 'block', marginTop: 4 }}
             >
               Autor: {msgAutor.nombre} {msgAutor.apellido}
+                  <br/>
+              Correo: {msgAutor.correo}
             </Text>
           )}
         </Modal>
@@ -683,108 +729,250 @@ export default function ListaSugerencias() {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <Text strong>Reportado por:</Text>
-                <div style={{ marginTop: 4 }}>
-                  <Text>{reporteInfo.usuario?.nombre} {reporteInfo.usuario?.apellido}</Text>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 16 }}>
                 <Text strong>Fecha del reporte:</Text>
                 <div style={{ marginTop: 4 }}>
                   <Text>{new Date(reporteInfo.createdAt).toLocaleString('es-CL')}</Text>
                 </div>
               </div>
 
-              {/* Confirmación de eliminación */}
-              {confirmandoEliminacion ? (
-                <div style={{ 
-                  marginBottom: 20,
-                  padding: 16,
-                  backgroundColor: '#fff2f0',
-                  border: '1px solid #ffccc7',
-                  borderRadius: 6
-                }}>
-                  <div style={{ marginBottom: 12 }}>
-                    <ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
-                    <Text strong style={{ color: '#ff4d4f' }}>
-                      ¿Estás seguro de que quieres eliminar este reporte?
-                    </Text>
+              {/* Información del usuario que reportó */}
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Reportado por:</Text>
+                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Text>{reporteInfo.usuario?.nombre} {reporteInfo.usuario?.apellido}</Text>
+                  {reporteInfo.usuario?.isMuted ? (
+                    <Tag color="red">Muteado</Tag>
+                  ) : null}
+                </div>
+                {esAdmin && (
+  <div style={{ marginTop: 8 }}>
+    {reporteInfo.usuario?.isMuted ? (
+      <Button 
+        type="link" 
+        size="small"
+        onClick={() => desmutearUsuario(reporteInfo.usuario?.id, reporteInfo.usuario?.nombre)}
+        loading={loadingMuteo}
+      >
+        Desmutear usuario
+      </Button>
+    ) : (
+     <Button 
+  type="link" 
+  size="small" 
+  danger
+  onClick={() => abrirMuteoModal(reporteInfo.usuario, 'reportador')}
+>
+  Mutear usuario
+</Button>
+    )}
+  </div>
+)}
+              </div>
+
+              {/* Información del autor de la sugerencia */}
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Autor de la sugerencia:</Text>
+                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Text>{reporteInfo.sugerencia?.autor?.nombre} {reporteInfo.sugerencia?.autor?.apellido}</Text>
+                  {reporteInfo.sugerencia?.autor?.isMuted ? (
+                    <Tag color="red">Muteado</Tag>
+                  ) : null}
+                </div>
+                {esAdmin && (
+                  <div style={{ marginTop: 8 }}>
+                    {reporteInfo.sugerencia?.autor?.isMuted ? (
+                      <Button 
+                        type="link" 
+                        size="small"
+                        onClick={() => desmutearUsuario(reporteInfo.sugerencia?.autor?.id, reporteInfo.sugerencia?.autor?.nombre)}
+                        loading={loadingMuteo}
+                      >
+                        Desmutear autor
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="link" 
+                        size="small" 
+                        danger
+                        onClick={() => abrirMuteoModal(reporteInfo.sugerencia?.autor, 'autor')}
+                      >
+                        Mutear autor
+                      </Button>
+                    )}
                   </div>
-                  <Text style={{ color: '#666' }}>
-                    Esta acción no se puede deshacer.
+                )}
+              </div>
+
+              {/* Contenido de la sugerencia */}
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Contenido de la sugerencia:</Text>
+                <div style={{ 
+                  marginTop: 8, 
+                  padding: 12, 
+                  backgroundColor: '#f5f5f5', 
+                  borderRadius: 4,
+                  border: '1px solid #d9d9d9'
+                }}>
+                  <Text>{reporteInfo.sugerencia?.mensaje}</Text>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div style={{ textAlign: 'right', marginTop: 24 }}>
+                <Button 
+                  onClick={() => setInfoReporteVisible(false)} 
+                  style={{ marginRight: 8 }}
+                >
+                  Cerrar
+                </Button>
+                <Button 
+                  danger 
+                  onClick={() => setConfirmandoEliminacion(true)}
+                  loading={loadingEliminarReporte}
+                >
+                  Eliminar Reporte
+                </Button>
+              </div>
+
+              {/* Confirmación de eliminación */}
+              {confirmandoEliminacion && (
+                <div style={{ 
+                  marginTop: 16, 
+                  padding: 12, 
+                  backgroundColor: '#fff1f0', 
+                  border: '1px solid #ffccc7', 
+                  borderRadius: 4 
+                }}>
+                  <Text strong style={{ color: '#ff4d4f' }}>
+                    ¿Estás seguro de que deseas eliminar este reporte?
                   </Text>
-                  <div style={{ marginTop: 12, textAlign: 'right' }}>
+                  <div style={{ marginTop: 8, textAlign: 'right' }}>
                     <Button 
+                      size="small" 
                       onClick={() => setConfirmandoEliminacion(false)}
                       style={{ marginRight: 8 }}
                     >
                       Cancelar
                     </Button>
                     <Button 
-                      type='primary' 
-                      danger
-                      loading={loadingEliminarReporte}
+                      size="small" 
+                      type="primary" 
+                      danger 
                       onClick={eliminarReporte}
+                      loading={loadingEliminarReporte}
                     >
-                      Sí, eliminar
+                      Confirmar Eliminación
                     </Button>
                   </div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'right', borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
-                  <Button 
-                    onClick={() => setInfoReporteVisible(false)} 
-                    style={{ marginRight: 8 }}
-                  >
-                    Cerrar
-                  </Button>
-                  <Button 
-                    type='primary' 
-                    danger
-                    onClick={() => setConfirmandoEliminacion(true)}
-                    style={{
-                      backgroundColor: '#ff4d4f',
-                      borderColor: '#ff4d4f'
-                    }}
-                  >
-                    Eliminar Reporte
-                  </Button>
                 </div>
               )}
             </div>
           )}
         </Modal>
 
-        {/* Modal para responder/editar (solo admin) */}
-        {esAdmin && (
-          <Modal
-            title={tieneResp(sugerenciaSel) ? 'Editar Respuesta' : 'Responder Sugerencia'}
-            open={respModalVisible}
-            onCancel={() => setRespModalVisible(false)}
-            footer={null}
-            width={600}
-          >
-            <Form form={form} layout='vertical' onFinish={enviarRespuesta}>
-              <Form.Item name='estado' label='Estado' rules={[{ required:true }]} initialValue='resuelta'>
-                <Select>
-                  <Option value='en proceso'>En proceso</Option>
-                  <Option value='resuelta'>Resuelta</Option>
-                  <Option value='archivada'>Archivada</Option>
-                </Select>
-              </Form.Item>
-              <Form.Item name='respuesta' label='Respuesta' rules={[{required:true,message:'Escribe una respuesta'},{min:10,message:'Mínimo 10 caracteres'}]}>
-                <Input.TextArea rows={4} showCount maxLength={500} />
-              </Form.Item>
-              <Form.Item style={{ textAlign:'right' }}>
-                <Button onClick={() => setRespModalVisible(false)} style={{ marginRight:8 }}>Cancelar</Button>
-                <Button type='primary' htmlType='submit' loading={loadingResp} style={{ backgroundColor:'#1e3a8a' }}>
-                  {tieneResp(sugerenciaSel) ? 'Actualizar' : 'Enviar'}
-                </Button>
-              </Form.Item>
-            </Form>
-          </Modal>
-        )}
+        {/* Modal para mutear usuario */}
+        <Modal
+          title={`Mutear ${tipoMuteo === 'reportador' ? 'Usuario Reportador' : 'Autor de la Sugerencia'}`}
+          open={muteoModalVisible}
+          onCancel={() => setMuteoModalVisible(false)}
+          footer={null}
+          width={500}
+        >
+          {usuarioAMutear && (
+            <div>
+              <div style={{ marginBottom: 16 }}>
+                <Text>
+                  Vas a mutear a: <Text strong>{usuarioAMutear.nombre} {usuarioAMutear.apellido}</Text>
+                </Text>
+              </div>
+              <Form form={muteoForm} layout="vertical" onFinish={mutearUsuario}>
+                <Form.Item
+                  name="razon"
+                  label="Razón del muteo"
+                  rules={[{ required: true, message: 'Ingresa la razón del muteo' }]}
+                >
+                  <Select placeholder="Selecciona la razón del muteo">
+                    <Option value="spam">Spam</Option>
+                    <Option value="contenido_inapropiado">Contenido inapropiado</Option>
+                    <Option value="lenguaje_ofensivo">Lenguaje ofensivo</Option>
+                    <Option value="reportes_falsos">Reportes falsos</Option>
+                    <Option value="conducta_disruptiva">Conducta disruptiva</Option>
+                    <Option value="otro">Otro</Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item
+                  name="fecha_fin"
+                  label="Fecha fin del muteo"
+                  rules={[{ required: true, message: 'Selecciona la fecha fin del muteo' }]}
+                >
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    showTime
+                    format="YYYY-MM-DD HH:mm:ss"
+                    placeholder="Selecciona fecha y hora"
+                  disabledDate={(current) => current && current < dayjs().endOf('day')}
+
+                  />
+                </Form.Item>
+                <Form.Item style={{ textAlign: 'right', marginTop: 24 }}>
+                  <Button 
+                    onClick={() => setMuteoModalVisible(false)} 
+                    style={{ marginRight: 8 }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="primary" 
+                    danger 
+                    htmlType="submit" 
+                    loading={loadingMuteo}
+                  >
+                    Mutear Usuario
+                  </Button>
+                </Form.Item>
+              </Form>
+            </div>
+          )}
+        </Modal>
+
+        {/* Modal para responder/editar respuesta admin */}
+        <Modal
+          title={tieneResp(sugerenciaSel) ? 'Editar Respuesta' : 'Responder Sugerencia'}
+          open={respModalVisible}
+          onCancel={() => setRespModalVisible(false)}
+          footer={null}
+          width={600}
+        >
+          <Form form={form} layout='vertical' onFinish={enviarRespuesta}>
+            <Form.Item 
+              name='respuesta' 
+              label='Respuesta'
+              rules={[{ required: true, message: 'Ingresa una respuesta' }]}
+            >
+              <Input.TextArea rows={4} placeholder='Escribe tu respuesta aquí...' />
+            </Form.Item>
+            <Form.Item 
+              name='estado' 
+              label='Estado'
+              rules={[{ required: true, message: 'Selecciona un estado' }]}
+            >
+              <Select placeholder='Selecciona el estado'>
+                <Option value='pendiente'>Pendiente</Option>
+                <Option value='en proceso'>En proceso</Option>
+                <Option value='resuelta'>Resuelta</Option>
+                <Option value='archivada'>Archivada</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item style={{ textAlign: 'right' }}>
+              <Button onClick={() => setRespModalVisible(false)} style={{ marginRight: 8 }}>
+                Cancelar
+              </Button>
+              <Button type='primary' htmlType='submit' loading={loadingResp}>
+                {tieneResp(sugerenciaSel) ? 'Actualizar' : 'Enviar'} Respuesta
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
       </Content>
     </MainLayout>
   );

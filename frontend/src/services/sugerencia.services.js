@@ -39,20 +39,20 @@ crearSugerencia: async (datos) => {
   },
 
   // Actualizar sugerencia
-  actualizarSugerencia: async (id, titulo, mensaje, categoria, contacto) => {
-    try {
-      const response = await axios.patch(`/sugerencias/${id}`, {
-        titulo,
-        mensaje,
-        categoria,
-        contacto
-      });
-      return response.data;
-    } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar sugerencia';
-      throw new Error(msg);
-    }
-  },
+  actualizarSugerencia: async (id, datos) => {
+  try {
+    console.log('Datos enviados al servidor:', datos); // Para debug
+    console.log('ID de la sugerencia:', id); // Para debug
+    const response = await axios.patch(`/sugerencias/${id}`, datos);
+    console.log('Respuesta del servidor:', response.data); // Para debug
+    return response.data;
+  } catch (error) {
+    console.error('Error en actualizarSugerencia:', error.response?.data);
+    const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar sugerencia';
+    throw new Error(msg);
+  }
+},
+
 
   // Eliminar sugerencia
   eliminarSugerencia: async (id) => {

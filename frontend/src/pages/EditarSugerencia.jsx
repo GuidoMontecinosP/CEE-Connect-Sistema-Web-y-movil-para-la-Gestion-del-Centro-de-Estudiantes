@@ -47,39 +47,45 @@ export default function EditarSugerencia() {
   }, [id, form, navigate]);
 
   const onFinish = async (values) => {
-    try {
-      setUpdating(true);
-      
-      // Log para debug
-      console.log('Valores del formulario:', values);
-      console.log('ID de la sugerencia:', id);
-      
-      const titulo = values.titulo?.trim();
-      const mensaje = values.mensaje?.trim();
-      const categoria = values.categoria;
-      const contacto = values.contacto?.trim() || null;
-      
-      console.log('Datos a enviar:', { titulo, mensaje, categoria, contacto });
-      
-      await sugerenciasService.actualizarSugerencia(
-        id,
-        titulo,
-        mensaje,
-        categoria,
-        contacto
-      );
-      
-      message.success("Sugerencia actualizada exitosamente");
-      navigate('/mis-sugerencias');
-    } catch (err) {
-      console.error("Error completo al actualizar sugerencia:", err);
-      console.error("Response data:", err.response?.data);
-      console.error("Response status:", err.response?.status);
-      message.error(err.message || "Error al actualizar sugerencia");
-    } finally {
-      setUpdating(false);
+  try {
+    setUpdating(true);
+    
+    // Solo enviar campos que realmente cambiaron
+    const datosActualizados = {};
+    
+    if (values.titulo && values.titulo.trim() !== datosOriginales?.titulo) {
+      datosActualizados.titulo = values.titulo.trim();
     }
-  };
+    if (values.mensaje && values.mensaje.trim() !== datosOriginales?.mensaje) {
+      datosActualizados.mensaje = values.mensaje.trim();
+    }
+    if (values.categoria && values.categoria !== datosOriginales?.categoria) {
+      datosActualizados.categoria = values.categoria;
+    }
+    if (values.contacto?.trim() !== datosOriginales?.contacto) {
+      datosActualizados.contacto = values.contacto?.trim() || null;
+    }
+    
+    // Verificar que hay al menos un cambio
+    if (Object.keys(datosActualizados).length === 0) {
+      message.warning("No se detectaron cambios");
+      return;
+    }
+    
+    console.log('Datos finales a enviar:', datosActualizados);
+    
+    await sugerenciasService.actualizarSugerencia(id, datosActualizados);
+    
+    message.success("Sugerencia actualizada exitosamente");
+    navigate('/mis-sugerencias');
+  } catch (err) {
+    console.error("Error al actualizar:", err);
+    message.error(err.message || "Error al actualizar sugerencia");
+  } finally {
+    setUpdating(false);
+  }
+};
+
 
   const menuItems = [
     { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
