@@ -1,5 +1,6 @@
 // backend/src/services/sugerencias.service.js
 "use strict";
+import { ILike, Or, And } from 'typeorm';
 
 import { AppDataSource } from "../config/configDb.js";
 import SugerenciaSchema from "../entity/sugerencia.entity.js";
@@ -39,36 +40,52 @@ class SugerenciasService {
   }
 
   async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
-    const skip = (page - 1) * limit;
-    
-    const whereConditions = {};
-    
-    if (filtros.categoria) {
-      whereConditions.categoria = filtros.categoria;
-    }
-    
-    if (filtros.estado) {
-      whereConditions.estado = filtros.estado;
-    }
-
-    const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
-      where: whereConditions,
-      relations: ["autor", "adminResponsable"],
-      order: { createdAt: "DESC" },
-      skip,
-      take: limit
-    });
-
-    return {
-      data: sugerencias,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
+  const skip = (page - 1) * limit;
+  
+  let whereConditions = {};
+  
+  // Filtros de categoría y estado
+  if (filtros.categoria) {
+    whereConditions.categoria = filtros.categoria;
   }
+  
+  if (filtros.estado) {
+    whereConditions.estado = filtros.estado;
+  }
+  
+  // Búsqueda por texto en múltiples campos
+  if (filtros.busqueda) {
+    const busqueda = filtros.busqueda.trim();
+    if (busqueda) {
+      const searchConditions = [
+        { ...whereConditions, titulo: ILike(`%${busqueda}%`) },
+        { ...whereConditions, mensaje: ILike(`%${busqueda}%`) },
+        { ...whereConditions, categoria: ILike(`%${busqueda}%`) }
+      ];
+      whereConditions = searchConditions;
+    }
+  }
+
+  const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
+    where: whereConditions,
+    relations: ["autor", "adminResponsable"],
+    order: { createdAt: "DESC" },
+    skip,
+    take: limit
+  });
+
+  return {
+    data: sugerencias,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+}
+
+
 
   async obtenerSugerenciaPorId(id) {
     return await this.sugerenciaRepository.findOne({

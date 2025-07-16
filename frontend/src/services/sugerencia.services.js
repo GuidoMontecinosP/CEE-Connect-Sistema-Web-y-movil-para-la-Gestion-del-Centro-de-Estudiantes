@@ -13,20 +13,33 @@ crearSugerencia: async (datos) => {
 },
 
   // Obtener todas las sugerencias con filtros y paginación
-  obtenerSugerencias: async (page = 1, limit = 10, categoria = null, estado = null) => {
-    try {
-      const params = new URLSearchParams();
-      params.append('page', page);
-      params.append('limit', limit);
-      if (categoria) params.append('categoria', categoria);
-      if (estado) params.append('estado', estado);
 
-      const response = await axios.get(`/sugerencias?${params.toString()}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.mensaje || 'Error al obtener sugerencias');
+obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('limit', limit);
+    
+    // Agregar filtros solo si tienen valor
+    if (filtros.categoria) {
+      params.append('categoria', filtros.categoria);
     }
-  },
+    
+    if (filtros.estado) {
+      params.append('estado', filtros.estado);
+    }
+    
+    if (filtros.busqueda && filtros.busqueda.trim()) {
+      params.append('busqueda', filtros.busqueda.trim());
+    }
+    
+    const response = await axios.get(`/sugerencias?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.mensaje || 'Error al obtener sugerencias');
+  }
+},
+
 
   // Obtener sugerencia por ID
   obtenerSugerenciaPorId: async (id) => {

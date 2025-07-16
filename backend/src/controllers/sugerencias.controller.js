@@ -34,18 +34,19 @@ export async function crearSugerencia(req, res) {
 
 export async function obtenerSugerencias(req, res) {
   try {
-    const { page = 1, limit = 10, categoria, estado } = req.query;
+    const { page = 1, limit = 10, categoria, estado, busqueda } = req.query;
     
     const filtros = {};
     if (categoria) filtros.categoria = categoria;
     if (estado) filtros.estado = estado;
-
+    if (busqueda) filtros.busqueda = busqueda; // Agregar esta línea
+    
     const sugerencias = await sugerenciasService.obtenerSugerencias(
       parseInt(page),
       parseInt(limit),
       filtros
     );
-
+    
     handleSuccess(res, 200, "Sugerencias obtenidas exitosamente", sugerencias);
   } catch (error) {
     console.error("Error al obtener sugerencias:", error);

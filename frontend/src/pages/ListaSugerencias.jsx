@@ -37,6 +37,17 @@ export default function ListaSugerencias() {
   const [sugerencias, setSugerencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  //Paginación y filtros
+  const [currentPage, setCurrentPage] = useState(1);
+const [pageSize, setPageSize] = useState(10);
+const [totalRecords, setTotalRecords] = useState(0);
+
+// Estados para filtros (opcional)
+const [categoriaFiltro, setCategoriaFiltro] = useState(null);
+const [estadoFiltro, setEstadoFiltro] = useState(null);
+
+
   const [form] = Form.useForm();
   const [reportForm] = Form.useForm();
   const [confirmandoEliminacion, setConfirmandoEliminacion] = useState(false);
@@ -85,15 +96,20 @@ export default function ListaSugerencias() {
   const esAdmin = usuario?.rol?.nombre === 'administrador';
   const esEstud = usuario?.rol?.nombre === 'estudiante';
 
-  const cargar = async () => {
+  const cargar = async (page = 1, limit = 10, filtros = {}) => {
     try {
       setLoading(true);
       
-      // Cargar sugerencias
-      const res = await sugerenciasService.obtenerSugerencias();
-      const payload = res.data.data;
-      const arr = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
-      setSugerencias(arr);
+      const res = await sugerenciasService.obtenerSugerencias(page, limit, filtros);
+
+    
+    // Manejar la respuesta según la estructura de tu backend
+    const data = res.data || res;
+    setSugerencias(data.data || []);
+    setTotalRecords(data.pagination?.total || 0);
+    setCurrentPage(page);
+    setPageSize(limit);
+
       
       // NUEVO: Cargar reportes del usuario actual (solo si es estudiante)
       if (esEstud) {
@@ -174,15 +190,53 @@ export default function ListaSugerencias() {
     }
   };
 
-  useEffect(() => {
-    cargar();
-  }, []);
+  const buscarSugerencias = (valor) => {
+  setSearchText(valor);
+  
+  // Limpiar timeout anterior
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  
+  // Crear nuevo timeout
+  const nuevoTimeout = setTimeout(() => {
+    setCurrentPage(1); // Volver a la primera página
+    cargar(1, pageSize, { 
+      categoria: categoriaFiltro, 
+      estado: estadoFiltro, 
+      busqueda: valor 
+    });
+  }, 500);
+  
+  setSearchTimeout(nuevoTimeout);
+};
 
-  const filtered = sugerencias.filter(s =>
-    `${s.titulo} ${s.categoria} ${s.estado}`
-      .toLowerCase()
-      .includes(searchText.toLowerCase())
-  );
+
+useEffect(() => {
+  cargar(currentPage, pageSize, { 
+    categoria: categoriaFiltro, 
+    estado: estadoFiltro,
+    busqueda: searchText 
+  });
+}, [currentPage, pageSize, categoriaFiltro, estadoFiltro]);
+
+const limpiarBusqueda = () => {
+  setSearchText('');
+  setCurrentPage(1);
+  cargar(1, pageSize, { 
+    categoria: categoriaFiltro, 
+    estado: estadoFiltro, 
+    busqueda: '' 
+  });
+};
+
+
+
+  // const filtered = sugerencias.filter(s =>
+  //   `${s.titulo} ${s.categoria} ${s.estado}`
+  //     .toLowerCase()
+  //     .includes(searchText.toLowerCase())
+  // );
 
   const tagColor = estado => {
     const map = { pendiente: 'orange', 'en proceso': 'blue', resuelta: 'green', archivada: 'default' };
@@ -689,14 +743,15 @@ export default function ListaSugerencias() {
           {esAdmin ? 'Sugerencias Recibidas' : 'Mis Sugerencias'}
         </Title>
         
-        <Input
-          placeholder='Buscar sugerencias...'
-          prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
-          value={searchText}
-          onChange={e => setSearchText(e.target.value)}
-          style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
-          allowClear
-        />
+       <Input
+  placeholder='Buscar sugerencias...'
+  prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+  value={searchText}
+  onChange={e => buscarSugerencias(e.target.value)} // CAMBIAR ESTA LÍNEA
+  style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
+  allowClear
+  onClear={() => buscarSugerencias('')} // AGREGAR ESTA LÍNEA
+/>
         
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
@@ -704,14 +759,29 @@ export default function ListaSugerencias() {
             <div style={{ marginTop: 16 }}><Text>Cargando...</Text></div>
           </div>
         ) : (
-          <Table
-            columns={columns}
-            dataSource={filtered}
-            rowKey='id'
-            pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true, showTotal: (t, r) => `${r[0]}–${r[1]} de ${t}` }}
-            bordered
-            locale={{ emptyText: filtered.length ? 'No hay coincidencias' : 'Sin sugerencias' }}
-          />
+         <Table
+  columns={columns}
+  dataSource={sugerencias} // Cambiar de 'filtered' a 'sugerencias'
+  rowKey='id'
+  pagination={{
+    current: currentPage,
+    pageSize: pageSize,
+    total: totalRecords,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    showTotal: (total, range) => `${range[0]}–${range[1]} de ${total}`,
+    onChange: (page, size) => {
+      setCurrentPage(page);
+      setPageSize(size);
+    },
+    onShowSizeChange: (current, size) => {
+      setCurrentPage(1);
+      setPageSize(size);
+    }
+  }}
+  bordered
+  locale={{ emptyText: 'Sin sugerencias' }}
+/>
         )}
 
         {/* Modal para ver mensaje */}
