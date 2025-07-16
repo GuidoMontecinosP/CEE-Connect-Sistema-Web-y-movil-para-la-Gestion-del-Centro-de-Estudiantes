@@ -1,5 +1,4 @@
-//src/entity/reporteSugerencia.entity.js
-
+// src/entity/reporteSugerencia.entity.js
 import { EntitySchema } from "typeorm";
 
 const ReporteSugerenciaSchema = new EntitySchema({
@@ -25,12 +24,14 @@ const ReporteSugerenciaSchema = new EntitySchema({
     usuario: {
       type: "many-to-one",
       target: "Usuario",
+      joinColumn: { name: "usuarioId" },        // <— aquí
       onDelete: "CASCADE",
       eager: true
     },
     sugerencia: {
       type: "many-to-one",
       target: "Sugerencia",
+      joinColumn: { name: "sugerenciaId" },     // <— y aquí
       onDelete: "CASCADE",
       eager: true
     }

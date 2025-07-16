@@ -63,15 +63,26 @@ export const reporteService = {
     await sugerenciaRepo.save(sugerencia);
   }
   ,
-  async obtenerReportesPorUsuario(userId) {
-    const reportes = await reporteRepo.find({
-      where: { usuario: { id: userId } },
-      relations: ['sugerencia']
-    });
-    
-    // Devolver solo los IDs de las sugerencias reportadas por este usuario
-    return reportes.map(r => r.sugerencia.id);
-  },
+async obtenerReportesPorUsuario(userId) {
+  //console.log('Buscando para userId:', userId);
+  
+  const reportes = await reporteRepo.find({
+    where: { usuario: { id: userId } }
+  });
+  
+  //console.log('Reportes encontrados:', reportes);
+  //console.log('Cantidad:', reportes.length);
+  
+  if (reportes.length > 0) {
+    //console.log('Primer reporte:', reportes[0]);
+    //console.log('Sugerencia del primer reporte:', reportes[0].sugerencia);
+  }
+  
+  return reportes.map(r => r.sugerencia?.id).filter(id => id);
+}
+
+
+
 };
 
  

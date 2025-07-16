@@ -39,12 +39,19 @@ export const obtenerMisReportes = async (req, res) => {
   try {
     const userId = req.user.id;
     const sugerenciasReportadas = await reporteService.obtenerReportesPorUsuario(userId);
-    handleSuccess(res, 200, "Mis reportes obtenidos", sugerenciasReportadas);
-  } catch (err) {
-    console.error("Error obteniendo mis reportes:", err);
-    handleErrorServer(res);
+    res.json({
+      success: true,
+      data: sugerenciasReportadas,
+      message: `${sugerenciasReportadas.length} sugerencias reportadas por este usuario`
+    });
+  } catch (error) {
+    console.error('Error al obtener reportes del usuario:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener reportes del usuario'
+    });
   }
-};
+}
 
 export const vaciarReportes = async (req, res) => {
   try {

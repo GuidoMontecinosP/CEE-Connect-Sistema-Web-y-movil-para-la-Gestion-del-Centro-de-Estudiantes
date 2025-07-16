@@ -36,7 +36,9 @@ export default function ListaSugerencias() {
   const [form] = Form.useForm();
   const [reportForm] = Form.useForm();
   const [confirmandoEliminacion, setConfirmandoEliminacion] = useState(false);
-  const [misReportes, setMisReportes] = useState([]);
+  const [misReportes, setMisReportes] = useState([]); // IDs de sugerencias que YA reporté
+  const [reportesDisponibles, setReportesDisponibles] = useState([]); // Para admin: lista de reportes pendientes
+  const [reporteActualIndex, setReporteActualIndex] = useState(0); // Para admin: índice del reporte actual
 
   // Modal para ver mensaje de sugerencia
   const [msgModalVisible, setMsgModalVisible] = useState(false);
@@ -60,7 +62,7 @@ export default function ListaSugerencias() {
   const [sugerenciaAReportar, setSugerenciaAReportar] = useState(null);
   const [loadingReporte, setLoadingReporte] = useState(false);
 
-  // Estados para gestión de reportes (ADMIN)
+  // Estados para gestión de reportes (admin)
   const [infoReporteVisible, setInfoReporteVisible] = useState(false);
   const [reporteInfo, setReporteInfo] = useState(null);
   const [loadingEliminarReporte, setLoadingEliminarReporte] = useState(false);
@@ -77,34 +79,32 @@ export default function ListaSugerencias() {
       // Cargar sugerencias
       const res = await sugerenciasService.obtenerSugerencias();
       const payload = res.data.data;
-      const arr = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.data)
-          ? payload.data
-          : [];
+      const arr = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
       setSugerencias(arr);
       
-      // Cargar reportes del usuario actual (solo si es estudiante)
+      // NUEVO: Cargar reportes del usuario actual (solo si es estudiante)
       if (esEstud) {
         try {
           const reportesRes = await reportesService.obtenerMisReportes();
-          console.log('Mis reportes (respuesta completa):', reportesRes);
-          
-          // CORRECCIÓN: Extraer correctamente los IDs de las sugerencias reportadas
-          const reportesData = reportesRes.data || [];
-          const sugerenciasReportadas = reportesData.map(reporte => {
-            // Asegurarse de que obtenemos el ID correcto
-            const sugerenciaId = reporte.sugerencia?.id || reporte.sugerenciaId;
-            console.log('Sugerencia reportada ID:', sugerenciaId);
-            return sugerenciaId;
-          }).filter(id => id !== undefined && id !== null);
-          
-          console.log('IDs de sugerencias reportadas:', sugerenciasReportadas);
-          setMisReportes(sugerenciasReportadas);
-          
+          setMisReportes(reportesRes.data || []); // Array de IDs de sugerencias reportadas
+          console.log('Mis reportes (IDs):', reportesRes.data);
         } catch (error) {
           console.error('Error al cargar mis reportes:', error);
           setMisReportes([]);
+        }
+      }
+      
+      // NUEVO: Cargar reportes disponibles (solo si es admin)
+      if (esAdmin) {
+        try {
+          const reportesRes = await reportesService.obtenerReportes(1, 100);
+          const reportesData = reportesRes.data?.data || [];
+          setReportesDisponibles(reportesData);
+          setReporteActualIndex(0); // Resetear al primer reporte
+          console.log('Reportes disponibles:', reportesData.length);
+        } catch (error) {
+          console.error('Error al cargar reportes:', error);
+          setReportesDisponibles([]);
         }
       }
       
@@ -137,51 +137,22 @@ export default function ListaSugerencias() {
 
   const tieneResp = s => !!s?.respuestaAdmin && String(s.respuestaAdmin).trim() !== '';
 
-  // FUNCIÓN CORREGIDA: Verificar si puedo reportar esta sugerencia
+  // FUNCIÓN ACTUALIZADA: Verificar si puedo reportar esta sugerencia
   const puedeReportar = (sugerencia) => {
-  console.log('Verificando si puede reportar:', {
-    sugerenciaId: sugerencia.id,
-    esEstud,
-    esPropia: sugerencia.autor?.id === usuario?.id,
-    estado: sugerencia.estado,
-    misReportes,
-    yaReportada: misReportes.includes(sugerencia.id) || misReportes.includes(String(sugerencia.id))
-  });
-  
-  // Solo estudiantes pueden reportar
-  if (!esEstud) {
-    console.log('No puede reportar: no es estudiante');
-    return false;
-  }
-  
-  // No puede reportar sus propias sugerencias
-  if (sugerencia.autor?.id === usuario?.id) {
-    console.log('No puede reportar: es su propia sugerencia');
-    return false;
-  }
-  
-  // No puede reportar sugerencias archivadas
-  if (sugerencia.estado === 'archivada') {
-    console.log('No puede reportar: sugerencia archivada');
-    return false;
-  }
-  
-  // CORRECCIÓN: Solo verificar si YO ya reporté esta sugerencia, no si alguien más la reportó
-  const yaReportePorMi = misReportes.includes(sugerencia.id) || 
-                         misReportes.includes(String(sugerencia.id)) ||
-                         misReportes.includes(Number(sugerencia.id));
-  
-  if (yaReportePorMi) {
-    console.log('No puede reportar: ya reporté esta sugerencia');
-    return false;
-  }
-  
-  // REMOVIDO: La verificación de sugerencia.isReportada 
-  // porque no debe impedir que otros usuarios reporten
-  
-  console.log('Puede reportar: todas las condiciones se cumplen');
-  return true;
-};
+    // Solo estudiantes pueden reportar
+    if (!esEstud) return false;
+    
+    // No puede reportar sus propias sugerencias
+    if (sugerencia.autor?.id === usuario?.id) return false;
+    
+    // No puede reportar sugerencias archivadas
+    if (sugerencia.estado === 'archivada') return false;
+    
+    // NUEVO: No puede reportar sugerencias que ya reportó
+    if (misReportes.includes(sugerencia.id)) return false;
+    
+    return true;
+  };
 
   // Ver mensaje de sugerencia
   const abrirVerMensaje = s => {
@@ -213,46 +184,27 @@ export default function ListaSugerencias() {
     setRespModalVisible(true);
   };
 
-  // FUNCIÓN CORREGIDA: Abrir modal de reporte
+  // Abrir modal de reporte
   const abrirReportar = (sugerencia) => {
-    console.log('Intentando abrir modal de reporte para:', sugerencia);
-    
     // Verificación adicional antes de abrir el modal
-    if (!puedeReportar(sugerencia)) {
-      if (sugerencia.isReportada) {
-        message.warning('Esta sugerencia ya ha sido reportada');
-      } else if (misReportes.includes(sugerencia.id) || misReportes.includes(String(sugerencia.id))) {
-        message.warning('Ya has reportado esta sugerencia');
-      } else {
-        message.warning('No puedes reportar esta sugerencia');
-      }
-      return;
-    }
-    
-    console.log('Abriendo modal de reporte...');
+   
     setSugerenciaAReportar(sugerencia);
     reportForm.resetFields();
     setReportModalVisible(true);
   };
 
-  // Enviar reporte
+  // FUNCIÓN ACTUALIZADA: Enviar reporte
   const enviarReporte = async (valores) => {
     try {
       setLoadingReporte(true);
-      console.log('Enviando reporte para sugerencia:', sugerenciaAReportar.id);
-      
       await reportesService.crearReporte(sugerenciaAReportar.id, valores.motivo);
+      
+      // NUEVO: Agregar la sugerencia a mis reportes inmediatamente
+      setMisReportes(prev => [...prev, sugerenciaAReportar.id]);
+      
       message.success('Reporte enviado exitosamente');
       setReportModalVisible(false);
-      
-      // CORRECCIÓN: Asegurar que agregamos el ID correcto a misReportes
-      setMisReportes(prev => {
-        const nuevosReportes = [...prev, sugerenciaAReportar.id];
-        console.log('Actualizando misReportes:', nuevosReportes);
-        return nuevosReportes;
-      });
-      
-      await cargar(); // Recargar para actualizar el estado general
+      await cargar(); // Recargar para actualizar el estado
     } catch (err) {
       console.error('Error al enviar reporte:', err);
       message.error(err.message || 'No se pudo enviar el reporte');
@@ -261,13 +213,13 @@ export default function ListaSugerencias() {
     }
   };
 
+  // FUNCIÓN MEJORADA: Ver información del reporte
   const verInfoReporte = async (sugerencia) => {
     try {
       setLoadingEliminarReporte(true);
-      const response = await reportesService.obtenerReportes(1, 100);
-      const reportes = response.data?.data || [];
       
-      const reporte = reportes.find(r => r.sugerencia?.id === sugerencia.id);
+      // Buscar el reporte en la lista ya cargada
+      const reporte = reportesDisponibles.find(r => r.sugerencia?.id === sugerencia.id);
       
       if (reporte) {
         setReporteInfo(reporte);
@@ -283,31 +235,69 @@ export default function ListaSugerencias() {
     }
   };
 
-  // Eliminar reporte (solo admin)
+  // FUNCIÓN ACTUALIZADA: Eliminar reporte
   const eliminarReporte = async () => {
     setLoadingEliminarReporte(true);
     
     try {
-      console.log('🔄 Llamando a reportesService.eliminarReporte con id:', reporteInfo.id);
-      const resultado = await reportesService.eliminarReporte(reporteInfo.id);
-      console.log('✅ Respuesta del servicio:', resultado);
-      
+      await reportesService.eliminarReporte(reporteInfo.id);
       message.success('Reporte eliminado exitosamente');
+      
+      // Cerrar modal actual
       setInfoReporteVisible(false);
       setReporteInfo(null);
       setConfirmandoEliminacion(false);
       
-      console.log('🔄 Recargando lista de sugerencias...');
+      // NUEVO: Actualizar la lista de reportes disponibles
+      const nuevosReportes = reportesDisponibles.filter(r => r.id !== reporteInfo.id);
+      setReportesDisponibles(nuevosReportes);
+      
+      // NUEVO: Mostrar automáticamente el siguiente reporte si existe
+      if (nuevosReportes.length > 0) {
+        // Ajustar índice si es necesario
+        const siguienteIndex = reporteActualIndex < nuevosReportes.length ? reporteActualIndex : 0;
+        setReporteActualIndex(siguienteIndex);
+        
+        // Mostrar el siguiente reporte automáticamente
+        setTimeout(() => {
+          const siguienteReporte = nuevosReportes[siguienteIndex];
+          if (siguienteReporte) {
+            setReporteInfo(siguienteReporte);
+            setInfoReporteVisible(true);
+            message.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+          }
+        }, 500);
+      } else {
+        message.info('No hay más reportes pendientes');
+      }
+      
+      // Recargar sugerencias para actualizar el estado
       await cargar();
-      console.log('✅ Lista recargada');
       
     } catch (error) {
-      console.error('❌ Error completo:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error response:', error.response?.data);
+      console.error('Error al eliminar reporte:', error);
       message.error(error.message || 'Error al eliminar el reporte');
     } finally {
       setLoadingEliminarReporte(false);
+    }
+  };
+
+  // NUEVA FUNCIÓN: Navegar reportes
+  const navegarReportes = (direccion) => {
+    let nuevoIndex = reporteActualIndex;
+    
+    if (direccion === 'siguiente') {
+      nuevoIndex = (reporteActualIndex + 1) % reportesDisponibles.length;
+    } else if (direccion === 'anterior') {
+      nuevoIndex = reporteActualIndex === 0 ? reportesDisponibles.length - 1 : reporteActualIndex - 1;
+    }
+    
+    setReporteActualIndex(nuevoIndex);
+    const reporte = reportesDisponibles[nuevoIndex];
+    
+    if (reporte) {
+      setReporteInfo(reporte);
+      setInfoReporteVisible(true);
     }
   };
 
@@ -339,8 +329,9 @@ export default function ListaSugerencias() {
       render: (titulo, record) => (
         <div>
           <Text strong>{titulo}</Text>
+          {/* Indicador de sugerencia reportada */}
           {record.isReportada && (
-            <Tag color="orange" style={{ marginLeft: 8 }}>
+            <Tag color="red" style={{ marginLeft: 8 }}>
               <ExclamationCircleOutlined /> Reportada
             </Tag>
           )}
@@ -365,6 +356,8 @@ export default function ListaSugerencias() {
       key: 'acciones', 
       render: (_, r) => {
         if (esEstud) {
+          const yaReporte = misReportes.includes(r.id);
+          
           return (
             <div style={{ display: 'flex', gap: 8 }}>
               <Button
@@ -376,7 +369,8 @@ export default function ListaSugerencias() {
               >
                 Ver Respuesta
               </Button>
-              {/* BOTÓN CORREGIDO: Mostrar estado de reporte en el botón */}
+              
+              {/* BOTÓN MEJORADO: Muestra diferentes estados */}
               {puedeReportar(r) ? (
                 <Button
                   icon={<ExclamationCircleOutlined />}
@@ -387,27 +381,21 @@ export default function ListaSugerencias() {
                 >
                   Reportar
                 </Button>
-              ) : (
-                // Mostrar botón deshabilitado con tooltip informativo
+              ) : yaReporte ? (
                 <Button
                   icon={<ExclamationCircleOutlined />}
                   type='link'
                   disabled
                   size='small'
-                  title={
-                    r.isReportada ? 'Sugerencia ya reportada' :
-                    misReportes.includes(r.id) || misReportes.includes(String(r.id)) ? 'Ya reportaste esta sugerencia' :
-                    r.autor?.id === usuario?.id ? 'No puedes reportar tu propia sugerencia' :
-                    r.estado === 'archivada' ? 'No se puede reportar sugerencias archivadas' :
-                    'No disponible'
-                  }
+                  title="Ya reportaste esta sugerencia"
                 >
-                  Reportar
+                  Reportado
                 </Button>
-              )}
+              ) : null}
             </div>
           );
         }
+        
         if (esAdmin) {
           return (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -429,6 +417,8 @@ export default function ListaSugerencias() {
               >
                 {tieneResp(r) ? 'Editar' : 'Responder'}
               </Button>
+              
+              {/* BOTÓN MEJORADO: Muestra contador de reportes */}
               {r.isReportada && (
                 <Button
                   icon={<ExclamationCircleOutlined />}
@@ -437,7 +427,7 @@ export default function ListaSugerencias() {
                   onClick={() => verInfoReporte(r)}
                   title="Ver información del reporte"
                 >
-                  !
+                  ! ({reportesDisponibles.filter(rep => rep.sugerencia?.id === r.id).length})
                 </Button>
               )}
             </div>
@@ -451,6 +441,39 @@ export default function ListaSugerencias() {
   return (
     <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
       <Content style={{ padding: '48px 24px' }}>
+        {/* NUEVO: Indicador de reportes pendientes (solo admin) */}
+        {esAdmin && reportesDisponibles.length > 0 && (
+          <div style={{ 
+            backgroundColor: '#fff2f0', 
+            border: '1px solid #ffccc7', 
+            borderRadius: 6, 
+            padding: 12, 
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <ExclamationCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+              <Text strong>Hay {reportesDisponibles.length} reportes pendientes de revisión</Text>
+            </div>
+            <Button
+              type="primary"
+              danger
+              size="small"
+              onClick={() => {
+                if (reportesDisponibles.length > 0) {
+                  setReporteInfo(reportesDisponibles[0]);
+                  setReporteActualIndex(0);
+                  setInfoReporteVisible(true);
+                }
+              }}
+            >
+              Revisar Reportes
+            </Button>
+          </div>
+        )}
+
         {!esAdmin && (
           <div style={{ textAlign: 'right', marginBottom: 16 }}>
             <Button
@@ -462,9 +485,11 @@ export default function ListaSugerencias() {
             </Button>
           </div>
         )}
+        
         <Title level={2} style={{ color: '#1e3a8a', marginBottom: 24 }}>
           {esAdmin ? 'Sugerencias Recibidas' : 'Mis Sugerencias'}
         </Title>
+        
         <Input
           placeholder='Buscar sugerencias...'
           prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
@@ -473,6 +498,7 @@ export default function ListaSugerencias() {
           style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
           allowClear
         />
+        
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
             <Spin size='large' />
@@ -609,7 +635,32 @@ export default function ListaSugerencias() {
 
         {/* Modal para ver información del reporte (solo admin) */}
         <Modal
-          title={`Información del Reporte - "${reporteInfo?.sugerencia?.titulo || ''}"`}
+          title={
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Información del Reporte - "{reporteInfo?.sugerencia?.titulo || ''}"</span>
+              {reportesDisponibles.length > 1 && (
+                <div>
+                  <Button 
+                    size="small" 
+                    onClick={() => navegarReportes('anterior')}
+                    disabled={reportesDisponibles.length <= 1}
+                  >
+                    ← Anterior
+                  </Button>
+                  <span style={{ margin: '0 8px', fontSize: '12px' }}>
+                    {reporteActualIndex + 1} de {reportesDisponibles.length}
+                  </span>
+                  <Button 
+                    size="small" 
+                    onClick={() => navegarReportes('siguiente')}
+                    disabled={reportesDisponibles.length <= 1}
+                  >
+                    Siguiente →
+                  </Button>
+                </div>
+              )}
+            </div>
+          }
           open={infoReporteVisible}
           onCancel={() => setInfoReporteVisible(false)}
           footer={null}
@@ -645,6 +696,7 @@ export default function ListaSugerencias() {
                 </div>
               </div>
 
+              {/* Confirmación de eliminación */}
               {confirmandoEliminacion ? (
                 <div style={{ 
                   marginBottom: 20,
