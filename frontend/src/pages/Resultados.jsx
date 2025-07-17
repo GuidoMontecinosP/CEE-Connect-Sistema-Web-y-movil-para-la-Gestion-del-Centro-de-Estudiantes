@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
 import { 
   Layout, Card, Button, Typography, Space, Row, Col, Tag, Progress, 
-  Spin, message, Divider, Statistic, Empty, Menu, theme 
+  Spin, message, Divider, Statistic, Empty, Menu, theme,Breadcrumb
 } from 'antd';
 import { 
   AuditOutlined, ArrowLeftOutlined, BarChartOutlined, TrophyOutlined,
@@ -12,7 +12,7 @@ import {
   DesktopOutlined 
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-
+import MainLayout from '../components/MainLayout';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -42,21 +42,7 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
       });
   }, [id]);
 
-  const items = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-    if (item.key === '5') navigate('/dashboard');
-  };
+  
 
   const getEstadoTag = (estado) => {
     const estadoConfig = {
@@ -91,29 +77,28 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
 
   if (loading) {
     return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-        </Sider>
-        <Layout>
+      <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Spin size="large" />
               <Text style={{ color: '#64748b', marginTop: 16 }}>Cargando resultados...</Text>
             </div>
           </Content>
-        </Layout>
-      </Layout>
+        </MainLayout>
     );
   }
 
  if (!resultados) {
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
+    <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <Card
@@ -134,19 +119,18 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
             </Card>
           </div>
         </Content>
-      </Layout>
-    </Layout>
+      </MainLayout>
   );
 }
 
 // 🚫 Bloqueo a estudiantes si la votación no está publicada
 if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
+     <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <Card
@@ -167,19 +151,18 @@ if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
             </Card>
           </div>
         </Content>
-      </Layout>
-    </Layout>
+      </MainLayout>
   );
 }
 
   const totalVotos = getTotalVotos();
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={setCollapsed}>
-        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
+     <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
@@ -312,8 +295,7 @@ if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
 
           </div>
         </Content>
-      </Layout>
-    </Layout>
+      </MainLayout>
   );
 }
 

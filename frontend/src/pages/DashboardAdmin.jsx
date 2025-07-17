@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import MainLayout from '../components/MainLayout.jsx';
 
+
 const { Title, Paragraph } = Typography;
 
 export default function DashboardEstudiante() {
@@ -25,28 +26,9 @@ export default function DashboardEstudiante() {
   };
 
   
-  console.log("📊 Usuario en Dashboard:", usuario);
+  //console.log("📊 Usuario en Dashboard:", usuario);
 
-  // Menú items basado en el rol del usuario
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    ...(usuario?.rol?.nombre === 'administrador'
-      ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
-      : []),
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-     
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-
-    if (item.key === '5') navigate('/dashboard');
-  };
+ 
 
   return (
     <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Dashboard' }]} /> }>
@@ -70,10 +52,13 @@ export default function DashboardEstudiante() {
                   ¡Bienvenido!
                 </Title>
                 <Title level={3} style={{ color: '#374151', marginBottom: 16 }}>
-                  {usuario?.nombre || 'tonto'}
+                  {usuario?.nombre }
                 </Title>
                 <Paragraph style={{ fontSize: 16, color: '#64748b', marginBottom: 0 }}>
                   Rol: <strong style={{ color: '#1e3a8a' }}>{usuario?.rol?.nombre}</strong>
+                </Paragraph>
+                <Paragraph style={{ fontSize: 16, color: '#64748b', marginBottom: 0 }}>
+                  Correo: <strong style={{ color: '#1e3a8a' }}>{usuario?.correo}</strong>
                 </Paragraph>
               </div>
 
@@ -111,7 +96,7 @@ export default function DashboardEstudiante() {
                   bodyStyle={{ padding: 16 }}
                 >
                   <Paragraph style={{ color: '#92400e', marginBottom: 8, fontSize: 14 }}>
-                    🛡️ <strong>Panel de Administrador:</strong>
+                     <strong>Panel de Administrador:</strong>
                   </Paragraph>
                   <ul style={{ color: '#a16207', fontSize: 14, marginBottom: 0, paddingLeft: 20 }}>
                     <li>Crear y gestionar votaciones</li>

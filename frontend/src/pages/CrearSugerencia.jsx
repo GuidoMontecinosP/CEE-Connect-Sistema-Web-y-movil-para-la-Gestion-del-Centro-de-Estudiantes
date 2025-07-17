@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Layout, Form, Input, Select, Button, Typography, message, Menu
+  Layout, Form, Input, Select, Button, Typography, message, Menu,Breadcrumb
 } from 'antd';
 import {
   FileTextOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined,
@@ -13,7 +13,7 @@ import { sugerenciasService } from '../services/sugerencia.services.js';
 const { Content, Sider } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
-
+import MainLayout from '../components/MainLayout';
 export default function CrearSugerencia() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -70,36 +70,13 @@ export default function CrearSugerencia() {
     }
   };
 
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <FileTextOutlined />, label: 'Sugerencias' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-    if (item.key === '4') navigate('/sugerencias');
-    if (item.key === '5') navigate('/dashboard');
-  };
-
+  
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-      <Sider theme="dark" collapsible>
-        <Menu 
-          mode="inline" 
-          theme="dark" 
-          defaultSelectedKeys={['4']} 
-          items={menuItems} 
-          onClick={onMenuClick} 
-        />
-      </Sider>
-      <Layout>
+    <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 12 }}>
             <Title level={2} style={{ color: '#1e3a8a', textAlign: 'center', marginBottom: 32 }}>
@@ -155,13 +132,13 @@ export default function CrearSugerencia() {
               </Form.Item>
 
               <Form.Item
-                label="Medio de contacto (opcional)"
+                label="Medio de contacto"
                 name="contacto"
                 rules={[
                   { max: 100, message: 'El contacto no debe exceder 100 caracteres' }
                 ]}
               >
-                <Input placeholder="Ej: tu correo o Instagram" />
+                <Input placeholder="Ej: correo o instagram" />
               </Form.Item>
 
               <Form.Item>
@@ -183,7 +160,6 @@ export default function CrearSugerencia() {
             </Form>
           </div>
         </Content>
-      </Layout>
-    </Layout>
+     </MainLayout>
   );
 }

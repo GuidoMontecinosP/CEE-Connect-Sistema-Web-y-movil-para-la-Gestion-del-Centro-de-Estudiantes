@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Layout, Form, Input, Select, Button, Typography, message, Menu, Spin
+  Layout, Form, Input, Select, Button, Typography, message, Menu, Spin,Breadcrumb
 } from 'antd';
 import {
   FileTextOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined,
@@ -9,7 +9,7 @@ import {
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { sugerenciasService } from '../services/sugerencia.services.js';
-
+import MainLayout from '../components/MainLayout';
 const { Content, Sider } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
@@ -72,7 +72,7 @@ export default function EditarSugerencia() {
       return;
     }
     
-    console.log('Datos finales a enviar:', datosActualizados);
+   // console.log('Datos finales a enviar:', datosActualizados);
     
     await sugerenciasService.actualizarSugerencia(id, datosActualizados);
     
@@ -87,41 +87,16 @@ export default function EditarSugerencia() {
 };
 
 
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <FileTextOutlined />, label: 'Sugerencias' },
-    { key: '6', icon: <UserOutlined />, label: 'Mis sugerencias' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    const rutas = {
-      '0': '/noticias',
-      '1': '/votaciones',
-      '2': '/crear',
-      '3': '/eventos',
-      '4': '/sugerencias',
-      '5': '/dashboard',
-      '6': '/mis-sugerencias'
-    };
-    navigate(rutas[item.key]);
-  };
+  
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-      <Sider theme="dark" collapsible>
-        <Menu 
-          mode="inline" 
-          theme="dark" 
-          defaultSelectedKeys={['6']} 
-          items={menuItems} 
-          onClick={onMenuClick} 
-        />
-      </Sider>
-      <Layout>
+    <MainLayout
+    selectedKeyOverride="8" 
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }} 
+      />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 12 }}>
             <Title level={2} style={{ color: '#1e3a8a', textAlign: 'center', marginBottom: 32 }}>
@@ -190,7 +165,6 @@ export default function EditarSugerencia() {
             )}
           </div>
         </Content>
-      </Layout>
-    </Layout>
+     </MainLayout>
   );
 }

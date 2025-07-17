@@ -6,7 +6,7 @@ import Votar from './pages/Votar';
 import VerVotacion from './pages/VerVotacion';
 import Resultados from './pages/Resultados';
 import CerrarVotacion from './pages/CerrarVotacion';
-import MenuPrincipal from './pages/MenuPrincipal';
+
 import ListaSugerencias from './pages/ListaSugerencias';
 
 import Eventos from './pages/Eventos';
@@ -57,11 +57,15 @@ function App() {
         <Route path="/crearEvento" element={<CrearEvento />} />
         
       </Route>
-
+      {/* Rutas protegidas - ESTUDIANTE */}
+      <Route element={<PrivateRoute allowedRoles={['estudiante']} />}>
+        <Route path="/sugerencias/nueva" element={<CrearSugerencia />} />
+        <Route path="/mis-sugerencias" element={<MisSugerencias />} />
+        </Route>
     
-      {/* Ruta protegida común, si decides mantener el MenuPrincipal */}
+      {/* Ruta protegida común*/}
       <Route element={<PrivateRoute allowedRoles={['administrador', 'estudiante']} />}>
-        <Route path="/menu" element={<MenuPrincipal />} />
+        
         <Route path="/votaciones" element={<ListarVotaciones />} />
         <Route path="/votacion/:id/resultados" element={<Resultados />} />
         <Route path="/noticias" element={<Noticias />} />
@@ -69,9 +73,8 @@ function App() {
       <Route path="/dashboard" element={<DashboardAdmin />} />
       <Route path = "votacion/:id/votar" element={<Votar />} />
    <Route path="/sugerencias" element={<ListaSugerencias />} />
-   <Route path="/sugerencias/nueva" element={<CrearSugerencia />} />
-<Route path="/sugerencias/nueva" element={<CrearSugerencia />} />
-<Route path="/mis-sugerencias" element={<MisSugerencias />} />
+  
+
 <Route path="/sugerencias/:id/editar" element={<EditarSugerencia />} />
       </Route>
     </Routes>

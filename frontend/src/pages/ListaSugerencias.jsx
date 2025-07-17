@@ -47,6 +47,7 @@ const [totalRecords, setTotalRecords] = useState(0);
 const [categoriaFiltro, setCategoriaFiltro] = useState(null);
 const [estadoFiltro, setEstadoFiltro] = useState(null);
 
+const [loadingVaciarReportes, setLoadingVaciarReportes] = useState(false);
 
   const [form] = Form.useForm();
   const [reportForm] = Form.useForm();
@@ -573,6 +574,48 @@ const limpiarBusqueda = () => {
       setInfoReporteVisible(true);
     }
   };
+const vaciarReportes = async (sugerenciaId) => {
+  try {
+    setLoadingVaciarReportes(true);
+    await reportesService.vaciarReportesDeSugerencia(sugerenciaId);
+    
+    message.success('Todos los reportes de la sugerencia han sido eliminados');
+    
+    // Cerrar modal actual
+    setInfoReporteVisible(false);
+    setReporteInfo(null);
+    
+    // Actualizar la lista de reportes disponibles (remover todos los reportes de esta sugerencia)
+    const nuevosReportes = reportesDisponibles.filter(r => r.sugerencia?.id !== sugerenciaId);
+    setReportesDisponibles(nuevosReportes);
+    
+    // Mostrar automáticamente el siguiente reporte si existe
+    if (nuevosReportes.length > 0) {
+      const siguienteIndex = reporteActualIndex < nuevosReportes.length ? reporteActualIndex : 0;
+      setReporteActualIndex(siguienteIndex);
+      
+      setTimeout(() => {
+        const siguienteReporte = nuevosReportes[siguienteIndex];
+        if (siguienteReporte) {
+          setReporteInfo(siguienteReporte);
+          setInfoReporteVisible(true);
+          message.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+        }
+      }, 500);
+    } else {
+      message.info('No hay más reportes pendientes');
+    }
+    
+    // Recargar sugerencias para actualizar el estado
+    await cargar();
+    
+  } catch (error) {
+    console.error('Error al vaciar reportes:', error);
+    message.error(error.message || 'Error al vaciar reportes de la sugerencia');
+  } finally {
+    setLoadingVaciarReportes(false);
+  }
+};
 
   const enviarRespuesta = async vals => {
     try {
@@ -594,7 +637,7 @@ const limpiarBusqueda = () => {
   };
 
   const columns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
+   
     { 
       title: 'Título', 
       dataIndex: 'titulo', 
@@ -1119,22 +1162,31 @@ const limpiarBusqueda = () => {
               </div>
 
               {/* Botones de acción */}
-              <div style={{ textAlign: 'right', marginTop: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
+                {/* Botón Vaciar reportes a la izquierda */}
                 <Button 
-                  onClick={() => setInfoReporteVisible(false)} 
-                  style={{ marginRight: 8 }}
+                  type="primary"
+                  onClick={() => vaciarReportes(reporteInfo.sugerencia?.id)}
+                  loading={loadingVaciarReportes}
                 >
-                  Cerrar
+                  Vaciar reportes
                 </Button>
-                <Button 
-                  danger 
-                  onClick={() => setConfirmandoEliminacion(true)}
-                  loading={loadingEliminarReporte}
-                >
-                  Eliminar Reporte
-                </Button>
+                 <div>
+                  <Button 
+                    onClick={() => setInfoReporteVisible(false)}
+                    style={{ marginRight: 8 }}
+                  >
+                    Cerrar
+                  </Button>
+              <Button 
+                    danger 
+                    onClick={() => setConfirmandoEliminacion(true)}
+                    loading={loadingEliminarReporte}
+                  >
+                    Eliminar Reporte
+                  </Button>
+                </div>
               </div>
-
               {/* Confirmación de eliminación */}
               {confirmandoEliminacion && (
                 <div style={{ 

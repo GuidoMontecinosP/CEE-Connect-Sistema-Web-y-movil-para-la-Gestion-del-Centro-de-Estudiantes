@@ -10,6 +10,8 @@ import {
   CalendarOutlined,
   PlusCircleOutlined,
   ScheduleOutlined,
+  EyeOutlined,
+  FormOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25,14 +27,19 @@ function getItem(label, key, icon, children) {
   };
 }
 
-const MainLayout = ({ children, breadcrumb }) => {
+const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario, logout } = useAuth();
   const [openKeys, setOpenKeys] = useState(() => {
-  // Si la ruta actual es de un hijo de 'sub1', abre 'sub1', si no, ninguno
+    // Si la ruta actual es de un hijo de 'sub1' (eventos), abre 'sub1'
     if (['/VerEventos', '/crearEvento'].includes(location.pathname)) {
       return ['sub1'];
+    }
+    
+    if (['/sugerencias/nueva', '/sugerencias', '/mis-sugerencias'].includes(location.pathname) && 
+        usuario?.rol !== 'administrador' && usuario?.rol?.nombre !== 'administrador') {
+      return ['sub2'];
     }
     return [];
   });
@@ -52,14 +59,17 @@ const MainLayout = ({ children, breadcrumb }) => {
     ]),
     getItem('Sugerencias', '7', <CalendarOutlined />),
     getItem('Dashboard', '5', <AuditOutlined />),
-    getItem('Mis Sugerencias', '8', <ScheduleOutlined />),
   ];
+  
   const userItems = [
     getItem('Inicio', '0', <FileTextOutlined />),
     getItem('Votaciones', '1', <PieChartOutlined />),
     getItem('Eventos', '4', <CarryOutOutlined />),
-    getItem('Sugerencias', '7', <CalendarOutlined />),
-    getItem('Mis Sugerencias', '8', <PlusOutlined />),
+    getItem('Sugerencias', 'sub2', <CalendarOutlined />, [
+      getItem('Crear Sugerencia', '9', <FormOutlined />),
+      getItem('Ver Sugerencias', '7', <EyeOutlined />),
+      getItem('Ver Mis Sugerencias', '8', <ScheduleOutlined />),
+    ]),
     getItem('Dashboard', '5', <AuditOutlined />),
   ];
 
@@ -71,8 +81,9 @@ const MainLayout = ({ children, breadcrumb }) => {
     if (item.key === '4') navigate('/eventos');
     if (item.key === '5') navigate('/dashboard');
     if (item.key === '6') navigate('/crearEvento');
-    if (item.key=== '7') navigate('/sugerencias');
+    if (item.key === '7') navigate('/sugerencias');
     if (item.key === '8') navigate('/mis-sugerencias');
+    if (item.key === '9') navigate('/sugerencias/nueva');
     if (item.key === 'logout') logout();
   };
 
@@ -87,9 +98,14 @@ const MainLayout = ({ children, breadcrumb }) => {
     '/crearEvento': '6',
     '/sugerencias': '7',
     '/mis-sugerencias': '8',
+    '/sugerencias/nueva': '9',
   };
-  const selectedKey = pathToKey[location.pathname] || '0';
+const selectedKey = 
+    selectedKeyOverride != null 
+      ? selectedKeyOverride 
+      : (pathToKey[location.pathname] || '0');
 
+ 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
@@ -119,7 +135,7 @@ const MainLayout = ({ children, breadcrumb }) => {
             {children}
           </div>
         </Content>
-        <Footer style={{ textAlign: 'center' }}>¡¡¡Created by Team Guido!!!</Footer>
+        
       </Layout>
     </Layout>
   );
