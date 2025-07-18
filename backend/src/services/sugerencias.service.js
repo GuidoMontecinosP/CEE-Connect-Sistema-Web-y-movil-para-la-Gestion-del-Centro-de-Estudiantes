@@ -163,6 +163,7 @@ async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
 
   if (!huboCambios) {
     throw new Error("No se detectaron cambios en los datos proporcionados");
+    //cambiar
   }
 
   sugerencia.updatedAt = new Date();
