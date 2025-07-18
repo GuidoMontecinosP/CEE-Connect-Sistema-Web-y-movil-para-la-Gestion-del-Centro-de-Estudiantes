@@ -1300,14 +1300,22 @@ const vaciarReportes = async (sugerenciaId) => {
     form={form} 
     layout='vertical' 
     onFinish={enviarRespuesta}
-    initialValues={{ estado: 'resuelta' }}
+    initialValues={{ estado: 'en proceso' }} 
   >
     <Form.Item 
       name='respuesta' 
       label='Respuesta'
-      rules={[{ required: true, message: 'Ingresa una respuesta' }]}
+      rules={[
+        { required: true, message: 'Ingresa una respuesta' },
+        { min: 10, message: 'La respuesta debe tener al menos 10 caracteres' }
+      ]}
     >
-      <Input.TextArea rows={4} placeholder='Escribe tu respuesta aquí...' />
+      <Input.TextArea 
+        rows={4} 
+        placeholder='Escribe tu respuesta aquí...' 
+        showCount
+        maxLength={500}
+      />
     </Form.Item>
 
     <Form.Item 
@@ -1333,6 +1341,7 @@ const vaciarReportes = async (sugerenciaId) => {
     </Form.Item>
   </Form>
 </Modal>
+
       </Content>
     </MainLayout>
   );

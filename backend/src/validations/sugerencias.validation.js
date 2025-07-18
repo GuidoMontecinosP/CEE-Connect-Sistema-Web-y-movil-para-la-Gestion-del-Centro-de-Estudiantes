@@ -31,6 +31,7 @@ export const validate = (schema, property = 'body') => {
     const { error } = schema.validate(data, { abortEarly: false });
     
     if (error) {
+      console.log("Errores de validación:", error.details .map(d => d.message));
       return res.status(400).json({
   success: false,
   message: "Errores de validación",
