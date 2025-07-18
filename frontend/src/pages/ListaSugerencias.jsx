@@ -46,7 +46,7 @@ const [totalRecords, setTotalRecords] = useState(0);
 // Estados para filtros (opcional)
 const [categoriaFiltro, setCategoriaFiltro] = useState(null);
 const [estadoFiltro, setEstadoFiltro] = useState(null);
-
+const [messageApi, contextHolder] = message.useMessage();
 const [loadingVaciarReportes, setLoadingVaciarReportes] = useState(false);
 
   const [form] = Form.useForm();
@@ -180,12 +180,13 @@ const [loadingVaciarReportes, setLoadingVaciarReportes] = useState(false);
 
       
       arr.length
-        ? message.success(`${arr.length} sugerencias cargadas`)
-        : message.info('No hay sugerencias');
+        ? messageApi.success(`${arr.length} sugerencias cargadas`)
+        : messageApi.info('No hay sugerencias');
         
     } catch (err) {
-      console.error('Error cargar sugerencias:', err);
-      message.error('No se pudieron cargar sugerencias');
+      //console.error('Error al cargar sugerencias:', err);
+      //console.error('Error cargar sugerencias:', err);
+     // messageApi.error('No se pudieron cargar sugerencias');
     } finally {
       setLoading(false);
     }
@@ -282,7 +283,7 @@ const limpiarBusqueda = () => {
     );
     
     console.log(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
-    message.success(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
+    messageApi.success(`Usuario ${usuarioAMutear.nombre} muteado exitosamente`);
     setMuteoModalVisible(false);
     
     // ACTUALIZACIÓN INMEDIATA DEL ESTADO LOCAL
@@ -339,7 +340,7 @@ const limpiarBusqueda = () => {
     
   } catch (error) {
     console.error('Error al mutear usuario:', error);
-    message.error(error.message || 'Error al mutear usuario');
+    messageApi.error(error.message || 'Error al mutear usuario');
   } finally {
     setLoadingMuteo(false);
   }
@@ -349,7 +350,7 @@ const limpiarBusqueda = () => {
   try {
     setLoadingDesmuteo(true);
     await muteoService.desmutearUsuario(userId);
-    message.success(`Usuario ${nombreUsuario} desmuteado exitosamente`);
+    messageApi.success(`Usuario ${nombreUsuario} desmuteado exitosamente`);
     
     // ACTUALIZACIÓN INMEDIATA DEL ESTADO LOCAL
     if (reporteInfo) {
@@ -410,7 +411,7 @@ const limpiarBusqueda = () => {
     
   } catch (error) {
     console.error('Error al desmutear usuario:', error);
-    message.error(error.message || 'Error al desmutear usuario');
+    messageApi.error(error.message || 'Error al desmutear usuario');
   } finally {
     setLoadingDesmuteo(false);
   }
@@ -428,7 +429,7 @@ const limpiarBusqueda = () => {
   // Ver respuesta admin
   const abrirVerRespuesta = s => {
     if (!tieneResp(s)) {
-      message.warning('Esta sugerencia aún no tiene respuesta');
+      messageApi.warning('Esta sugerencia aún no tiene respuesta');
       return;
     }
     setViewRespuesta(s.respuestaAdmin);
@@ -472,12 +473,12 @@ const limpiarBusqueda = () => {
       // NUEVO: Agregar la sugerencia a mis reportes inmediatamente
       setMisReportes(prev => [...prev, sugerenciaAReportar.id]);
       
-      message.success('Reporte enviado exitosamente');
+      messageApi.success('Reporte enviado exitosamente');
       setReportModalVisible(false);
       await cargar(); // Recargar para actualizar el estado
     } catch (err) {
       console.error('Error al enviar reporte:', err);
-      message.error(err.message || 'No se pudo enviar el reporte');
+      messageApi.error(err.message || 'No se pudo enviar el reporte');
     } finally {
       setLoadingReporte(false);
     }
@@ -499,11 +500,11 @@ const limpiarBusqueda = () => {
         setReporteInfo(reporte);
         setInfoReporteVisible(true);
       } else {
-        message.error('No se encontró información del reporte');
+        messageApi.error('No se encontró información del reporte');
       }
     } catch (error) {
       console.error('Error al obtener info del reporte:', error);
-      message.error('Error al cargar información del reporte');
+      messageApi.error('Error al cargar información del reporte');
     } finally {
       setLoadingEliminarReporte(false);
     }
@@ -538,11 +539,11 @@ const limpiarBusqueda = () => {
           if (siguienteReporte) {
             setReporteInfo(siguienteReporte);
             setInfoReporteVisible(true);
-            message.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+            messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
           }
         }, 500);
       } else {
-        message.info('No hay más reportes pendientes');
+        messageApi.info('No hay más reportes pendientes');
       }
       
       // Recargar sugerencias para actualizar el estado
@@ -550,7 +551,7 @@ const limpiarBusqueda = () => {
       
     } catch (error) {
       console.error('Error al eliminar reporte:', error);
-      message.error(error.message || 'Error al eliminar el reporte');
+      messageApi.error(error.message || 'Error al eliminar el reporte');
     } finally {
       setLoadingEliminarReporte(false);
     }
@@ -579,7 +580,7 @@ const vaciarReportes = async (sugerenciaId) => {
     setLoadingVaciarReportes(true);
     await reportesService.vaciarReportesDeSugerencia(sugerenciaId);
     
-    message.success('Todos los reportes de la sugerencia han sido eliminados');
+    messageApi.success('Todos los reportes de la sugerencia han sido eliminados');
     
     // Cerrar modal actual
     setInfoReporteVisible(false);
@@ -599,11 +600,11 @@ const vaciarReportes = async (sugerenciaId) => {
         if (siguienteReporte) {
           setReporteInfo(siguienteReporte);
           setInfoReporteVisible(true);
-          message.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+          messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
         }
       }, 500);
     } else {
-      message.info('No hay más reportes pendientes');
+      messageApi.info('No hay más reportes pendientes');
     }
     
     // Recargar sugerencias para actualizar el estado
@@ -611,7 +612,7 @@ const vaciarReportes = async (sugerenciaId) => {
     
   } catch (error) {
     console.error('Error al vaciar reportes:', error);
-    message.error(error.message || 'Error al vaciar reportes de la sugerencia');
+    messageApi.error(error.message || 'Error al vaciar reportes de la sugerencia');
   } finally {
     setLoadingVaciarReportes(false);
   }
@@ -625,12 +626,13 @@ const vaciarReportes = async (sugerenciaId) => {
         vals.respuesta,
         vals.estado
       );
-      message.success('Respuesta enviada');
+      messageApi.success('Respuesta enviada');
       setRespModalVisible(false);
       await cargar();
     } catch (err) {
-      console.error('Error enviar respuesta:', err);
-      message.error('No se pudo enviar respuesta');
+      console.log("error respuesta lala", err.message);
+        messageApi.error(err.message);
+    
     } finally {
       setLoadingResp(false);
     }
@@ -759,6 +761,7 @@ const vaciarReportes = async (sugerenciaId) => {
 
   return (
     <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+      {contextHolder}
       <Content style={{ padding: '48px 24px' }}>
         {/* NUEVO: Indicador de reportes pendientes (solo admin) */}
         {esAdmin && reportesDisponibles.length > 0 && (

@@ -23,7 +23,8 @@ export default function EditarSugerencia() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const [messageApi, contextHolder] = message.useMessage();
+
   // Datos pasados desde la navegación (para usar como placeholders)
   const datosIniciales = location.state?.sugerencia || {};
 
@@ -31,12 +32,19 @@ export default function EditarSugerencia() {
     const cargarSugerencia = async () => {
       try {
         const res = await sugerenciasService.obtenerSugerenciaPorId(id);
+        console.log("Sugerencia cargada:", res.data.autor.id);
         const datos = res.data.data;
+        
+      if (usuario.id !== res.data.autor.id) {
+          messageApi.error("No tienes permiso para editar esta sugerencia");
+          navigate('/mis-sugerencias');
+          return;
+        }
         setDatosOriginales(datos);
         form.setFieldsValue(datos);
       } catch (err) {
         console.error("Error al cargar sugerencia:", err);
-        message.error("No se pudo cargar la sugerencia");
+        messageApi.error("No se pudo cargar la sugerencia");
         navigate('/mis-sugerencias');
       } finally {
         setLoading(false);
@@ -68,7 +76,7 @@ export default function EditarSugerencia() {
     
     // Verificar que hay al menos un cambio
     if (Object.keys(datosActualizados).length === 0) {
-      message.warning("No se detectaron cambios");
+     messageApi.warning("No se detectaron cambios");
       return;
     }
     
@@ -76,18 +84,16 @@ export default function EditarSugerencia() {
     
     await sugerenciasService.actualizarSugerencia(id, datosActualizados);
     
-    message.success("Sugerencia actualizada exitosamente");
+    messageApi.success("Sugerencia actualizada exitosamente");
     navigate('/mis-sugerencias');
   } catch (err) {
-    console.error("Error al actualizar:", err);
-    message.error(err.message || "Error al actualizar sugerencia");
+    console.log("Error al actualizar:", err.message);
+    messageApi.error(err.message || "Error al actualizar sugerencia");
   } finally {
     setUpdating(false);
   }
 };
 
-
-  
 
   return (
     <MainLayout
@@ -97,6 +103,7 @@ export default function EditarSugerencia() {
       />
     }
   >
+       {contextHolder}
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 12 }}>
             <Title level={2} style={{ color: '#1e3a8a', textAlign: 'center', marginBottom: 32 }}>
@@ -116,7 +123,8 @@ export default function EditarSugerencia() {
                 <Form.Item
                   label="Título"
                   name="titulo"
-                  rules={[{  message: 'Ingresa un título' }]}
+                  rules={[{  message: 'Ingresa un título' }, { min: 5, message: 'El título debe tener al menos 5 caracteres' },
+    { max: 200, message: 'El título no debe exceder 200 caracteres' }]}
                 >
                   <Input 
                     placeholder={datosIniciales.titulo || "Ingresa el título de tu sugerencia..."}
@@ -125,11 +133,14 @@ export default function EditarSugerencia() {
                 <Form.Item
                   label="Mensaje"
                   name="mensaje"
-                  rules={[{  message: 'Ingresa un mensaje' }]}
+                  rules={[{  message: 'Ingresa un mensaje' }, { min: 10, message: 'El mensaje debe tener al menos 10 caracteres' },
+    { max: 500, message: 'El mensaje no debe exceder 500 caracteres' }]}
                 >
                   <Input.TextArea 
                     rows={4} 
                     placeholder={datosIniciales.mensaje || "Describe tu sugerencia en detalle..."}
+                    showCount
+                    maxLength={500}
                   />
                 </Form.Item>
                 <Form.Item

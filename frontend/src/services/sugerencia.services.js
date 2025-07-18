@@ -5,11 +5,11 @@ export const sugerenciasService = {
 crearSugerencia: async (datos) => {
   try {
     const response = await axios.post('/sugerencias', datos);
-    console.log('Respuesta del servidor:', response.data); // Para debug
+   
     return response.data;
   } catch (error) {
-    console.log('Error en crearSugerencia:', error);
-    const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al crear sugerencia';
+    console.log('Error en crearSugerencia:', error.response?.data.errors);
+    const msg = error.response?.data.errors || 'Error al crear sugerencia';
     throw new Error(msg);
   }
 },
@@ -56,19 +56,17 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
   // Actualizar sugerencia
   actualizarSugerencia: async (id, datos) => {
   try {
-    console.log('Datos enviados al servidor:', datos); // Para debug
-    console.log('ID de la sugerencia:', id); // Para debug
+    //console.log('Datos enviados al servidor:', datos); // Para debug
+    //console.log('ID de la sugerencia:', id); // Para debug
     const response = await axios.patch(`/sugerencias/${id}`, datos);
     console.log('Respuesta del servidor:', response.data); // Para debug
     return response.data;
   } catch (error) {
-    console.error('Error en actualizarSugerencia:', error.response?.data);
-    const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar sugerencia';
+    //console.log('Error en actualizarSugerencia:', error.response?.data.errors);
+    const msg = error.response?.data.errors|| 'Error al actualizar sugerencia';
     throw new Error(msg);
   }
 },
-
-
   // Eliminar sugerencia
   eliminarSugerencia: async (id) => {
     try {
@@ -100,7 +98,9 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
       });
       return response.data;
     } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al responder sugerencia';
+
+     // console.log('Error en responderSugerencia:', error.response?.data.errors);
+      const msg = error.response?.data.errors || 'Error al responder sugerencia';
       throw new Error(msg);
     }
   },
@@ -124,7 +124,7 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
       });
       return response.data;
     } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar respuesta';
+      const msg = error.response?.data.errors || 'Error al actualizar respuesta';
       throw new Error(msg);
     }
   },
