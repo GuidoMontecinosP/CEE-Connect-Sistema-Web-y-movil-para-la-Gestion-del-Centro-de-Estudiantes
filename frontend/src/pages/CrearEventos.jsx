@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { crearEvento } from '../services/eventos.services.js';
-import { Layout, Card, Input, Button, Typography, Space, Row, Col, Divider, Breadcrumb, DatePicker, TimePicker, Select } from 'antd';
+import { Card, Input, Button, Typography, Space, Row, Col, Divider, Breadcrumb, DatePicker, TimePicker, Select } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import MainLayout from '../components/MainLayout.jsx';
-
+import { useNavigate } from 'react-router-dom';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -16,6 +16,7 @@ function CrearEvento() {
   const [lugar, setLugar] = useState('');
   const [tipo, setTipo] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     if (!titulo || !descripcion || !fecha || !hora || !lugar || !tipo) {
@@ -37,11 +38,14 @@ function CrearEvento() {
         tipo
       };
       const response = await crearEvento(data);
+
       if (response.success) {
         Swal.fire({
           icon: 'success',
           title: 'Evento creado exitosamente',
           text: 'El evento ha sido creado correctamente.'
+        }).then(() => {
+          navigate('/verEventos');
         });
         setTitulo('');
         setDescripcion('');
@@ -63,7 +67,7 @@ function CrearEvento() {
   };
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Agregar Evento' }]} />}>
+    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
       <div>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
@@ -153,10 +157,11 @@ function CrearEvento() {
                 onChange={setTipo}
                 style={{ width: '100%', borderRadius: 8 }}
               >
-                <Option value="charla">Charla</Option>
-                <Option value="taller">Taller</Option>
-                <Option value="conferencia">Conferencia</Option>
-                <Option value="reunion">Reunión</Option>
+                <Option value="Charla">Charla</Option>
+                <Option value="Taller">Taller</Option>
+                <Option value="Conferencia">Conferencia</Option>
+                <Option value="Reunión">Reunión</Option>
+                <Option value="Recreativo">Recreativo</Option>
                 <Option value="otro">Otro</Option>
               </Select>
             </div>

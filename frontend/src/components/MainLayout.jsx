@@ -51,8 +51,8 @@ const MainLayout = ({ children, breadcrumb }) => {
       getItem('Agregar Eventos', '6', <PlusCircleOutlined />),
     ]),
     getItem('Sugerencias', '7', <CalendarOutlined />),
-    getItem('Dashboard', '5', <AuditOutlined />),
     getItem('Mis Sugerencias', '8', <ScheduleOutlined />),
+    getItem('Dashboard', '5', <AuditOutlined />),
   ];
   const userItems = [
     getItem('Inicio', '0', <FileTextOutlined />),

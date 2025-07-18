@@ -36,9 +36,9 @@ function VerEventos() {
     setEditModalOpen(true);
   };
 
-  const handleDeleteClick = async (id) => {
+  const handleDeleteClick = async (id, titulo) => {
     Swal.fire({
-      title: '¿Estás seguro?',
+      title: `¿Estás seguro de eliminar el evento "${titulo}"?`,
       text: "¡No podrás recuperar este evento!",
       icon: 'warning',
       showCancelButton: true,
@@ -78,7 +78,9 @@ function VerEventos() {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed){
-        modificarEvento(selectedEvento)
+        // Excluir el campo id antes de enviar al backend
+        const { id, estado, ...eventoSinId } = selectedEvento;
+        modificarEvento(id, eventoSinId)
           .then(async () => {
             Swal.fire('¡Modificado!', 'El evento ha sido modificado.', 'success');
             setEditModalOpen(false);
@@ -143,7 +145,7 @@ function VerEventos() {
                     <Card key={e.id} size="small" title={e.titulo} extra={
                       <>
                         <a href="#" onClick={() => handleEditClick(e)} style={{ marginRight: 8}}>Modificar</a>
-                        <a href="#" onClick={() => handleDeleteClick(e.id)} style={{color: 'red'}}>eliminar</a>
+                        <a href="#" onClick={() => handleDeleteClick(e.id, e.titulo)} style={{color: 'red'}}>eliminar</a>
                       </>
                       }
                       style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
@@ -168,18 +170,18 @@ function VerEventos() {
           {selectedEvento && (
             <form onSubmit={handleEditSubmit}>
               <div>
-                <Input type="text" placeholder="Título" name="titulo" value={selectedEvento.titulo} onChange={handleEditChange} required />
-                <Input type="text" placeholder="Descripción" name="descripcion" value={selectedEvento.descripcion} onChange={handleEditChange} required />
+                <Input type="text" placeholder="Título" name="titulo" value={selectedEvento.titulo} onChange={handleEditChange} />
+                <Input type="text" placeholder="Descripción" name="descripcion" value={selectedEvento.descripcion} onChange={handleEditChange}/>
                 <Space.Compact block>
                   <DatePicker style={{ width: '100%' }} onChange={(date) => setSelectedEvento({ ...selectedEvento, fecha: date ? date.format('YYYY-MM-DD') : '' })} />
                 </Space.Compact>
                 <Space.Compact block>
-                  <TimePicker style={{ width: '100%' }} onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })} />
+                  <TimePicker style={{ width: '100%' }} onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })} format={"HH:mm"} />
                 </Space.Compact>
                 {/* <Input type="date" placeholder="Fecha" name="fecha" value={selectedEvento.fecha} onChange={handleEditChange} required />
                 <Input type="time" placeholder="Hora" name="hora" value={selectedEvento.hora} onChange={handleEditChange} required /> */}
-                <Input type="text" placeholder="Lugar" name="lugar" value={selectedEvento.lugar} onChange={handleEditChange} required />
-                <Input type="text" placeholder="Tipo" name="tipo" value={selectedEvento.tipo} onChange={handleEditChange} required />
+                <Input type="text" placeholder="Lugar" name="lugar" value={selectedEvento.lugar} onChange={handleEditChange} />
+                <Input type="text" placeholder="Tipo" name="tipo" value={selectedEvento.tipo} onChange={handleEditChange} />
               </div>
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <Button onClick={() => setEditModalOpen(false)} style={{ marginRight: 8 }}>

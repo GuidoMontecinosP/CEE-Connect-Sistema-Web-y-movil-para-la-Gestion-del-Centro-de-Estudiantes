@@ -19,9 +19,9 @@ export const crearEvento = async (evento) => {
     }
 };
 
-export const modificarEvento = async (evento) => {
+export const modificarEvento = async (id, evento) => {
     try {
-        const response = await axios.put(`/eventos/modificarEvento/${evento.id}`, evento);
+        const response = await axios.put(`/eventos/modificarEvento/${id}`, evento);
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.mensaje || 'Error al modificar el evento');
