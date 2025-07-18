@@ -42,13 +42,13 @@ export const verificarMuteo = async (req, res, next) => {
         );
       }
 
-      //  Si llegamos aquí, el muteo ya expiró
+      
       //console.log("Muteo expirado, desactivando automáticamente...");
       muteo.activo = false;
       await usuarioMuteadoRepo.save(muteo);
     }
 
-    console.log("Usuario no muteado o muteo expirado, continuando...");
+    //console.log("Usuario no muteado o muteo expirado, continuando...");
     next();
   } catch (err) {
     console.error("Error al verificar muteo:", err);

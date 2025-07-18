@@ -31,7 +31,6 @@ export const validate = (schema, property = 'body') => {
     const { error } = schema.validate(data, { abortEarly: false });
     
     if (error) {
-      console.log("Errores de validación:", error.details .map(d => d.message));
       return res.status(400).json({
   success: false,
   message: "Errores de validación",
@@ -46,6 +45,18 @@ export const validate = (schema, property = 'body') => {
 
 // Esquemas de validación con Joi
 export const esquemaCrearSugerencia = Joi.object({
+ autorId: Joi.alternatives()
+    .try(
+      Joi.string(),
+      Joi.number().integer()
+    )
+    .required()
+    .messages({
+      'alternatives.match': 'El autorId debe ser un string o número',
+      'any.required': 'El autor es obligatorio'
+    }),
+
+
   titulo: Joi.string()
     .trim()
     .min(5)
@@ -87,7 +98,8 @@ export const esquemaCrearSugerencia = Joi.object({
   contacto: Joi.string()
     .trim()
     .max(100)
-    .allow('')
+    .allow('',null)
+    
     .optional()
     .messages({
       'string.max': 'El contacto no puede exceder los 100 caracteres'

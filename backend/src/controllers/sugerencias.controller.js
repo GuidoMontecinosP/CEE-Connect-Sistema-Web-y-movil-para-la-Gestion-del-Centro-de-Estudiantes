@@ -12,7 +12,8 @@ export async function crearSugerencia(req, res) {
   try {
     const { titulo, mensaje, categoria, contacto } = req.body;
     const autorId = req.user.id;
-
+    
+   
     const nuevaSugerencia = await sugerenciasService.crearSugerencia({
       titulo,
       mensaje,

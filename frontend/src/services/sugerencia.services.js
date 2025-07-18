@@ -5,8 +5,10 @@ export const sugerenciasService = {
 crearSugerencia: async (datos) => {
   try {
     const response = await axios.post('/sugerencias', datos);
+    console.log('Respuesta del servidor:', response.data); // Para debug
     return response.data;
   } catch (error) {
+    console.log('Error en crearSugerencia:', error);
     const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al crear sugerencia';
     throw new Error(msg);
   }
