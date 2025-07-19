@@ -19,9 +19,20 @@ export const muteoService = {
   desmutearUsuario: async (userId) => {
     try {
       const response = await axios.patch(`/muteo/${userId}`);
+      console.log("Usuario desmuteado: en services", response.data);
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.mensaje || 'Error al desmutear usuario');
+    }
+  },
+  // Obtener estado de muteo de un usuario
+  obtenerEstadoMuteo: async (userId) => {
+    try {
+      const response = await axios.get(`/muteo/estado-muteo/${userId}`);
+      console.log("Estado de muteo obtenido: en services", response.data);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.mensaje || 'Error al obtener estado de muteo');
     }
   }
 };

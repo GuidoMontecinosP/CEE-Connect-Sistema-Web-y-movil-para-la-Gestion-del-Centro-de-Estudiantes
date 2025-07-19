@@ -5,28 +5,43 @@ export const sugerenciasService = {
 crearSugerencia: async (datos) => {
   try {
     const response = await axios.post('/sugerencias', datos);
+   
     return response.data;
   } catch (error) {
-    const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al crear sugerencia';
+    console.log('Error en crearSugerencia:', error.response?.data.errors);
+    const msg = error.response?.data.errors || 'Error al crear sugerencia';
     throw new Error(msg);
   }
 },
 
   // Obtener todas las sugerencias con filtros y paginación
-  obtenerSugerencias: async (page = 1, limit = 10, categoria = null, estado = null) => {
-    try {
-      const params = new URLSearchParams();
-      params.append('page', page);
-      params.append('limit', limit);
-      if (categoria) params.append('categoria', categoria);
-      if (estado) params.append('estado', estado);
 
-      const response = await axios.get(`/sugerencias?${params.toString()}`);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.mensaje || 'Error al obtener sugerencias');
+obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('limit', limit);
+    
+    // Agregar filtros solo si tienen valor
+    if (filtros.categoria) {
+      params.append('categoria', filtros.categoria);
     }
-  },
+    
+    if (filtros.estado) {
+      params.append('estado', filtros.estado);
+    }
+    
+    if (filtros.busqueda && filtros.busqueda.trim()) {
+      params.append('busqueda', filtros.busqueda.trim());
+    }
+    
+    const response = await axios.get(`/sugerencias?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.mensaje || 'Error al obtener sugerencias');
+  }
+},
+
 
   // Obtener sugerencia por ID
   obtenerSugerenciaPorId: async (id) => {
@@ -39,21 +54,19 @@ crearSugerencia: async (datos) => {
   },
 
   // Actualizar sugerencia
-  actualizarSugerencia: async (id, titulo, mensaje, categoria, contacto) => {
-    try {
-      const response = await axios.patch(`/sugerencias/${id}`, {
-        titulo,
-        mensaje,
-        categoria,
-        contacto
-      });
-      return response.data;
-    } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar sugerencia';
-      throw new Error(msg);
-    }
-  },
-
+  actualizarSugerencia: async (id, datos) => {
+  try {
+    //console.log('Datos enviados al servidor:', datos); // Para debug
+    //console.log('ID de la sugerencia:', id); // Para debug
+    const response = await axios.patch(`/sugerencias/${id}`, datos);
+    console.log('Respuesta del servidor:', response.data); // Para debug
+    return response.data;
+  } catch (error) {
+    //console.log('Error en actualizarSugerencia:', error.response?.data.errors);
+    const msg = error.response?.data.errors|| 'Error al actualizar sugerencia';
+    throw new Error(msg);
+  }
+},
   // Eliminar sugerencia
   eliminarSugerencia: async (id) => {
     try {
@@ -85,7 +98,9 @@ crearSugerencia: async (datos) => {
       });
       return response.data;
     } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al responder sugerencia';
+
+     // console.log('Error en responderSugerencia:', error.response?.data.errors);
+      const msg = error.response?.data.errors || 'Error al responder sugerencia';
       throw new Error(msg);
     }
   },
@@ -109,7 +124,7 @@ crearSugerencia: async (datos) => {
       });
       return response.data;
     } catch (error) {
-      const msg = error.response?.data?.errors?.[0] || error.response?.data?.mensaje || 'Error al actualizar respuesta';
+      const msg = error.response?.data.errors || 'Error al actualizar respuesta';
       throw new Error(msg);
     }
   },

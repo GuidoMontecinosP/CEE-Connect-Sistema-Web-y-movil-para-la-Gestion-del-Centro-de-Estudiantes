@@ -9,11 +9,13 @@ import {  Card, Input,
           DatePicker, 
           TimePicker, 
           Select,
+          message,
            } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2';
+
 import MainLayout from '../components/MainLayout.jsx';
 import { useNavigate } from 'react-router-dom';
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -27,13 +29,11 @@ function CrearEvento() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [messageApi, contextHolder] = message.useMessage();
+
   const handleSubmit = async () => {
     if (!titulo || !descripcion || !fecha || !hora || !lugar || !tipo) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Por favor completa todos los campos.'
-      });
+      messageApi.error('Por favor completa todos los campos requeridos');
       return;
     }
     setLoading(true);
@@ -49,11 +49,8 @@ function CrearEvento() {
       const response = await crearEvento(data);
 
       if (response.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Evento creado exitosamente',
-          text: 'El evento ha sido creado correctamente.'
-        }).then(() => {
+        messageApi.success('Evento creado exitosamente')
+        .then(() => {
           navigate('/verEventos');
         });
         setTitulo('');
@@ -64,20 +61,10 @@ function CrearEvento() {
         setTipo('');
       }
     } catch (error) {
-      console.error("Error al crear el evento:", error);
 
-      const errores = error.response?.data?.errors;
       const mensaje = error.response?.data?.message || 'Error inesperado al crear el evento.';
-
-      if (Array.isArray(errores)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Errores al crear el evento',
-         html: `<ul style="text-align: left;">${errores.map(e => `<li>${e}</li>`).join('')}</ul>`,
-        });
-      } else {
-        Swal.fire('Error', mensaje, 'error');
-      }
+      messageApi.error(mensaje);
+      
     } finally {
       setLoading(false);
     }
@@ -85,6 +72,7 @@ function CrearEvento() {
 
   return (
     <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+      {contextHolder}
       <div>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>

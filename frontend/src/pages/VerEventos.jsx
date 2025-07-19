@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Swal from 'sweetalert2';
 
 import MainLayout from "../components/MainLayout.jsx";
 
@@ -13,8 +12,11 @@ import { Breadcrumb,
          Space, 
          TimePicker,
          Card,
-         Typography      
+         Typography,
+         message,
+         Select,     
 } from 'antd';
+
 import { PlusOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -22,94 +24,78 @@ const { Title, Text } = Typography;
 function VerEventos() {
   const [eventos, setEventos] = useState([]);
 
+  const [messageApi, contextHolder] = message.useMessage();
+
   useEffect(() => {
     obtenerEventos()
       .then(setEventos)
-      .catch(() => Swal.fire('Error', 'Hubo un problema al cargar los eventos.', 'error'));
+      .catch(() => messageApi.error('Error al obtener eventos. Inténtalo de nuevo más tarde.'));
   }, []);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState(null);
+  const [confirmEditVisible, setConfirmEditVisible] = useState(false);
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+  const [eventoAEliminar, setEventoAEliminar] = useState(null);
 
   const handleEditClick = (evento) => {
     setSelectedEvento(evento);
     setEditModalOpen(true);
   };
 
-  const handleDeleteClick = async (id, titulo) => {
-    Swal.fire({
-      title: `¿Estás seguro de eliminar el evento "${titulo}"?`,
-      text: "¡No podrás recuperar este evento!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        eliminarEvento(id)
-          .then(async () => {
-            Swal.fire('¡Eliminado!', 'El evento ha sido eliminado.', 'success');
-            // Recargar eventos después de eliminar
-            const nuevosEventos = await obtenerEventos();
-            setEventos(nuevosEventos);
-          })
-          .catch(() => {
-            Swal.fire('Error', 'Hubo un problema al eliminar el evento.', 'error');
-          });
-      }
-    });
+  const handleDeleteClick = (id, titulo) => {
+    setEventoAEliminar({ id, titulo });
+    setConfirmDeleteVisible(true);
   };
+
+  const handleConfirmDelete = async () => {
+    if (!eventoAEliminar) return;
+    try {
+      await eliminarEvento(eventoAEliminar.id);
+      messageApi.success('Evento eliminado exitosamente');
+      setConfirmDeleteVisible(false);
+      setEventoAEliminar(null);
+      // Recargar eventos después de eliminar
+      const nuevosEventos = await obtenerEventos();
+      setEventos(nuevosEventos);
+    } catch {
+      messageApi.error('Error al eliminar el evento. Inténtalo de nuevo más tarde.');
+      setConfirmDeleteVisible(false);
+      setEventoAEliminar(null);
+    }
+  };
+
   const handleEditChange = (e) => {
     setSelectedEvento({ ...selectedEvento, [e.target.name]: e.target.value });
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    Swal.fire({
-      title: '¿Estás seguro de modificar este evento?',
-      text: "¡Los cambios serán permanentes!",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, modificar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed){
-        // Excluir el campo id antes de enviar al backend
-        // eslint-disable-next-line no-unused-vars
-        const { id, estado, ...eventoSinId } = selectedEvento;
-        modificarEvento(id, eventoSinId)
-          .then(async () => {
-            Swal.fire('¡Modificado!', 'El evento ha sido modificado.', 'success');
-            setEditModalOpen(false);
-            setSelectedEvento(null);
-            const nuevosEventos = await obtenerEventos();
-            setEventos(nuevosEventos);
-          })
-          .catch((error) => {
-
-            const errores = error.response?.data?.errors;
-            const mensaje = error.response?.data?.message || 'Error inesperado en la modificación del evento.';
-
-            if(Array.isArray(errores)) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                html: `<ul style="text-align: left;">${errores.map(e => `<li>${e}</li>`).join('')}</ul>`,
-              })
-            } else{
-              Swal.fire('Error', mensaje, 'error');
-            }
-          })
-      }
-    })
+  const handleEditSubmit = () => {
+    setConfirmEditVisible(true);
   };
+
+  const handleConfirmEdit = async () => {
+    // eslint-disable-next-line no-unused-vars
+    const { id, estado, ...data } = selectedEvento;
+    try {
+      await modificarEvento(id, data);
+      messageApi.success('Evento modificado exitosamente');
+      setEditModalOpen(false);
+      setSelectedEvento(null);
+      setConfirmEditVisible(false);
+      // Recargar eventos después de modificar
+      const nuevosEventos = await obtenerEventos();
+      setEventos(nuevosEventos);
+    } catch (error) {
+      const mensaje = error.response?.data?.message || 'Error inesperado al modificar el evento.';
+      messageApi.error(mensaje);
+      setConfirmEditVisible(false);
+    }
+  };
+
   return (
     <>     
       <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+      {contextHolder}
         <div >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
           <div>
@@ -183,7 +169,7 @@ function VerEventos() {
           footer={null}
         >
           {selectedEvento && (
-            <form onSubmit={handleEditSubmit}>
+            <div>
               <div>
                 <Input type="text" placeholder="Título" name="titulo" value={selectedEvento.titulo} onChange={handleEditChange} />
                 <Input type="text" placeholder="Descripción" name="descripcion" value={selectedEvento.descripcion} onChange={handleEditChange}/>
@@ -196,18 +182,52 @@ function VerEventos() {
                 {/* <Input type="date" placeholder="Fecha" name="fecha" value={selectedEvento.fecha} onChange={handleEditChange} required />
                 <Input type="time" placeholder="Hora" name="hora" value={selectedEvento.hora} onChange={handleEditChange} required /> */}
                 <Input type="text" placeholder="Lugar" name="lugar" value={selectedEvento.lugar} onChange={handleEditChange} />
-                <Input type="text" placeholder="Tipo" name="tipo" value={selectedEvento.tipo} onChange={handleEditChange} />
+                <Select
+                  placeholder="Tipo de evento"
+                  name="tipo"
+                  value={selectedEvento.tipo}
+                  style={{ width: '100%', marginTop: 8 }}
+                  onChange={value => setSelectedEvento({ ...selectedEvento, tipo: value })}
+                  options={[
+                    { value: 'Charla', label: 'Charla' },
+                    { value: 'Taller', label: 'Taller' },
+                    { value: 'Conferencia', label: 'Conferencia' },
+                    { value: 'Reunión', label: 'Reunión' },
+                    { value: 'Recreativo', label: 'Recreativo' },
+                    { value: 'Otro', label: 'Otro' },
+                  ]}
+                />
               </div>
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <Button onClick={() => setEditModalOpen(false)} style={{ marginRight: 8 }}>
                   Cancelar
                 </Button>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" onClick={handleEditSubmit}>
                   Guardar Cambios
                 </Button>
               </div>
-            </form>
+            </div>
           )}
+        </Modal>
+        <Modal
+          open={confirmEditVisible}
+          title="¿Estás seguro de que deseas modificar este evento?"
+          onOk={handleConfirmEdit}
+          onCancel={() => setConfirmEditVisible(false)}
+          okText="Modificar"
+          cancelText="Cancelar"
+        >
+          <p>Recuerda que una vez modificado, no podrás revertir los cambios.</p>
+        </Modal>
+        <Modal
+          open={confirmDeleteVisible}
+          title={`¿Estás seguro de eliminar el evento "${eventoAEliminar?.titulo ?? ''}"?`}
+          onOk={handleConfirmDelete}
+          onCancel={() => { setConfirmDeleteVisible(false); setEventoAEliminar(null); }}
+          okText="Eliminar"
+          cancelText="Cancelar"
+        >
+          <p>¡No podrás recuperar este evento!</p>
         </Modal>
       </MainLayout>
     </>

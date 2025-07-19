@@ -1,5 +1,6 @@
 // backend/src/services/sugerencias.service.js
 "use strict";
+import { ILike, Or, And } from 'typeorm';
 
 import { AppDataSource } from "../config/configDb.js";
 import SugerenciaSchema from "../entity/sugerencia.entity.js";
@@ -38,37 +39,81 @@ class SugerenciasService {
     return await this.sugerenciaRepository.save(nuevaSugerencia);
   }
 
-  async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
-    const skip = (page - 1) * limit;
-    
-    const whereConditions = {};
-    
-    if (filtros.categoria) {
-      whereConditions.categoria = filtros.categoria;
-    }
-    
-    if (filtros.estado) {
-      whereConditions.estado = filtros.estado;
-    }
-
-    const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
-      where: whereConditions,
-      relations: ["autor", "adminResponsable"],
-      order: { createdAt: "DESC" },
-      skip,
-      take: limit
-    });
-
-    return {
-      data: sugerencias,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
+async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
+  const skip = (page - 1) * limit;
+  
+  let whereConditions = {};
+  
+  // Filtros de categoría y estado
+  if (filtros.categoria) {
+    whereConditions.categoria = filtros.categoria;
   }
+  
+  if (filtros.estado) {
+    whereConditions.estado = filtros.estado;
+  }
+  
+  // Búsqueda por texto en múltiples campos
+  if (filtros.busqueda) {
+    const busqueda = filtros.busqueda.trim();
+    if (busqueda) {
+      // Crear condiciones de búsqueda que incluyan los filtros existentes
+      const searchConditions = [
+        { 
+          ...whereConditions, 
+          titulo: ILike(`%${busqueda}%`) 
+        },
+        { 
+          ...whereConditions, 
+          mensaje: ILike(`%${busqueda}%`) 
+        },
+        { 
+          ...whereConditions, 
+          categoria: ILike(`%${busqueda}%`) 
+        }
+      ];
+      
+      // Usar el array de condiciones para búsqueda OR
+      const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
+        where: searchConditions,
+        relations: ["autor", "adminResponsable"],
+        order: { createdAt: "DESC" },
+        skip,
+        take: limit
+      });
+      
+      return {
+        data: sugerencias,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      };
+    }
+  }
+  
+  // Si no hay búsqueda, usar las condiciones normales
+  const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
+    where: whereConditions,
+    relations: ["autor", "adminResponsable"],
+    order: { createdAt: "DESC" },
+    skip,
+    take: limit
+  });
+  
+  return {
+    data: sugerencias,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+}
+
 
   async obtenerSugerenciaPorId(id) {
     return await this.sugerenciaRepository.findOne({
@@ -118,6 +163,7 @@ class SugerenciasService {
 
   if (!huboCambios) {
     throw new Error("No se detectaron cambios en los datos proporcionados");
+    //cambiar
   }
 
   sugerencia.updatedAt = new Date();

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Layout, Menu, Table, Typography, Input, Tag, Spin, Button, Modal, Tooltip, Space, Popconfirm, message
+  Table, Typography, Input, Tag, Spin, Button, Modal, Tooltip, Space, Popconfirm, message, Breadcrumb
 } from 'antd';
 import {
-  FileTextOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined,
-  AuditOutlined, UserOutlined, MessageOutlined, SearchOutlined, EditOutlined, DeleteOutlined
+  MessageOutlined, SearchOutlined, EditOutlined, DeleteOutlined, HomeOutlined, UserOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { sugerenciasService } from '../services/sugerencia.services.js';
+import MainLayout from '../components/MainLayout';    
 
-const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function MisSugerencias() {
@@ -184,78 +183,56 @@ export default function MisSugerencias() {
     }
   ];
 
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <FileTextOutlined />, label: 'Sugerencias' },
-    { key: '6', icon: <UserOutlined />, label: 'Mis sugerencias' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-    if (item.key === '4') navigate('/sugerencias');
-    if (item.key === '5') navigate('/dashboard');
-    if (item.key === '6') navigate('/mis-sugerencias');
-  };
-
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-      <Sider theme="dark" collapsible>
-        <Menu mode="inline" theme="dark" defaultSelectedKeys={['6']} items={menuItems} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
-        <Content style={{ padding: '48px 24px' }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <Title level={2} style={{ color: '#1e3a8a', marginBottom: 24 }}>
-              Mis Sugerencias
-            </Title>
+    <MainLayout
+      breadcrumb={
+        <Breadcrumb style={{ margin: '14px 0' }}>  </Breadcrumb>
 
-            <Input
-              placeholder="Buscar sugerencias..."
-              prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
-              allowClear
-            />
+      }
+    >
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <Title level={2} style={{ color: '#1e3a8a', marginBottom: 24 }}>
+          Mis Sugerencias
+        </Title>
 
-            {loading ? (
-              <div style={{ textAlign: 'center', padding: '80px 0' }}>
-                <Spin size="large" />
-                <div style={{ marginTop: 16 }}>
-                  <Text>Cargando sugerencias...</Text>
-                </div>
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                dataSource={filtered}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
-                bordered
-                locale={{
-                  emptyText: 'Aún no has creado ninguna sugerencia',
-                }}
-              />
-            )}
+        <Input
+          placeholder="Buscar sugerencias..."
+          prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
+          allowClear
+        />
 
-            <Modal
-              title="Mensaje de la sugerencia"
-              open={modalVisible}
-              onCancel={() => setModalVisible(false)}
-              footer={null}
-            >
-              <p>{mensajeActivo}</p>
-            </Modal>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 16 }}>
+              <Text>Cargando sugerencias...</Text>
+            </div>
           </div>
-        </Content>
-      </Layout>
-    </Layout>
+        ) : (
+          <Table
+            columns={columns}
+            dataSource={filtered}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            bordered
+            locale={{
+              emptyText: 'Aún no has creado ninguna sugerencia',
+            }}
+          />
+        )}
+
+        <Modal
+          title="Mensaje de la sugerencia"
+          open={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          footer={null}
+        >
+          <p>{mensajeActivo}</p>
+        </Modal>
+      </div>
+    </MainLayout>
   );
 }

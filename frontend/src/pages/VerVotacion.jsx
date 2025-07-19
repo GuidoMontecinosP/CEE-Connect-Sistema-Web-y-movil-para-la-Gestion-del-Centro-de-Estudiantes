@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
 import {
-  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu, Input
+  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu, Input,Breadcrumb
 } from 'antd';
 import {
   ArrowLeftOutlined, CheckCircleOutlined, StopOutlined, UserOutlined,
@@ -12,7 +12,7 @@ import {
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
-
+import MainLayout from '../components/MainLayout';
 function VerVotacion() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -145,29 +145,14 @@ function VerVotacion() {
     }
   ];
 
-  const items = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    if (item.key === '0') navigate('/noticias');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-    if (item.key === '5') navigate('/dashboard');
-  };
-
+  
   if (loading) {
     return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-        <Sider theme="dark" collapsible>
-          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-        </Sider>
-        <Layout>
+      <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Spin size="large" />
@@ -176,34 +161,32 @@ function VerVotacion() {
               </div>
             </div>
           </Content>
-        </Layout>
-      </Layout>
+        </MainLayout>
     );
   }
 
   if (!votacion) {
     return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-        <Sider theme="dark" collapsible>
-          <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-        </Sider>
-        <Layout>
+      <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Text style={{ color: '#64748b', fontSize: '16px' }}>No se encontró la votación</Text>
             </div>
           </Content>
-        </Layout>
-      </Layout>
+        </MainLayout>
     );
   }
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-      <Sider theme="dark" collapsible>
-        <Menu mode="inline" theme="dark" defaultSelectedKeys={['1']} items={items} onClick={onMenuClick} />
-      </Sider>
-      <Layout>
+    <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
@@ -318,8 +301,7 @@ function VerVotacion() {
             </Card>
           </div>
         </Content>
-      </Layout>
-    </Layout>
+      </MainLayout>
   );
 }
 

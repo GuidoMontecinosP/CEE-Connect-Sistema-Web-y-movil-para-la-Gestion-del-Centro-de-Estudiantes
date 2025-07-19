@@ -1,4 +1,3 @@
-//src/controllers/reporte.controller.js
 
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../handlers/responseHandlers.js";
 import { reporteService } from "../services/reporte.service.js";
@@ -36,6 +35,23 @@ export const eliminarReporte = async (req, res) => {
     handleErrorClient(res, 404, err.message);
   }
 };
+export const obtenerMisReportes = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const sugerenciasReportadas = await reporteService.obtenerReportesPorUsuario(userId);
+    res.json({
+      success: true,
+      data: sugerenciasReportadas,
+      message: `${sugerenciasReportadas.length} sugerencias reportadas por este usuario`
+    });
+  } catch (error) {
+    console.error('Error al obtener reportes del usuario:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener reportes del usuario'
+    });
+  }
+}
 
 export const vaciarReportes = async (req, res) => {
   try {

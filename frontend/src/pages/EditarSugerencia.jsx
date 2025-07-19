@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Layout, Form, Input, Select, Button, Typography, message, Menu, Spin
+  Layout, Form, Input, Select, Button, Typography, message, Menu, Spin,Breadcrumb
 } from 'antd';
 import {
   FileTextOutlined, PieChartOutlined, DesktopOutlined, CarryOutOutlined,
@@ -9,7 +9,7 @@ import {
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { sugerenciasService } from '../services/sugerencia.services.js';
-
+import MainLayout from '../components/MainLayout';
 const { Content, Sider } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
@@ -23,7 +23,8 @@ export default function EditarSugerencia() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const [messageApi, contextHolder] = message.useMessage();
+
   // Datos pasados desde la navegación (para usar como placeholders)
   const datosIniciales = location.state?.sugerencia || {};
 
@@ -31,12 +32,19 @@ export default function EditarSugerencia() {
     const cargarSugerencia = async () => {
       try {
         const res = await sugerenciasService.obtenerSugerenciaPorId(id);
+        console.log("Sugerencia cargada:", res.data.autor.id);
         const datos = res.data.data;
+        
+      if (usuario.id !== res.data.autor.id) {
+          messageApi.error("No tienes permiso para editar esta sugerencia");
+          navigate('/mis-sugerencias');
+          return;
+        }
         setDatosOriginales(datos);
         form.setFieldsValue(datos);
       } catch (err) {
         console.error("Error al cargar sugerencia:", err);
-        message.error("No se pudo cargar la sugerencia");
+        messageApi.error("No se pudo cargar la sugerencia");
         navigate('/mis-sugerencias');
       } finally {
         setLoading(false);
@@ -47,75 +55,55 @@ export default function EditarSugerencia() {
   }, [id, form, navigate]);
 
   const onFinish = async (values) => {
-    try {
-      setUpdating(true);
-      
-      // Log para debug
-      console.log('Valores del formulario:', values);
-      console.log('ID de la sugerencia:', id);
-      
-      const titulo = values.titulo?.trim();
-      const mensaje = values.mensaje?.trim();
-      const categoria = values.categoria;
-      const contacto = values.contacto?.trim() || null;
-      
-      console.log('Datos a enviar:', { titulo, mensaje, categoria, contacto });
-      
-      await sugerenciasService.actualizarSugerencia(
-        id,
-        titulo,
-        mensaje,
-        categoria,
-        contacto
-      );
-      
-      message.success("Sugerencia actualizada exitosamente");
-      navigate('/mis-sugerencias');
-    } catch (err) {
-      console.error("Error completo al actualizar sugerencia:", err);
-      console.error("Response data:", err.response?.data);
-      console.error("Response status:", err.response?.status);
-      message.error(err.message || "Error al actualizar sugerencia");
-    } finally {
-      setUpdating(false);
+  try {
+    setUpdating(true);
+    
+    // Solo enviar campos que realmente cambiaron
+    const datosActualizados = {};
+    
+    if (values.titulo && values.titulo.trim() !== datosOriginales?.titulo) {
+      datosActualizados.titulo = values.titulo.trim();
     }
-  };
+    if (values.mensaje && values.mensaje.trim() !== datosOriginales?.mensaje) {
+      datosActualizados.mensaje = values.mensaje.trim();
+    }
+    if (values.categoria && values.categoria !== datosOriginales?.categoria) {
+      datosActualizados.categoria = values.categoria;
+    }
+    if (values.contacto?.trim() !== datosOriginales?.contacto) {
+      datosActualizados.contacto = values.contacto?.trim() || null;
+    }
+    
+    // Verificar que hay al menos un cambio
+    if (Object.keys(datosActualizados).length === 0) {
+     messageApi.warning("No se detectaron cambios");
+      return;
+    }
+    
+   // console.log('Datos finales a enviar:', datosActualizados);
+    
+    await sugerenciasService.actualizarSugerencia(id, datosActualizados);
+    
+    messageApi.success("Sugerencia actualizada exitosamente");
+    navigate('/mis-sugerencias');
+  } catch (err) {
+    console.log("Error al actualizar:", err.message);
+    messageApi.error(err.message || "Error al actualizar sugerencia");
+  } finally {
+    setUpdating(false);
+  }
+};
 
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    { key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' },
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
-    { key: '4', icon: <FileTextOutlined />, label: 'Sugerencias' },
-    { key: '6', icon: <UserOutlined />, label: 'Mis sugerencias' },
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    const rutas = {
-      '0': '/noticias',
-      '1': '/votaciones',
-      '2': '/crear',
-      '3': '/eventos',
-      '4': '/sugerencias',
-      '5': '/dashboard',
-      '6': '/mis-sugerencias'
-    };
-    navigate(rutas[item.key]);
-  };
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#1e3a8a' }}>
-      <Sider theme="dark" collapsible>
-        <Menu 
-          mode="inline" 
-          theme="dark" 
-          defaultSelectedKeys={['6']} 
-          items={menuItems} 
-          onClick={onMenuClick} 
-        />
-      </Sider>
-      <Layout>
+    <MainLayout
+    selectedKeyOverride="8" 
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }} 
+      />
+    }
+  >
+       {contextHolder}
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 600, margin: '0 auto', background: '#fff', padding: 32, borderRadius: 12 }}>
             <Title level={2} style={{ color: '#1e3a8a', textAlign: 'center', marginBottom: 32 }}>
@@ -135,7 +123,8 @@ export default function EditarSugerencia() {
                 <Form.Item
                   label="Título"
                   name="titulo"
-                  rules={[{  message: 'Ingresa un título' }]}
+                  rules={[{  message: 'Ingresa un título' }, { min: 5, message: 'El título debe tener al menos 5 caracteres' },
+    { max: 200, message: 'El título no debe exceder 200 caracteres' }]}
                 >
                   <Input 
                     placeholder={datosIniciales.titulo || "Ingresa el título de tu sugerencia..."}
@@ -144,11 +133,14 @@ export default function EditarSugerencia() {
                 <Form.Item
                   label="Mensaje"
                   name="mensaje"
-                  rules={[{  message: 'Ingresa un mensaje' }]}
+                  rules={[{  message: 'Ingresa un mensaje' }, { min: 10, message: 'El mensaje debe tener al menos 10 caracteres' },
+    { max: 500, message: 'El mensaje no debe exceder 500 caracteres' }]}
                 >
                   <Input.TextArea 
                     rows={4} 
                     placeholder={datosIniciales.mensaje || "Describe tu sugerencia en detalle..."}
+                    showCount
+                    maxLength={500}
                   />
                 </Form.Item>
                 <Form.Item
@@ -184,7 +176,6 @@ export default function EditarSugerencia() {
             )}
           </div>
         </Content>
-      </Layout>
-    </Layout>
+     </MainLayout>
   );
 }

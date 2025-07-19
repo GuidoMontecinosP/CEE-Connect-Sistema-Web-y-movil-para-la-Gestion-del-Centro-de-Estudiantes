@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
 import { votoService } from '../services/voto.services';
 import { useAuth } from '../context/AuthContext';
+import MainLayout from '../components/MainLayout';
 import { 
   Layout, 
   Card, 
@@ -16,7 +17,7 @@ import {
   Tag,
   Result,
   Divider,
-  Menu
+  Menu,Breadcrumb
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -105,41 +106,7 @@ function Votar() {
     }
   };
 
-  // Menú items basado en el rol del usuario
-  const menuItems = [
-    { key: '0', icon: <FileTextOutlined />, label: 'Inicio' },
-    { key: '1', icon: <PieChartOutlined />, label: 'Votaciones' },
-    ...(usuario?.rol.nombre === 'administrador'
-      ? [{ key: '2', icon: <DesktopOutlined />, label: 'Crear Votación' }]
-      : []),
-    { key: '3', icon: <CarryOutOutlined />, label: 'Eventos' },
  
-    { key: '5', icon: <AuditOutlined />, label: 'Dashboard' }
-  ];
-
-  const onMenuClick = (item) => {
-    // Prevenir que se abra la sidebar al hacer click en un item cuando está colapsada
-    if (collapsed) {
-      // Navegar directamente sin expandir la sidebar
-      setSelectedKey(item.key);
-      if (item.key === '0') navigate('/');
-      if (item.key === '1') navigate('/votaciones');
-      if (item.key === '2') navigate('/crear');
-      if (item.key === '3') navigate('/eventos');
-      if (item.key === '5') navigate('/dashboard');
-      return;
-    }
-    
-    // Comportamiento normal cuando la sidebar está expandida
-    setSelectedKey(item.key);
-    if (item.key === '0') navigate('/');
-    if (item.key === '1') navigate('/votaciones');
-    if (item.key === '2') navigate('/crear');
-    if (item.key === '3') navigate('/eventos');
-    if (item.key === '4') navigate('/noticias');
-    if (item.key === '5') navigate('/dashboard');
-  };
-
   const getEstadoTag = (estado) => {
     const estadoConfig = {
       'activa': { color: 'success', icon: <CheckCircleOutlined />, text: 'Activa' },
@@ -157,22 +124,11 @@ function Votar() {
 
   if (loading) {
     return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-          <Menu
-            mode="inline"
-            theme="dark"
-            selectedKeys={[selectedKey]}
-            items={menuItems}
-            onClick={onMenuClick}
-            style={{ 
-              height: '100%', 
-              borderRight: 0
-            }}
-          />
-        </Sider>
-        
-        <Layout>
+     <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ textAlign: 'center' }}>
               <Spin size="large" />
@@ -181,29 +137,17 @@ function Votar() {
               </div>
             </div>
           </Content>
-        </Layout>
-      </Layout>
+        </MainLayout>
     );
   }
 
   if (!votacion) {
     return (
-      <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-          <Menu
-            mode="inline"
-            theme="dark"
-            selectedKeys={[selectedKey]}
-            items={menuItems}
-            onClick={onMenuClick}
-            style={{ 
-              height: '100%', 
-              borderRight: 0
-            }}
-          />
-        </Sider>
-        
-        <Layout>
+      <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ maxWidth: 800, margin: '0 auto' }}>
               <Result
@@ -231,28 +175,16 @@ function Votar() {
               />
             </div>
           </Content>
-        </Layout>
-      </Layout>
+       </MainLayout>
     );
   }
 
   return (
-    <Layout style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <Sider theme="dark" collapsible collapsed={collapsed} onCollapse={(value) => setCollapsed(value)}>
-        <Menu
-          mode="inline"
-          theme="dark"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={onMenuClick}
-          style={{ 
-            height: '100%', 
-            borderRight: 0
-          }}
-        />
-      </Sider>
-
-      <Layout>
+    <MainLayout
+    breadcrumb={
+      <Breadcrumb style={{ margin: '14px 0' }}  />
+    }
+  >
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
             
@@ -463,7 +395,7 @@ function Votar() {
             )}
           </div>
         </Content>
-      </Layout>
+      
 
       <style jsx>{`
         .ant-card:hover {
@@ -481,7 +413,7 @@ function Votar() {
           margin-top: 2px;
         }
       `}</style>
-    </Layout>
+    </MainLayout>
   );
 }
 

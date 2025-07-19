@@ -22,26 +22,16 @@ export default function Login() {
         contrasena
       });
 
-      const { token, user } = response.data.data; // Ajustado según tu estructura de respuesta
+      const { token, user } = response.data.data; 
       
       login(user, token);
       navigate("/noticias");
       
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-      
-      // Manejo específico de errores según tu backend
-      if (error.response?.data?.details?.dataInfo === "verificado") {
-        setError("Debes verificar tu correo institucional antes de iniciar sesión.");
-      } else if (error.response?.data?.details?.dataInfo === "correo") {
-        setError("El correo electrónico es incorrecto.");
-      } else if (error.response?.data?.details?.dataInfo === "contrasena") {
-        setError("La contraseña es incorrecta.");
-      } else if (error.response?.data?.details?.dataInfo === "estado") {
-        setError("Tu cuenta está desactivada. Contacta al administrador.");
-      } else {
-        setError(error.response?.data?.message || "Error de conexión. Intenta nuevamente.");
-      }
+    
+      console.log("Error al iniciar sesión:", error.response.data.details);
+      setError(error.response.data.details || "Error al iniciar sesión. Por favor, inténtalo de nuevo.");
+     
     } finally {
       setLoading(false);
     }

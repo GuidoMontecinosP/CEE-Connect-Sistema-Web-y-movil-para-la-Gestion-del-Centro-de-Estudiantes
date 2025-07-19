@@ -34,7 +34,11 @@ export const reportesService = {
       throw new Error(error.response?.data?.mensaje || 'Error al eliminar reporte');
     }
   },
-
+async obtenerMisReportes() {
+    const response = await axios.get('/reportes/mis-reportes');
+    console.log(response); 
+    return response.data;
+  },
   // Vaciar todos los reportes de una sugerencia específica (solo admin)
   vaciarReportesDeSugerencia: async (sugerenciaId) => {
     try {

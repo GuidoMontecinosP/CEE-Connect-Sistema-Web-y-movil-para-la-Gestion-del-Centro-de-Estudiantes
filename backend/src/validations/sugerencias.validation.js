@@ -1,8 +1,6 @@
-
 "use strict";
 
-import { body, param, query } from "express-validator";
-import { handleValidationErrors } from "../helpers/validation.helper.js";
+import Joi from "joi";
 
 // Categorías válidas para las sugerencias
 const CATEGORIAS_VALIDAS = [
@@ -26,176 +24,290 @@ const ESTADOS_VALIDOS = [
   "archivada"
 ];
 
-export const validarCrearSugerencia = [
-  body("titulo")
-    .notEmpty()
-    .withMessage("El título es obligatorio")
-    .isLength({ min: 5, max: 200 })
-    .withMessage("El título debe tener entre 5 y 200 caracteres")
-    .trim(),
-  
-  body("mensaje")
-    .notEmpty()
-    .withMessage("El mensaje es obligatorio")
-    .isLength({ min: 10, max: 2000 })
-    .withMessage("El mensaje debe tener entre 10 y 2000 caracteres")
-    .trim(),
-  
-  body("categoria")
-    .notEmpty()
-    .withMessage("La categoría es obligatoria")
-    .isIn(CATEGORIAS_VALIDAS)
-    .withMessage(`La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`),
-  
-  body("contacto")
-    .optional()
-    .isLength({ max: 100 })
-    .withMessage("El contacto no puede exceder los 100 caracteres")
-    .trim(),
+// Middleware simple para validar con Joi
+export const validate = (schema, property = 'body') => {
+  return (req, res, next) => {
+    const data = req[property];
+    const { error } = schema.validate(data, { abortEarly: false });
+    
+    if (error) {
+      return res.status(400).json({
+  success: false,
+  message: "Errores de validación",
+  errors: error.details.map(d => d.message).join(', ')
+});
 
-  handleValidationErrors
-];
+    }
+    
+    next();
+  };
+};
 
-export const validarActualizarSugerencia = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("ID debe ser un número entero positivo"),
-  
-  body("titulo")
-    .optional()
-    .isLength({ min: 5, max: 200 })
-    .withMessage("El título debe tener entre 5 y 200 caracteres")
-    .trim(),
-  
-  body("mensaje")
-    .optional()
-    .isLength({ min: 10, max: 2000 })
-    .withMessage("El mensaje debe tener entre 10 y 2000 caracteres")
-    .trim(),
-  
-  body("categoria")
-    .optional()
-    .isIn(CATEGORIAS_VALIDAS)
-    .withMessage(`La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`),
-  
-  body("contacto")
-    .optional()
-    .isLength({ max: 100 })
-    .withMessage("El contacto no puede exceder los 100 caracteres")
-    .trim(),
+// Esquemas de validación con Joi
+export const esquemaCrearSugerencia = Joi.object({
+ autorId: Joi.alternatives()
+    .try(
+      Joi.string(),
+      Joi.number().integer()
+    )
+    .required()
+    .messages({
+      'alternatives.match': 'El autorId debe ser un string o número',
+      'any.required': 'El autor es obligatorio'
+    }),
 
-  handleValidationErrors
-];
 
-export const validarResponderSugerencia = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("ID debe ser un número entero positivo"),
+  titulo: Joi.string()
+    .trim()
+    .min(5)
+    .max(200)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
+    .required()
+    .messages({
+      'string.empty': 'El título es obligatorio',
+      'string.min': 'El título debe tener al menos 5 caracteres',
+      'string.max': 'El título no puede exceder los 200 caracteres',
+      'string.pattern.base': 'El título solo puede contener letras y espacios simples, sin símbolos ni números',
+      'any.required': 'El título es obligatorio'
+    }),
   
-  body("respuesta")
-    .notEmpty()
-    .withMessage("La respuesta es obligatoria")
-    .isLength({ min: 10, max: 1000 })
-    .withMessage("La respuesta debe tener entre 10 y 1000 caracteres")
-    .trim(),
+  mensaje: Joi.string()
+    .trim()
+    .min(10)
+    .max(500)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s.,;:!?¡¿()-]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
+    .required()
+    .messages({
+      'string.empty': 'El mensaje es obligatorio',
+      'string.min': 'El mensaje debe tener al menos 10 caracteres',
+      'string.max': 'El mensaje no puede exceder los 500 caracteres',
+      'string.pattern.base': 'El mensaje contiene caracteres no permitidos o espacios dobles',
+      'any.required': 'El mensaje es obligatorio'
+    }),
   
-  body("estado")
+  categoria: Joi.string()
+    .valid(...CATEGORIAS_VALIDAS)
+    .required()
+    .messages({
+      'any.only': `La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`,
+      'any.required': 'La categoría es obligatoria'
+    }),
+  
+  contacto: Joi.string()
+    .trim()
+    .max(100)
+    .allow('',null)
+    
     .optional()
-    .isIn(ESTADOS_VALIDOS)
-    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+    .messages({
+      'string.max': 'El contacto no puede exceder los 100 caracteres'
+    })
+});
 
-  handleValidationErrors
-];
-
-export const validarIdSugerencia = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("ID debe ser un número entero positivo"),
-  
-  handleValidationErrors
-];
-
-export const validarPaginacion = [
-  query("page")
+export const esquemaActualizarSugerencia = Joi.object({
+  titulo: Joi.string()
+    .trim()
+    .min(5)
+    .max(200)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("La página debe ser un número entero positivo"),
+    .messages({
+      'string.min': 'El título debe tener al menos 5 caracteres',
+      'string.max': 'El título no puede exceder los 200 caracteres',
+      'string.pattern.base': 'El título solo puede contener letras y espacios simples, sin símbolos ni números'
+    }),
   
-  query("limit")
+  mensaje: Joi.string()
+    .trim()
+    .min(10)
+    .max(500)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s.,;:!?¡¿()-]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
     .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage("El límite debe ser un número entre 1 y 100"),
+    .messages({
+      'string.min': 'El mensaje debe tener al menos 10 caracteres',
+      'string.max': 'El mensaje no puede exceder los 500 caracteres',
+      'string.pattern.base': 'El mensaje contiene caracteres no permitidos o espacios dobles'
+    }),
   
-  query("categoria")
+  categoria: Joi.string()
+    .valid(...CATEGORIAS_VALIDAS)
     .optional()
-    .isIn(CATEGORIAS_VALIDAS)
-    .withMessage(`La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`),
+    .messages({
+      'any.only': `La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`
+    }),
   
-  query("estado")
+  contacto: Joi.string()
+    .trim()
+    .max(100)
+    .allow('')
     .optional()
-    .isIn(ESTADOS_VALIDOS)
-    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+    .messages({
+      'string.max': 'El contacto no puede exceder los 100 caracteres'
+    })
+});
 
-  handleValidationErrors
-];
-
-// Validación específica para filtros de administrador
-export const validarFiltrosAdmin = [
-  query("page")
+export const esquemaResponderSugerencia = Joi.object({
+  respuesta: Joi.string()
+    .trim()
+    .min(10)
+    .max(500)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s.,;:!?¡¿()-]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
+    .required()
+    .messages({
+      'string.empty': 'La respuesta es obligatoria',
+      'string.min': 'La respuesta debe tener al menos 10 caracteres',
+      'string.max': 'La respuesta no puede exceder los 500 caracteres',
+      'string.pattern.base': 'La respuesta contiene caracteres no permitidos o espacios dobles',
+      'any.required': 'La respuesta es obligatoria'
+    }),
+  
+  estado: Joi.string()
+    .valid(...ESTADOS_VALIDOS)
     .optional()
-    .isInt({ min: 1 })
-    .withMessage("La página debe ser un número entero positivo"),
-  
-  query("limit")
+    .messages({
+      'any.only': `El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`
+    })
+});
+
+export const esquemaIdSugerencia = Joi.object({
+  id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'ID debe ser un número',
+      'number.integer': 'ID debe ser un número entero',
+      'number.positive': 'ID debe ser un número positivo',
+      'any.required': 'ID es obligatorio'
+    })
+});
+
+export const esquemaPaginacion = Joi.object({
+  page: Joi.number()
+    .integer()
+    .positive()
     .optional()
-    .isInt({ min: 1, max: 100 })
-    .withMessage("El límite debe ser un número entre 1 y 100"),
+    .messages({
+      'number.base': 'La página debe ser un número',
+      'number.integer': 'La página debe ser un número entero',
+      'number.positive': 'La página debe ser un número positivo'
+    }),
   
-  query("isReportada")
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
     .optional()
-    .isBoolean()
-    .withMessage("isReportada debe ser true o false"),
+    .messages({
+      'number.base': 'El límite debe ser un número',
+      'number.integer': 'El límite debe ser un número entero',
+      'number.min': 'El límite debe ser al menos 1',
+      'number.max': 'El límite no puede exceder 100'
+    }),
   
-  query("minReportes")
+  categoria: Joi.string()
+    .valid(...CATEGORIAS_VALIDAS)
     .optional()
-    .isInt({ min: 0 })
-    .withMessage("minReportes debe ser un número entero positivo o cero"),
-
-  handleValidationErrors
-];
-
-export const validarActualizarRespuesta = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("ID debe ser un número entero positivo"),
+    .messages({
+      'any.only': `La categoría debe ser una de: ${CATEGORIAS_VALIDAS.join(", ")}`
+    }),
   
-  body("respuesta")
-    .notEmpty()
-    .withMessage("La respuesta es obligatoria")
-    .isLength({ min: 10, max: 1000 })
-    .withMessage("La respuesta debe tener entre 10 y 1000 caracteres")
-    .trim(),
-  
-  body("estado")
+  estado: Joi.string()
+    .valid(...ESTADOS_VALIDOS)
     .optional()
-    .isIn(ESTADOS_VALIDOS)
-    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+    .messages({
+      'any.only': `El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`
+    })
+});
 
-  handleValidationErrors
-];
-
-export const validarCambiarEstado = [
-  param("id")
-    .isInt({ min: 1 })
-    .withMessage("ID debe ser un número entero positivo"),
+export const esquemaFiltrosAdmin = Joi.object({
+  page: Joi.number()
+    .integer()
+    .positive()
+    .optional()
+    .messages({
+      'number.base': 'La página debe ser un número',
+      'number.integer': 'La página debe ser un número entero',
+      'number.positive': 'La página debe ser un número positivo'
+    }),
   
-  body("estado")
-    .notEmpty()
-    .withMessage("El estado es obligatorio")
-    .isIn(ESTADOS_VALIDOS)
-    .withMessage(`El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`),
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .optional()
+    .messages({
+      'number.base': 'El límite debe ser un número',
+      'number.integer': 'El límite debe ser un número entero',
+      'number.min': 'El límite debe ser al menos 1',
+      'number.max': 'El límite no puede exceder 100'
+    }),
+  
+  isReportada: Joi.boolean()
+    .optional()
+    .messages({
+      'boolean.base': 'isReportada debe ser true o false'
+    }),
+  
+  minReportes: Joi.number()
+    .integer()
+    .min(0)
+    .optional()
+    .messages({
+      'number.base': 'minReportes debe ser un número',
+      'number.integer': 'minReportes debe ser un número entero',
+      'number.min': 'minReportes debe ser cero o positivo'
+    })
+});
 
-  handleValidationErrors
-];
+export const esquemaActualizarRespuesta = Joi.object({
+  respuesta: Joi.string()
+    .trim()
+    .min(10)
+    .max(500)
+    .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s.,;:!?¡¿()-]+$/)
+    .pattern(/^(?!.*\s{2,}).*$/)
+    .required()
+    .messages({
+      'string.empty': 'La respuesta es obligatoria',
+      'string.min': 'La respuesta debe tener al menos 10 caracteres',
+      'string.max': 'La respuesta no puede exceder los 500 caracteres',
+      'string.pattern.base': 'La respuesta contiene caracteres no permitidos o espacios dobles',
+      'any.required': 'La respuesta es obligatoria'
+    }),
+
+  
+  estado: Joi.string()
+    .valid(...ESTADOS_VALIDOS)
+    .optional()
+    .messages({
+      'any.only': `El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`
+    })
+});
+
+export const esquemaCambiarEstado = Joi.object({
+  estado: Joi.string()
+    .valid(...ESTADOS_VALIDOS)
+    .required()
+    .messages({
+      'any.only': `El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`,
+      'any.required': 'El estado es obligatorio'
+    })
+});
+
+// Middlewares de validación listos para usar
+export const validarCrearSugerencia = validate(esquemaCrearSugerencia);
+export const validarActualizarSugerencia = validate(esquemaActualizarSugerencia);
+export const validarResponderSugerencia = validate(esquemaResponderSugerencia);
+export const validarIdSugerencia = validate(esquemaIdSugerencia, 'params');
+export const validarPaginacion = validate(esquemaPaginacion, 'query');
+export const validarFiltrosAdmin = validate(esquemaFiltrosAdmin, 'query');
+export const validarActualizarRespuesta = validate(esquemaActualizarRespuesta);
+export const validarCambiarEstado = validate(esquemaCambiarEstado);
 
 export { CATEGORIAS_VALIDAS, ESTADOS_VALIDOS };
