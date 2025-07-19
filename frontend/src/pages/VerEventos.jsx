@@ -79,6 +79,7 @@ function VerEventos() {
     }).then((result) => {
       if (result.isConfirmed){
         // Excluir el campo id antes de enviar al backend
+        // eslint-disable-next-line no-unused-vars
         const { id, estado, ...eventoSinId } = selectedEvento;
         modificarEvento(id, eventoSinId)
           .then(async () => {
@@ -88,15 +89,27 @@ function VerEventos() {
             const nuevosEventos = await obtenerEventos();
             setEventos(nuevosEventos);
           })
-          .catch(() => {
-            Swal.fire('Error', 'Hubo un problema al modificar el evento.', 'error');
+          .catch((error) => {
+
+            const errores = error.response?.data?.errors;
+            const mensaje = error.response?.data?.message || 'Error inesperado en la modificación del evento.';
+
+            if(Array.isArray(errores)) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                html: `<ul style="text-align: left;">${errores.map(e => `<li>${e}</li>`).join('')}</ul>`,
+              })
+            } else{
+              Swal.fire('Error', mensaje, 'error');
+            }
           })
       }
     })
   };
   return (
     <>     
-      <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Eventos' }]} />}>
+      <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
         <div >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
           <div>
@@ -141,6 +154,8 @@ function VerEventos() {
                 {eventos.map(e => {
                 // Formatear fecha de YYYY-MM-DD a DD-MM-YYYY
                   let fechaFormateada = e.fecha ? e.fecha.split('-').reverse().join('-') : '';
+                  // Mostrar hora solo en formato HH:mm
+                  let horaFormateada = e.hora ? e.hora.slice(0,5) : '';
                   return (
                     <Card key={e.id} size="small" title={e.titulo} extra={
                       <>
@@ -149,7 +164,7 @@ function VerEventos() {
                       </>
                       }
                       style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
-                        Fecha: {fechaFormateada} - Hora: {e.hora ?? ''}  <br />
+                        Fecha: {fechaFormateada} - Hora: {horaFormateada}  <br />
                         Descripción: {e.descripcion} <br />
                         Lugar: {e.lugar} <br />
                         Tipo: {e.tipo} <br />

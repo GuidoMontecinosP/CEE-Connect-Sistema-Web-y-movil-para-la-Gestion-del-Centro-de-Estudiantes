@@ -7,7 +7,7 @@ export async function crearEventoController(req, res) {
     console.log("Error de validación:", error.details);
     return res.status(400).json({
         success: false,
-        message: "Datos de entrada inválidos",
+        message: error.details[0].message,
         errors: error.details.map(detail => detail.message)
       });
   }
@@ -43,7 +43,7 @@ export async function modificarEventoController(req, res) {
     console.log("Error de validación:", error.details);
     return res.status(400).json({
         success: false,
-        message: "Datos de entrada inválidos",
+        message: error.details[0].message,
         errors: error.details.map(detail => detail.message)
       });
   }

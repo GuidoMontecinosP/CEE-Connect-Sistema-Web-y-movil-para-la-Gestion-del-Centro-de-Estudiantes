@@ -32,7 +32,7 @@ function Noticias() {
     } = theme.useToken();
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Noticias' }]} /> }>
+    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} /> }>
       <div
         style={{
           padding: 22,

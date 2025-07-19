@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { crearEvento } from '../services/eventos.services.js';
-import { Card, Input, Button, Typography, Space, Row, Col, Divider, Breadcrumb, DatePicker, TimePicker, Select } from 'antd';
+import {  Card, Input, 
+          Button, 
+          Typography, 
+          Row, Col, 
+          Divider, 
+          Breadcrumb, 
+          DatePicker, 
+          TimePicker, 
+          Select,
+           } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import MainLayout from '../components/MainLayout.jsx';
@@ -56,11 +65,19 @@ function CrearEvento() {
       }
     } catch (error) {
       console.error("Error al crear el evento:", error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error al crear el evento',
-        text: error.message
-      });
+
+      const errores = error.response?.data?.errors;
+      const mensaje = error.response?.data?.message || 'Error inesperado al crear el evento.';
+
+      if (Array.isArray(errores)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Errores al crear el evento',
+         html: `<ul style="text-align: left;">${errores.map(e => `<li>${e}</li>`).join('')}</ul>`,
+        });
+      } else {
+        Swal.fire('Error', mensaje, 'error');
+      }
     } finally {
       setLoading(false);
     }
