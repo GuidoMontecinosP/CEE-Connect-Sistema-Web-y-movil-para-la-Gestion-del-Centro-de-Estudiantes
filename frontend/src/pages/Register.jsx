@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "../services/root.services";
 import { useNavigate } from "react-router-dom";
 import ubbFondo from "../assets/portal.png";
+import {message} from 'antd'
 
 export default function Register() {
   const [nombre, setNombre] = useState("");
@@ -11,7 +12,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [passwordStrength, setPasswordStrength] = useState("");
-
+  const [messageApi, contextHolder] = message.useMessage(); 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -29,20 +30,27 @@ export default function Register() {
         rolId: 2,
       });
 
-      alert("Registro exitoso. Revisa tu correo institucional.");
-      navigate("/login");
+      messageApi.success({
+  content: "Registro exitoso. Revisa tu correo institucional.",
+  duration: 3,
+  onClose: () => {
+    navigate("/login");
+  }
+});
+
     } catch (err) {
-      console.log("Error de registro:" , err.response?.data)   
-      const msg =
-      err?.response?.data?.details?.ls ||
-      err?.response?.data?.details?.message ||
-      err?.response?.data?.message ||
-      "Error desconocido";
-      setError(msg);
+       
+      console.log("Error de registro:" , err.response?.data?.details);   
+     messageApi.error({
+  content: err.response?.data?.details || "Error al registrarse",
+  duration: 3,
+     })
     }
   };
 
   return (
+     <>
+          {contextHolder}
     <div style={{ display: "flex", height: "100vh", fontFamily: "Segoe UI, sans-serif" }}>
       {/* Imagen izquierda */}
       <div
@@ -81,10 +89,10 @@ export default function Register() {
         <img
           src="/src/assets/escudo-color-gradiente-oscuro.png"
           alt="Logo UBB"
-          style={{ width: "220px", marginBottom: "2rem" }}
+          style={{ width: "220px", marginBottom: "0.5rem" }}
         />
 
-        <h1 style={{ color: "#1e3a8a", marginBottom: "2rem", fontWeight: 700 }}>
+        <h1 style={{ color: "#1e3a8a", marginBottom: "0.5rem", fontWeight: 700 }}>
           Registrarse
         </h1>
 
@@ -152,7 +160,7 @@ export default function Register() {
           </button>
         </form>
 
-        <p style={{ marginTop: "2rem", fontSize: "14px", color: "#666" }}>
+        <p style={{ marginTop: "1.5rem", fontSize: "14px", color: "#666" }}>
           ¿Ya tienes una cuenta?{" "}
           <a href="/login" style={{ color: "#1e3a8a", fontWeight: "bold" }}>
             Inicia sesión aquí
@@ -160,12 +168,13 @@ export default function Register() {
         </p>
       </div>
     </div>
+    </>
   );
 }
 
 const inputStyle = {
   width: "100%",
-  padding: "12px",
+  padding: "10px",
   marginBottom: "1rem",
   borderRadius: "6px",
   border: "1px solid #ccc",
@@ -195,7 +204,7 @@ function getPasswordStrength(password) {
 function getColorStrength(strength) {
   switch (strength) {
     case "débil": return "crimson";
-    case "media": return "#e69b00"; // naranja
+    case "media": return "#e69b00";
     case "fuerte": return "limegreen";
     default: return "#333";
   }

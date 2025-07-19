@@ -23,12 +23,12 @@ export function handleSuccess(res, statusCode = 200, message = "Operación exito
  * @param {string} message - Mensaje de error
  * @param {object} details - Detalles adicionales del error
  */
-export function handleErrorClient(res, statusCode = 400, message = "Error del cliente", details = {}) {
+export function handleErrorClient(res, statusCode, message, details) {
   return res.status(statusCode).json({
-    ok: false,
-    status: "client_error",
+    state: "Error",
     message,
-    details,
+    details: details || message, 
+    statusCode
   });
 }
 

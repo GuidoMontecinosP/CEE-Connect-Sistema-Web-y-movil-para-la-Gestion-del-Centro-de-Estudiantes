@@ -516,7 +516,7 @@ const limpiarBusqueda = () => {
     
     try {
       await reportesService.eliminarReporte(reporteInfo.id);
-      message.success('Reporte eliminado exitosamente');
+      messageApi.success('Reporte eliminado exitosamente');
       
       // Cerrar modal actual
       setInfoReporteVisible(false);

@@ -110,6 +110,12 @@ export async function register(req, res) {
 
     const [usuarioCreado, errorNewUser] = await registerService(body);
 
+    const repo = AppDataSource.getRepository("Usuario");
+    const usuarioExistente = await repo.findOneBy({ correo: body.correo });
+    if (usuarioExistente) {
+      return handleErrorClient(res, 400, "Correo ya registrado");
+    }
+
     if (errorNewUser) {
       return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
     }

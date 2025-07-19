@@ -181,6 +181,7 @@ function Votar() {
 
   return (
     <MainLayout
+      selectedKeyOverride={selectedKey}
     breadcrumb={
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }

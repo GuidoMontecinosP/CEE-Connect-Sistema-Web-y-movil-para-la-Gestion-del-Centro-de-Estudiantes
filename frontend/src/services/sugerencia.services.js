@@ -8,8 +8,8 @@ crearSugerencia: async (datos) => {
    
     return response.data;
   } catch (error) {
-    console.log('Error en crearSugerencia:', error.response?.data.errors);
-    const msg = error.response?.data.errors || 'Error al crear sugerencia';
+  //  console.log('Error en crearSugerencia:', error.response?.data.errors);
+    const msg = error.response?.data.errors || error.response?.data.details||'Error al crear sugerencia';
     throw new Error(msg);
   }
 },
@@ -63,7 +63,8 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
     return response.data;
   } catch (error) {
     //console.log('Error en actualizarSugerencia:', error.response?.data.errors);
-    const msg = error.response?.data.errors|| 'Error al actualizar sugerencia';
+    console.log('Error en actualizarSugerencia:', );
+    const msg = error.response?.data.errors|| error.response?.data.details|| 'Error al actualizar sugerencia';
     throw new Error(msg);
   }
 },

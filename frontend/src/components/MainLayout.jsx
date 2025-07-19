@@ -12,6 +12,7 @@ import {
   ScheduleOutlined,
   EyeOutlined,
   FormOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +28,7 @@ function getItem(label, key, icon, children) {
   };
 }
 
-const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
+const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario, logout } = useAuth();
@@ -35,6 +36,12 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
     // Si la ruta actual es de un hijo de 'sub1' (eventos), abre 'sub1'
     if (['/VerEventos', '/crearEvento'].includes(location.pathname)) {
       return ['sub1'];
+    }
+    
+    // Si la ruta actual es de un hijo de 'sub_votaciones' (votaciones admin), abre 'sub_votaciones'
+    if (['/crear', '/votaciones'].includes(location.pathname) && 
+        (usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador')) {
+      return ['sub_votaciones'];
     }
     
     if (['/sugerencias/nueva', '/sugerencias', '/mis-sugerencias'].includes(location.pathname) && 
@@ -51,13 +58,15 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
   // Filtrar items del menú según el rol
   const adminItems = [
     getItem('Inicio', '0', <FileTextOutlined />),
-    getItem('Votaciones', '1', <PieChartOutlined />),
-    getItem('Crear Votación', '2', <DesktopOutlined />),
+    getItem('Votaciones', 'sub_votaciones', <PieChartOutlined />, [
+      getItem('Crear Votación', '2', <PlusOutlined />),
+      getItem('Votaciones', '1', <SettingOutlined />),
+    ]),
     getItem('Eventos', 'sub1', <CarryOutOutlined />, [
       getItem('Ver Eventos', '3', <CarryOutOutlined />),
       getItem('Agregar Eventos', '6', <PlusCircleOutlined />),
     ]),
-    getItem('Sugerencias', '7', <CalendarOutlined />),
+    getItem(' Sugerencias', '7', <CalendarOutlined />),
     getItem('Dashboard', '5', <AuditOutlined />),
   ];
   
@@ -100,12 +109,12 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
     '/mis-sugerencias': '8',
     '/sugerencias/nueva': '9',
   };
-const selectedKey = 
+
+  const selectedKey = 
     selectedKeyOverride != null 
       ? selectedKeyOverride 
       : (pathToKey[location.pathname] || '0');
 
- 
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>

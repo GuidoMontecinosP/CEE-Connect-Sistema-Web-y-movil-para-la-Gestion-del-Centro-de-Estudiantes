@@ -28,6 +28,7 @@ export const verificarMuteo = async (req, res, next) => {
 
       // ✅ Verificar si el muteo sigue vigente
       if (ahora < fechaFinMuteo) {
+        //console.log("Usuario muteado, no puede realizar esta acción.");
         return handleErrorClient(
           res,
           403,

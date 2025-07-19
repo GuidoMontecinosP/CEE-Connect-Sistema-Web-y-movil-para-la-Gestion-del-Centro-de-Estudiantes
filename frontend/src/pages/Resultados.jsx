@@ -38,6 +38,7 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
       })
       .catch(err => {
         message.error(`Error al cargar resultados: ${err.message}`);
+        console.log("Error al cargar resultados:", err);
         setLoading(false);
       });
   }, [id]);
@@ -159,6 +160,7 @@ if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
 
   return (
      <MainLayout
+     selectedKeyOverride="1" 
     breadcrumb={
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { votacionService } from '../services/votacion.services';
 import { votoService } from '../services/voto.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, ConfigProvider,Breadcrumb } from 'antd';
+import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, ConfigProvider,Breadcrumb, Modal } from 'antd';
 import { CheckCircleOutlined, StopOutlined, BarChartOutlined, FilterOutlined, PlusOutlined, EyeOutlined, CheckOutlined,FileTextOutlined,PieChartOutlined,DesktopOutlined,CarryOutOutlined,AuditOutlined,SendOutlined  } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,10 @@ function ListarVotaciones() {
   const [votosUsuario, setVotosUsuario] = useState({}); // Para guardar qué votaciones ya votó el usuario
   const navigate = useNavigate();
   const { usuario } = useAuth();
+  
+  const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
+
 
   // Verificar roles del usuario
   const esAdministrador = usuario?.rol?.nombre === 'administrador';
@@ -68,155 +72,118 @@ function ListarVotaciones() {
       
       setLoading(false);
     } catch (err) {
-      message.error(`Error al cargar votaciones: ${err.message}`);
+      messageApi.error(`Error al cargar votaciones: ${err.message}`);
       setLoading(false);
     }
   };
 
   const handleCerrarVotacion = async (votacion) => {
-    // Solo permitir cerrar votaciones si es administrador
     if (!esAdministrador) {
-      message.error('No tienes permisos para cerrar votaciones');
+      messageApi.error('No tienes permisos para cerrar votaciones');
       return;
     }
 
-    const result = await Swal.fire({
+    modal.confirm({
       title: '¿Cerrar votación?',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <p style="margin-bottom: 10px; color: #666;">
-            <strong>Votación:</strong> ${votacion.titulo}
+      content: (
+        <div style={{ textAlign: 'left', margin: '20px 0' }}>
+          <p style={{ marginBottom: 10, color: '#666' }}>
+            <strong>Votación:</strong> {votacion.titulo}
           </p>
-          <p style="margin-bottom: 15px; color: #666;">
+          <p style={{ marginBottom: 15, color: '#666' }}>
             Esta acción no se puede deshacer. Una vez cerrada, no se podrán registrar más votos.
           </p>
-          <p style="margin-bottom: 15px; color: #d63384;">
+          <p style={{ marginBottom: 15, color: '#d63384' }}>
             <strong>Nota:</strong> Los resultados no se publicarán automáticamente. Podrás publicarlos cuando desees.
           </p>
         </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, cerrar votación',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-    });
-
-    if (result.isConfirmed) {
-      try {
-        setCerrandoVotacion(votacion.id);
-
-        await votacionService.cerrarVotacion(votacion.id);
-
-        setVotaciones(prevVotaciones => 
-          prevVotaciones.map(v => 
-            v.id === votacion.id 
-              ? { ...v, estado: 'cerrada', resultadosPublicados: false }
-              : v
-          )
-        );
-
-        await Swal.fire({
-          title: '¡Votación cerrada!',
-          text: `La votación "${votacion.titulo}" ha sido cerrada exitosamente. Ahora puedes publicar los resultados cuando desees.`,
-          icon: 'success',
-          confirmButtonColor: '#28a745',
-          confirmButtonText: 'Entendido',
-          timer: 4000,
-          timerProgressBar: true
-        });
-
-        setCerrandoVotacion(null);
-      } catch (error) {
-        console.error('Error al cerrar votación:', error);
-        setCerrandoVotacion(null);
-
-        await Swal.fire({
-          title: 'Error al cerrar votación',
-          text: `No se pudo cerrar la votación "${votacion.titulo}"`,
-          icon: 'error',
-          confirmButtonColor: '#dc3545',
-          confirmButtonText: 'Entendido'
-        });
+      ),
+      icon: null,
+      okText: 'Sí, cerrar votación',
+      cancelText: 'Cancelar',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          setCerrandoVotacion(votacion.id);
+          
+          await votacionService.cerrarVotacion(votacion.id);
+          
+          setVotaciones(prevVotaciones => 
+            prevVotaciones.map(v => 
+              v.id === votacion.id 
+                ? { ...v, estado: 'cerrada', resultadosPublicados: false }
+                : v
+            )
+          );
+          
+          messageApi.success({
+            content: `La votación "${votacion.titulo}" ha sido cerrada exitosamente. Ahora puedes publicar los resultados cuando desees.`,
+            duration: 4
+          });
+          
+        } catch (error) {
+          console.error('Error al cerrar votación:', error);
+          messageApi.error(`No se pudo cerrar la votación "${votacion.titulo}"`);
+        } finally {
+          setCerrandoVotacion(null);
+        }
       }
-    }
+    });
   };
 
+
   const handlePublicarResultados = async (votacion) => {
-    // Solo permitir publicar si es administrador
     if (!esAdministrador) {
-      message.error('No tienes permisos para publicar resultados');
+      messageApi.error('No tienes permisos para publicar resultados');
       return;
     }
 
-    const result = await Swal.fire({
+    modal.confirm({
       title: '¿Publicar resultados?',
-      html: `
-        <div style="text-align: left; margin: 20px 0;">
-          <p style="margin-bottom: 10px; color: #666;">
-            <strong>Votación:</strong> ${votacion.titulo}
+      content: (
+        <div style={{ textAlign: 'left', margin: '20px 0' }}>
+          <p style={{ marginBottom: 10, color: '#666' }}>
+            <strong>Votación:</strong> {votacion.titulo}
           </p>
-          <p style="margin-bottom: 15px; color: #666;">
+          <p style={{ marginBottom: 15, color: '#666' }}>
             Una vez publicados, los resultados serán visibles para todos los usuarios.
           </p>
-          <p style="margin-bottom: 15px; color: #28a745;">
+          <p style={{ marginBottom: 15, color: '#28a745' }}>
             <strong>Nota:</strong> Los estudiantes podrán ver los resultados de esta votación.
           </p>
         </div>
-      `,
-      icon: 'info',
-      showCancelButton: true,
-      confirmButtonColor: '#28a745',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, publicar resultados',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-    });
-
-    if (result.isConfirmed) {
-      try {
-        setPublicandoResultados(votacion.id);
-
-        await votacionService.publicarResultados(votacion.id);
-
-        // Actualizar el estado local
-        setVotaciones(prevVotaciones => 
-          prevVotaciones.map(v => 
-            v.id === votacion.id 
-              ? { ...v, resultadosPublicados: true }
-              : v
-          )
-        );
-
-        await Swal.fire({
-          title: '¡Resultados publicados!',
-          text: `Los resultados de "${votacion.titulo}" ahora son visibles para todos los usuarios.`,
-          icon: 'success',
-          confirmButtonColor: '#28a745',
-          confirmButtonText: 'Entendido',
-          timer: 3000,
-          timerProgressBar: true
-        });
-
-        setPublicandoResultados(null);
-        
-        // Recargar las votaciones para actualizar la vista
-        //cargarVotaciones();
-      } catch (error) {
-        console.error('Error al publicar resultados:', error);
-        setPublicandoResultados(null);
-
-        await Swal.fire({
-          title: 'Error al publicar resultados',
-          text: error.message || `No se pudieron publicar los resultados de "${votacion.titulo}"`,
-          icon: 'error',
-          confirmButtonColor: '#dc3545',
-          confirmButtonText: 'Entendido'
-        });
+      ),
+      icon: null,
+      okText: 'Sí, publicar resultados',
+      cancelText: 'Cancelar',
+      okButtonProps: { type: 'primary' },
+      onOk: async () => {
+        try {
+          setPublicandoResultados(votacion.id);
+          
+          await votacionService.publicarResultados(votacion.id);
+          
+          setVotaciones(prevVotaciones => 
+            prevVotaciones.map(v => 
+              v.id === votacion.id 
+                ? { ...v, resultadosPublicados: true }
+                : v
+            )
+          );
+          
+          messageApi.success({
+            content: `Los resultados de "${votacion.titulo}" ahora son visibles para todos los usuarios.`,
+            duration: 3
+          });
+          
+        } catch (error) {
+          console.error('Error al publicar resultados:', error);
+          messageApi.error(error.message || `No se pudieron publicar los resultados de "${votacion.titulo}"`);
+        } finally {
+          setPublicandoResultados(null);
+        }
       }
-    }
+    });
   };
 
   const getEstadoTag = (estado, resultadosPublicados) => {
@@ -347,12 +314,17 @@ function ListarVotaciones() {
   }, [esAdministrador]);
 
   return (
+    
     <ConfigProvider locale={esES}>
       <MainLayout
+      selectedKeyOverride="1" 
     breadcrumb={
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }
+    
   >
+    {contextHolder}
+{modalContextHolder}
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ maxWidth: 1200, margin: '0 auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
@@ -517,7 +489,7 @@ function ListarVotaciones() {
                                         justifyContent: 'center'
                                       }}
                                     >
-                                      Ver Detalle
+                                      Ver Detalles
                                     </Button>
                                   </Col>
                                   

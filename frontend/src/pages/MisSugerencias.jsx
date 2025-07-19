@@ -18,6 +18,7 @@ export default function MisSugerencias() {
   const [modalVisible, setModalVisible] = useState(false);
   const [mensajeActivo, setMensajeActivo] = useState(null);
   const [eliminandoId, setEliminandoId] = useState(null);
+  const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
   const formatearFecha = (fecha) => {
@@ -47,10 +48,10 @@ export default function MisSugerencias() {
         prevSugerencias.filter(s => s.id !== id)
       );
       
-      message.success(`Sugerencia "${titulo}" eliminada exitosamente`);
+      messageApi.success(`Sugerencia "${titulo}" eliminada exitosamente`);
     } catch (error) {
       console.error("Error al eliminar sugerencia:", error);
-      message.error(error.message || 'Error al eliminar la sugerencia');
+      messageApi.error(error.message || 'Error al eliminar la sugerencia');
     } finally {
       setEliminandoId(null);
     }
@@ -190,6 +191,7 @@ export default function MisSugerencias() {
 
       }
     >
+      {contextHolder}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <Title level={2} style={{ color: '#1e3a8a', marginBottom: 24 }}>
           Mis Sugerencias
