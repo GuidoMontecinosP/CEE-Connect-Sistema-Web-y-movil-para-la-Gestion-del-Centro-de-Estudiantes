@@ -142,7 +142,7 @@ return (
                 rules={[
                   { required: true, message: 'Por favor escribe un mensaje' },
                   { min: 10, message: 'El mensaje debe tener al menos 10 caracteres' },
-                  { max: 2000, message: 'El mensaje no debe exceder 2000 caracteres' }
+                  { max: 500, message: 'El mensaje no debe exceder 500 caracteres' }
                 ]}
                 style={{ marginBottom: 0 }}
               >
@@ -194,7 +194,7 @@ return (
                 
                 <Col span={12}>
                   <Text strong style={{ fontSize: 16, color: '#1e3a8a', display: 'block', marginBottom: 8 }}>
-                    Contacto (Opcional)
+                    Contacto 
                   </Text>
                   <Form.Item
                     name="contacto"

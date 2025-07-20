@@ -98,7 +98,7 @@ export async function login(req, res) {
   }
 }
 
-// 📝 REGISTRO + ENVÍO DE CORREO
+
 export async function register(req, res) {
   try {
     const { body } = req;
@@ -108,13 +108,15 @@ export async function register(req, res) {
       return handleErrorClient(res, 400, "Error de validación", error.message);
     }
 
-    const [usuarioCreado, errorNewUser] = await registerService(body);
-
+    
     const repo = AppDataSource.getRepository("Usuario");
     const usuarioExistente = await repo.findOneBy({ correo: body.correo });
     if (usuarioExistente) {
       return handleErrorClient(res, 400, "Correo ya registrado");
     }
+
+    // ✅ DESPUÉS crear el usuario (solo si no existe)
+    const [usuarioCreado, errorNewUser] = await registerService(body);
 
     if (errorNewUser) {
       return handleErrorClient(res, 400, "Error registrando al usuario", errorNewUser);
@@ -122,7 +124,7 @@ export async function register(req, res) {
 
     // 📨 Generar token y enviar correo
     const tokenVerificacion = generarTokenVerificacion(usuarioCreado);
-    const urlVerificacion = `http://localhost:3000/api/auth/verificar/${tokenVerificacion}`; //cambiar por url de producción
+    const urlVerificacion = `http://192.168.1.10:3000/api/auth/verificar/${tokenVerificacion}`; //cambiar por url de producción 1712
 
     await transporter.sendMail({
       from: '"CEE Connect" <no-reply@ceeconnect.cl>',
@@ -142,6 +144,7 @@ export async function register(req, res) {
     handleErrorServer(res, 500, "Error interno del servidor");
   }
 }
+
 
 // 🔓 LOGOUT
 export async function logout(req, res) {
