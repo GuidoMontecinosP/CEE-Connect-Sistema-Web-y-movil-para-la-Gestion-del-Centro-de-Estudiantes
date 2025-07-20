@@ -8,6 +8,7 @@ import "./config/passport.config.js";
 import cookieParser from "cookie-parser";    
 import authRoutes from "./routes/auth.routes.js"      
 
+
 // Cargar variables de entorno
 dotenv.config();
 
