@@ -842,6 +842,15 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
           </TouchableOpacity>
         )}
       </View>
+      {esEstud && (
+  <TouchableOpacity
+    style={styles.mySuggestionsButton}
+    onPress={() => navigation.navigate('MisSugerencias')}
+  >
+    <Ionicons name="list-outline" size={20} color="#fff" />
+    <Text style={styles.mySuggestionsButtonText}>Mis sugerencias</Text>
+  </TouchableOpacity>
+)}
 
       {/* Búsqueda y filtros */}
       <View style={styles.searchContainer}>
@@ -1091,11 +1100,20 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
               <Text style={styles.messageText}>{mensajeActivo}</Text>
               
               <View style={styles.messageInfo}>
-                <Text style={styles.messageInfoLabel}>Autor:</Text>
-                <Text style={styles.messageInfoText}>
-                  {msgAutor?.nombre || 'Usuario anónimo'}
-                </Text>
-              </View>
+               
+               <Text style={styles.messageInfoLabel}>Autor:</Text>
+  <Text style={styles.messageInfoText}>
+    {msgAutor
+      ? `${msgAutor.nombre}${msgAutor.apellido ? ' ' + msgAutor.apellido : ''}`
+      : 'Usuario anónimo'}
+  </Text>
+               </View>
+               <View style={styles.messageInfo}>
+  <Text style={styles.messageInfoLabel}>Contacto:</Text>
+  <Text style={styles.messageInfoText}>
+    {msgAutor?.contacto || 'Sin contacto'}
+  </Text>
+</View>
               
               <View style={styles.messageInfo}>
                 <Text style={styles.messageInfoLabel}>Fecha:</Text>
@@ -2465,7 +2483,20 @@ ellipsis: {
   fontWeight: '500',
   marginHorizontal: 4,
 },
-
+mySuggestionsButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#fff',       // o el color que prefieras
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 8,
+  marginLeft: 8,
+},
+mySuggestionsButtonText: {
+  marginLeft: 4,
+  color: '#1e3a8a',             // asegúrate contraste con el fondo
+  fontWeight: '600',
+},
 });
 
 

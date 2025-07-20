@@ -15,6 +15,8 @@ import Resultados from './screens/Resultados';
 import DetalleVotacion from './screens/DetalleVotacion';
 import ListaSugerencias from './screens/ListaSugerencias';
 import CrearSugerencia from './screens/CrearSugerencia';
+import EditarSugerencia from './screens/EditarSugerencia';
+import MisSugerencias from './screens/MisSugerencias';
 
 // Screens de autenticación
 import LoginScreen from './screens/LoginScreen';
@@ -57,6 +59,8 @@ function SugerenciasStack() {
           headerShown: false // El componente maneja su propio header
         }} 
       />
+      <Stack.Screen name="MisSugerencias" component={MisSugerencias} options={{ title: 'Mis Sugerencias' }} />
+      <Stack.Screen name="EditarSugerencia" component={EditarSugerencia} options={{ title: 'Editar Sugerencia' }} />
     </Stack.Navigator>
   );
 }
