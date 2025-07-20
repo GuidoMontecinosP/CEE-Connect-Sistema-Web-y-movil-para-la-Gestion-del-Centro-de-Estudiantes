@@ -6,7 +6,8 @@ import indexRoutes from "./routes/index.routes.js";
 import passport from "passport";
 import "./config/passport.config.js";
 import cookieParser from "cookie-parser";    
-import authRoutes from "./routes/auth.routes.js"      
+import authRoutes from "./routes/auth.routes.js"   
+import "./components/eventos.cron.js";
 
 // Cargar variables de entorno
 dotenv.config();

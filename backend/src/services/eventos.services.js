@@ -43,6 +43,7 @@ export const modificarEvento = async (id, data) => {
 
 export const eventos = async () => {
     const eventos = await eventoRepo.find({
+        where: { estado: "activo" },
       order: {
         fecha: "ASC",
         hora: "ASC"

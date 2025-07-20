@@ -30,7 +30,7 @@ function VerEventos() {
     obtenerEventos()
       .then(setEventos)
       .catch(() => messageApi.error('Error al obtener eventos. Inténtalo de nuevo más tarde.'));
-  }, []);
+  }, [messageApi]);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState(null);

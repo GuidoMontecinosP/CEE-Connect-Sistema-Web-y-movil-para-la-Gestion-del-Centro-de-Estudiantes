@@ -193,7 +193,7 @@ export const modificarEventoValidation = Joi.object({
         }),
 
     tipo: Joi.string()
-        .valid("Reunión", "Taller", "Charla", "Recreativo", "otro", "Conferencia")
+        .valid("Reunión", "Taller", "Charla", "Recreativo", "Otro", "Conferencia")
         .optional()
         .allow("")
         .messages({
