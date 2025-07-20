@@ -626,34 +626,94 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
     if (totalPaginas <= 1) return null;
 
     return (
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
-          onPress={() => cambiarPagina(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          <Ionicons name="chevron-back" size={16} color={currentPage === 1 ? "#ccc" : "#1e3a8a"} />
-          <Text style={[styles.paginationButtonText, currentPage === 1 && styles.paginationButtonTextDisabled]}>
-            Anterior
-          </Text>
-        </TouchableOpacity>
+    <View style={styles.paginationContainer}>
+      {/* Botón Anterior */}
+      <TouchableOpacity
+        style={[
+          styles.paginationButton, 
+          currentPage === 1 && styles.paginationButtonDisabled
+        ]}
+        onPress={() => cambiarPagina(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <Ionicons 
+          name="chevron-back" 
+          size={18} 
+          color={currentPage === 1 ? "#ccc" : "#1e3a8a"} 
+        />
+      </TouchableOpacity>
 
-        <Text style={styles.paginationInfo}>
-          Página {currentPage} de {totalPaginas}
-        </Text>
+      {/* Números de página */}
+      <View style={styles.pageNumbersContainer}>
+        {currentPage > 2 && (
+          <>
+            <TouchableOpacity
+              style={styles.pageNumber}
+              onPress={() => cambiarPagina(1)}
+            >
+              <Text style={styles.pageNumberText}>1</Text>
+            </TouchableOpacity>
+            {currentPage > 3 && (
+              <Text style={styles.ellipsis}>...</Text>
+            )}
+          </>
+        )}
 
-        <TouchableOpacity
-          style={[styles.paginationButton, currentPage === totalPaginas && styles.paginationButtonDisabled]}
-          onPress={() => cambiarPagina(currentPage + 1)}
-          disabled={currentPage === totalPaginas}
-        >
-          <Text style={[styles.paginationButtonText, currentPage === totalPaginas && styles.paginationButtonTextDisabled]}>
-            Siguiente
-          </Text>
-          <Ionicons name="chevron-forward" size={16} color={currentPage === totalPaginas ? "#ccc" : "#1e3a8a"} />
-        </TouchableOpacity>
+        {currentPage > 1 && (
+          <TouchableOpacity
+            style={styles.pageNumber}
+            onPress={() => cambiarPagina(currentPage - 1)}
+          >
+            <Text style={styles.pageNumberText}>{currentPage - 1}</Text>
+          </TouchableOpacity>
+        )}
+
+        <View style={[styles.pageNumber, styles.currentPageNumber]}>
+          <Text style={styles.currentPageText}>{currentPage}</Text>
+        </View>
+
+        {currentPage < totalPaginas && (
+          <TouchableOpacity
+            style={styles.pageNumber}
+            onPress={() => cambiarPagina(currentPage + 1)}
+          >
+            <Text style={styles.pageNumberText}>{currentPage + 1}</Text>
+          </TouchableOpacity>
+        )}
+
+        {currentPage < totalPaginas - 1 && (
+          <>
+            {currentPage < totalPaginas - 2 && (
+              <Text style={styles.ellipsis}>...</Text>
+            )}
+            <TouchableOpacity
+              style={styles.pageNumber}
+              onPress={() => cambiarPagina(totalPaginas)}
+            >
+              <Text style={styles.pageNumberText}>{totalPaginas}</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
-    );
+
+      {/* Botón Siguiente */}
+      <TouchableOpacity
+        style={[
+          styles.paginationButton, 
+          currentPage === totalPaginas && styles.paginationButtonDisabled
+        ]}
+        onPress={() => cambiarPagina(currentPage + 1)}
+        disabled={currentPage === totalPaginas}
+      >
+        <Ionicons 
+          name="chevron-forward" 
+          size={18} 
+          color={currentPage === totalPaginas ? "#ccc" : "#1e3a8a"} 
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
   };
 
   const renderSugerencia = ({ item }) => (
@@ -850,70 +910,166 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
       {/* MODALES */}
       
       {/* Modal de filtros */}
-      <Modal
-        visible={filtrosVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setFiltrosVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filtros</Text>
-              <TouchableOpacity onPress={() => setFiltrosVisible(false)}>
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+     <Modal
+  visible={filtrosVisible}
+  animationType="slide"
+  transparent={true}
+  onRequestClose={() => setFiltrosVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.filterModalContainer}>
+      {/* Header mejorado */}
+      <View style={styles.filterModalHeader}>
+        <View style={styles.filterHeaderLeft}>
+          <View style={styles.filterIconContainer}>
+            <Ionicons name="options-outline" size={24} color="#1e3a8a" />
+          </View>
+          <Text style={styles.filterModalTitle}>Filtrar Resultados</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.closeIconButton}
+          onPress={() => setFiltrosVisible(false)}
+        >
+          <Ionicons name="close" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
 
-            <ScrollView style={styles.modalContent}>
-              <View style={styles.filterSection}>
-                <Text style={styles.filterLabel}>Categoría:</Text>
-                <Picker
-                  selectedValue={categoriaFiltro}
-                  onValueChange={setCategoriaFiltro}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Todas las categorías" value={null} />
-                  <Picker.Item label="Eventos" value="eventos" />
-                  <Picker.Item label="Infraestructura" value="infraestructura" />
-                  <Picker.Item label="Bienestar" value="bienestar" />
-                  <Picker.Item label="Otros" value="otros" />
-                </Picker>
-              </View>
-
-              <View style={styles.filterSection}>
-                <Text style={styles.filterLabel}>Estado:</Text>
-                <Picker
-                  selectedValue={estadoFiltro}
-                  onValueChange={setEstadoFiltro}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Todos los estados" value={null} />
-                  <Picker.Item label="Pendiente" value="pendiente" />
-                  <Picker.Item label="En proceso" value="en proceso" />
-                  <Picker.Item label="Resuelta" value="resuelta" />
-                  <Picker.Item label="Archivada" value="archivada" />
-                </Picker>
-              </View>
-            </ScrollView>
-
-            <View style={styles.modalActions}>
+      <ScrollView style={styles.filterModalContent} showsVerticalScrollIndicator={false}>
+        {/* Categoría */}
+        <View style={styles.filterCard}>
+          <View style={styles.filterCardHeader}>
+            <Ionicons name="file-tray-stacked-outline" size={20} color="#1e3a8a" />
+            <Text style={styles.filterCardTitle}>Categoría</Text>
+          </View>
+          <View style={styles.optionsGrid}>
+            {[
+              { label: 'Todas', value: null, icon: 'apps-outline' },
+              { label: 'Eventos', value: 'eventos', icon: 'calendar-outline' },
+              { label: 'Infraestructura', value: 'infraestructura', icon: 'construct-outline' },
+              { label: 'Bienestar', value: 'bienestar', icon: 'heart-outline' },
+              { label: 'Otros', value: 'otros', icon: 'ellipsis-horizontal-outline' }
+            ].map((option) => (
               <TouchableOpacity
-                style={styles.clearButton}
-                onPress={limpiarFiltros}
+                key={option.value || 'all'}
+                style={[
+                  styles.filterOption,
+                  categoriaFiltro === option.value && styles.filterOptionSelected
+                ]}
+                onPress={() => setCategoriaFiltro(option.value)}
               >
-                <Text style={styles.clearButtonText}>Limpiar</Text>
+                <Ionicons
+                  name={option.icon}
+                  size={20}
+                  color={categoriaFiltro === option.value ? '#fff' : '#1e3a8a'}
+                />
+                <Text style={[
+                  styles.filterOptionText,
+                  categoriaFiltro === option.value && styles.filterOptionTextSelected
+                ]}>
+                  {option.label}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.applyButton}
-                onPress={aplicarFiltros}
-              >
-                <Text style={styles.applyButtonText}>Aplicar</Text>
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
         </View>
-      </Modal>
+
+        {/* Estado */}
+        <View style={styles.filterCard}>
+          <View style={styles.filterCardHeader}>
+            <Ionicons name="flag-outline" size={20} color="#1e3a8a" />
+            <Text style={styles.filterCardTitle}>Estado</Text>
+          </View>
+          <View style={styles.optionsGrid}>
+            {[
+              { label: 'Todos', value: null, icon: 'checkmark-circle-outline', color: '#666' },
+              { label: 'Pendiente', value: 'pendiente', icon: 'time-outline', color: '#ff9500' },
+              { label: 'En proceso', value: 'en proceso', icon: 'sync-outline', color: '#1890ff' },
+              { label: 'Resuelta', value: 'resuelta', icon: 'checkmark-done-outline', color: '#52c41a' },
+              { label: 'Archivada', value: 'archivada', icon: 'archive-outline', color: '#8c8c8c' }
+            ].map((option) => (
+              <TouchableOpacity
+                key={option.value || 'all'}
+                style={[
+                  styles.filterOption,
+                  estadoFiltro === option.value && styles.filterOptionSelected,
+                  estadoFiltro === option.value && { backgroundColor: option.color }
+                ]}
+                onPress={() => setEstadoFiltro(option.value)}
+              >
+                <Ionicons
+                  name={option.icon}
+                  size={20}
+                  color={estadoFiltro === option.value ? '#fff' : option.color}
+                />
+                <Text style={[
+                  styles.filterOptionText,
+                  estadoFiltro === option.value && styles.filterOptionTextSelected
+                ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Indicador de filtros activos */}
+        {(categoriaFiltro || estadoFiltro) && (
+          <View style={styles.activeFiltersCard}>
+            <View style={styles.activeFiltersHeader}>
+              <Ionicons name="funnel-outline" size={16} color="#1e3a8a" />
+              <Text style={styles.activeFiltersTitle}>Filtros Activos</Text>
+            </View>
+            <View style={styles.activeFiltersList}>
+              {categoriaFiltro && (
+                <View style={styles.activeFilterTag}>
+                  <Text style={styles.activeFilterText}>
+                    Categoría: {categoriaFiltro === 'eventos' ? 'Eventos' : 
+                               categoriaFiltro === 'infraestructura' ? 'Infraestructura' :
+                               categoriaFiltro === 'bienestar' ? 'Bienestar' : 'Otros'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setCategoriaFiltro(null)}>
+                    <Ionicons name="close-circle" size={16} color="#1e3a8a" />
+                  </TouchableOpacity>
+                </View>
+              )}
+              {estadoFiltro && (
+                <View style={styles.activeFilterTag}>
+                  <Text style={styles.activeFilterText}>
+                    Estado: {estadoFiltro === 'pendiente' ? 'Pendiente' :
+                            estadoFiltro === 'en proceso' ? 'En proceso' :
+                            estadoFiltro === 'resuelta' ? 'Resuelta' : 'Archivada'}
+                  </Text>
+                  <TouchableOpacity onPress={() => setEstadoFiltro(null)}>
+                    <Ionicons name="close-circle" size={16} color="#1e3a8a" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Footer con botones mejorados */}
+      <View style={styles.filterModalFooter}>
+        <TouchableOpacity
+          style={styles.clearFiltersButton}
+          onPress={limpiarFiltros}
+        >
+          <Ionicons name="refresh-outline" size={18} color="#ff4d4f" />
+          <Text style={styles.clearFiltersButtonText}>Limpiar</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.applyFiltersButton}
+          onPress={aplicarFiltros}
+        >
+          <Ionicons name="checkmark-outline" size={18} color="#fff" />
+          <Text style={styles.applyFiltersButtonText}>Aplicar Filtros</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 
       {/* Modal de ver mensaje */}
       <Modal
@@ -1761,44 +1917,219 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
   },
   // Modal de filtros
-  filterSection: {
-    marginBottom: 16,
+  filterModalContainer: {
+  backgroundColor: 'white',
+  borderRadius: 20,
+  width: '92%',
+  maxHeight: '85%',
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 10,
   },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 8,
+  shadowOpacity: 0.25,
+  shadowRadius: 15,
+  elevation: 10,
+},
+filterModalHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingHorizontal: 20,
+  paddingVertical: 16,
+  borderBottomWidth: 1,
+  borderBottomColor: '#f0f0f0',
+  backgroundColor: '#fafafa',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+},
+filterHeaderLeft: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 12,
+},
+filterIconContainer: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: '#e6f3ff',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+filterModalTitle: {
+  fontSize: 18,
+  fontWeight: '600',
+  color: '#1a1a1a',
+},
+closeIconButton: {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  backgroundColor: '#f0f0f0',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+filterModalContent: {
+  padding: 20,
+},
+filterCard: {
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 16,
+  borderWidth: 1,
+  borderColor: '#f0f0f0',
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 2,
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    marginBottom: 16,
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
+},
+filterCardHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+  marginBottom: 12,
+},
+filterCardTitle: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#1a1a1a',
+},
+optionsGrid: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+},
+filterOption: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 12,
+  paddingVertical: 8,
+  borderRadius: 20,
+  backgroundColor: '#f8f9fa',
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+  gap: 6,
+  minWidth: 80,
+},
+filterOptionSelected: {
+  backgroundColor: '#1e3a8a',
+  borderColor: '#1e3a8a',
+  transform: [{ scale: 1.05 }],
+  shadowColor: '#1e3a8a',
+  shadowOffset: {
+    width: 0,
+    height: 2,
   },
-  picker: {
-    height: 50,
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  elevation: 4,
+},
+filterOptionText: {
+  fontSize: 13,
+  fontWeight: '500',
+  color: '#1a1a1a',
+},
+filterOptionTextSelected: {
+  color: '#fff',
+  fontWeight: '600',
+},
+activeFiltersCard: {
+  backgroundColor: '#e6f3ff',
+  borderRadius: 12,
+  padding: 16,
+  borderWidth: 1,
+  borderColor: '#b3d9ff',
+  marginTop: 8,
+},
+activeFiltersHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  marginBottom: 10,
+},
+activeFiltersTitle: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#1e3a8a',
+},
+activeFiltersList: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 8,
+},
+activeFilterTag: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#fff',
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  borderRadius: 16,
+  gap: 6,
+  borderWidth: 1,
+  borderColor: '#1e3a8a',
+},
+activeFilterText: {
+  fontSize: 12,
+  color: '#1e3a8a',
+  fontWeight: '500',
+},
+filterModalFooter: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  paddingHorizontal: 20,
+  paddingVertical: 16,
+  borderTopWidth: 1,
+  borderTopColor: '#f0f0f0',
+  backgroundColor: '#fafafa',
+  borderBottomLeftRadius: 20,
+  borderBottomRightRadius: 20,
+  gap: 12,
+},
+clearFiltersButton: {
+  flex: 1,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 12,
+  borderRadius: 10,
+  backgroundColor: '#fff',
+  borderWidth: 1,
+  borderColor: '#ff4d4f',
+  gap: 6,
+},
+clearFiltersButtonText: {
+  color: '#ff4d4f',
+  fontWeight: '600',
+  fontSize: 14,
+},
+applyFiltersButton: {
+  flex: 2,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 12,
+  borderRadius: 10,
+  backgroundColor: '#1e3a8a',
+  gap: 6,
+  shadowColor: '#1e3a8a',
+  shadowOffset: {
+    width: 0,
+    height: 3,
   },
-  clearButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
-  },
-  clearButtonText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  applyButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#1e3a8a',
-  },
-  applyButtonText: {
-    color: 'white',
-    fontWeight: '500',
-  },
+  shadowOpacity: 0.3,
+  shadowRadius: 5,
+  elevation: 5,
+},
+applyFiltersButtonText: {
+  color: '#fff',
+  fontWeight: '600',
+  fontSize: 14,
+},
   // Modal de mensaje
   messageBox: {
     backgroundColor: '#f8f9fa',
@@ -2066,6 +2397,77 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '500',
   },
+  paginationContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingHorizontal: 16,
+  paddingVertical: 16,
+  backgroundColor: 'white',
+  borderTopWidth: 1,
+  borderTopColor: '#e0e0e0',
+  gap: 8,
+},
+paginationButton: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  backgroundColor: '#f8f9fa',
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+},
+paginationButtonDisabled: {
+  backgroundColor: '#f5f5f5',
+  borderColor: '#f0f0f0',
+},
+pageNumbersContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+},
+pageNumber: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: '#f8f9fa',
+  justifyContent: 'center',
+  alignItems: 'center',
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+},
+currentPageNumber: {
+  backgroundColor: '#1e3a8a',
+  borderColor: '#1e3a8a',
+  shadowColor: '#1e3a8a',
+  shadowOffset: {
+    width: 0,
+    height: 2,
+  },
+  shadowOpacity: 0.2,
+  shadowRadius: 3,
+  elevation: 3,
+},
+pageNumberText: {
+  fontSize: 14,
+  fontWeight: '500',
+  color: '#1e3a8a',
+},
+currentPageText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: 'white',
+},
+ellipsis: {
+  fontSize: 16,
+  color: '#ccc',
+  fontWeight: '500',
+  marginHorizontal: 4,
+},
+
 });
+
+
 
 export default ListaSugerencias;
