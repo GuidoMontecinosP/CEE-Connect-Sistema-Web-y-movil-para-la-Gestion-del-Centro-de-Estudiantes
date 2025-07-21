@@ -1247,14 +1247,12 @@ const vaciarReportes = async (sugerenciaId) => {
                   label="Razón del muteo"
                   rules={[{ required: true, message: 'Ingresa la razón del muteo' }]}
                 >
-                  <Select placeholder="Selecciona la razón del muteo">
-                    <Option value="spam">Spam</Option>
-                    <Option value="contenido_inapropiado">Contenido inapropiado</Option>
-                    <Option value="lenguaje_ofensivo">Lenguaje ofensivo</Option>
-                    <Option value="reportes_falsos">Reportes falsos</Option>
-                    <Option value="conducta_disruptiva">Conducta disruptiva</Option>
-                    <Option value="otro">Otro</Option>
-                  </Select>
+                  <Input.TextArea 
+            rows={3} 
+            placeholder="Describe la razón del muteo..." 
+            showCount
+            maxLength={500}
+          />
                 </Form.Item>
                 <Form.Item
                   name="fecha_fin"

@@ -847,8 +847,9 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
     style={styles.mySuggestionsButton}
     onPress={() => navigation.navigate('MisSugerencias')}
   >
-    <Ionicons name="list-outline" size={20} color="#fff" />
-    <Text style={styles.mySuggestionsButtonText}>Mis sugerencias</Text>
+    <Ionicons name="person-outline" size={20} color="#1e3a8a" />
+    <Text style={styles.mySuggestionsButtonText}>Mis Sugerencias</Text>
+    <Ionicons name="chevron-forward" size={16} color="#1e3a8a" />
   </TouchableOpacity>
 )}
 
@@ -1548,6 +1549,7 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
                     onChangeText={setRazonMuteo}
                     multiline
                     numberOfLines={3}
+                    maxLength={500}  
                   />
                 </View>
 
@@ -1588,6 +1590,15 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
           </View>
         </Modal>
       )}
+
+      {esEstud && (
+  <TouchableOpacity
+    style={styles.floatingActionButton}
+    onPress={() => navigation.navigate('CrearSugerencia')}
+  >
+    <Ionicons name="add" size={24} color="#fff" />
+  </TouchableOpacity>
+)}
     </View>
   );
 };
@@ -1597,6 +1608,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  floatingActionButton: {
+  position: 'absolute',
+  bottom: 20,
+  right: 20,
+  backgroundColor: '#1e3a8a',
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  justifyContent: 'center',
+  alignItems: 'center',
+  elevation: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+  zIndex: 1000,
+}
+,
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

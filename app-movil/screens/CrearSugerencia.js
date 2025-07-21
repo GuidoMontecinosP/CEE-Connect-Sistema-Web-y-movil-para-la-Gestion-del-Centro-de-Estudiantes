@@ -76,6 +76,10 @@ const CrearSugerencia = ({ navigation }) => {
     
     return true;
   };
+  if(usuario?.rol !== 'estudiante') {
+    
+    navigation.navigate('ListaSugerencias');
+  }
 
   const enviarSugerencia = async () => {
     if (!validarFormulario()) {
