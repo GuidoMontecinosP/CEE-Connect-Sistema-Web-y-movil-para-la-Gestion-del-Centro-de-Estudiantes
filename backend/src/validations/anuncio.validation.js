@@ -20,7 +20,7 @@ export const crearAnuncioValidation = Joi.object({
         .min(20)
         .max(500)
         .trim()
-        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()-]+$/)
+        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()\-%]+$/)
         .required()
         .messages({
             "string.empty": "El epílogo del anuncio no puede estar vacío.",
@@ -66,7 +66,7 @@ export const modificarAnuncioValidation = Joi.object({
         .min(20)
         .max(500)
         .trim()
-        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()-]+$/)
+        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()\-%]+$/)
         .optional()
         .allow("")
         .messages({

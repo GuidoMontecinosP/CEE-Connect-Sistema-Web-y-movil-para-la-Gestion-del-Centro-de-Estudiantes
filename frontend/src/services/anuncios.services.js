@@ -1,13 +1,11 @@
-
-import axios from "axios";
+import axios from "./root.services.js";
 import Cookies from "js-cookie";
-
 
 export const obtenerAnuncios = async () => {
     const token = Cookies.get('token');
     try {
         const response = await axios.get(
-            'http://localhost:3000/api/anuncios/anuncios',
+            '/anuncios/anuncios',
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -20,12 +18,11 @@ export const obtenerAnuncios = async () => {
     }
 };
 
-
 export const crearAnuncio = async (anuncio) => {
     const token = Cookies.get('token');
     try {
         const response = await axios.post(
-            'http://localhost:3000/api/anuncios/crearAnuncio',
+            '/anuncios/crearAnuncio',
             anuncio,
             {
                 headers: {
@@ -41,11 +38,10 @@ export const crearAnuncio = async (anuncio) => {
     }
 };
 
-
 export const modificarAnuncio = async (id, anuncio) => {
     const token = Cookies.get('token');
     const response = await axios.put(
-        `http://localhost:3000/api/anuncios/modificarAnuncio/${id}`,
+        `/anuncios/modificarAnuncio/${id}`,
         anuncio,
         {
             headers: {
@@ -56,11 +52,10 @@ export const modificarAnuncio = async (id, anuncio) => {
     return response.data;
 };
 
-
 export const eliminarAnuncio = async (id) => {
     const token = Cookies.get('token');
     const response = await axios.delete(
-        `http://localhost:3000/api/anuncios/eliminarAnuncio/${id}`,
+        `/anuncios/eliminarAnuncio/${id}`,
         {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -72,7 +67,7 @@ export const eliminarAnuncio = async (id) => {
 
 export const obtenerNoticiasUBB = async () => {
     try {
-        const response = await axios.get('http://localhost:3000/api/noticias');
+        const response = await axios.get('/noticias');
         // console.log("Respuesta de noticias UBB:", response.data);
         return response.data;
     } catch (error) {
