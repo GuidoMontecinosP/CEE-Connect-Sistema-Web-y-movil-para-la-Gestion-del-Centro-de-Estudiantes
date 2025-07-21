@@ -51,6 +51,7 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
   // Filtrar items del menú según el rol
   const adminItems = [
     getItem('Inicio', '0', <FileTextOutlined />),
+    getItem('Anuncios', '10', <FileTextOutlined />),
     getItem('Votaciones', '1', <PieChartOutlined />),
     getItem('Crear Votación', '2', <DesktopOutlined />),
     getItem('Eventos', 'sub1', <CarryOutOutlined />, [
@@ -85,6 +86,7 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
     if (item.key === '7') navigate('/sugerencias');
     if (item.key === '8') navigate('/mis-sugerencias');
     if (item.key === '9') navigate('/sugerencias/nueva');
+    if (item.key === '10') navigate('/adminAnuncios');
     if (item.key === 'logout') logout();
   };
 
@@ -100,6 +102,7 @@ const MainLayout = ({ children, breadcrumb,selectedKeyOverride  }) => {
     '/sugerencias': '7',
     '/mis-sugerencias': '8',
     '/sugerencias/nueva': '9',
+    '/adminAnuncios': '10',
   };
 const selectedKey = 
     selectedKeyOverride != null 

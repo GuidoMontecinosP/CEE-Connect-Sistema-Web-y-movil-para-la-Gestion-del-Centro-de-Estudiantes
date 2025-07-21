@@ -4,6 +4,7 @@ import usuarioRoutes from "./usuario.routes.js";
 import authRoutes from "./auth.routes.js";
 
 import eventosRouter from "./eventos.routes.js";
+import anunciosRouter from "./anuncios.routes.js";
 
 import sugerenciasRoutes from "./sugerencias.routes.js";
 import usuarioMuteadoRoutes from "./usuarioMuteado.routes.js";
@@ -21,6 +22,7 @@ router.use("/auth", authRoutes);
 //router.use("/usuarios", usuariosRoutes);
 
 router.use("/eventos", eventosRouter);
+router.use("/anuncios", anunciosRouter);
 
 router.get("/noticias", NoticiasController);
 router.use("/sugerencias", sugerenciasRoutes);
