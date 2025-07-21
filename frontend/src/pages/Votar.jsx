@@ -4,6 +4,7 @@ import { votacionService } from '../services/votacion.services';
 import { votoService } from '../services/voto.services';
 import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/MainLayout';
+
 import { 
   Layout, 
   Card, 
@@ -49,24 +50,13 @@ function Votar() {
   const [loading, setLoading] = useState(true);
   const [enviandoVoto, setEnviandoVoto] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedKey, setSelectedKey] = useState('1'); // Votaciones por defecto
+  const [selectedKey, setSelectedKey] = useState('1');
+   const [messageApi, contextHolder] = message.useMessage();
   const usuarioId =  usuario?.id;
 
-  // Mapeo de rutas a keys del menú
-  const routeToKey = {
-    '/': '0',
-    '/votaciones': '1',
-    '/crear': '2',
-    '/eventos': '3',
-    '/dashboard': '5'
-  };
 
-  // Actualizar la key seleccionada basada en la ruta actual
-  useEffect(() => {
-    const currentKey = routeToKey[location.pathname] || '1';
-    setSelectedKey(currentKey);
-  }, [location.pathname]);
 
+ 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -79,7 +69,7 @@ function Votar() {
         setVotacion(votacionRes.data);
         setYaVoto(yaVotoRes.data.yaVoto);
       } catch (error) {
-        message.error(`Error al cargar datos: ${error.message}`);
+        messageApi.error(` ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -90,17 +80,17 @@ function Votar() {
 
   const handleSubmit = async () => {
     if (!opcionSeleccionada) {
-      message.warning('Debes seleccionar una opción antes de votar');
+      messageApi.warning('Debes seleccionar una opción antes de votar');
       return;
     }
 
     try {
       setEnviandoVoto(true);
       await votoService.emitirVoto(usuarioId, id, opcionSeleccionada);
-      message.success('¡Voto emitido exitosamente!');
+      messageApi.success('¡Voto emitido exitosamente!');
       setYaVoto(true);
     } catch (error) {
-      message.error(`Error al emitir voto: ${error.message}`);
+      messageApi.error(`${error.message}`);
     } finally {
       setEnviandoVoto(false);
     }
@@ -278,24 +268,7 @@ function Votar() {
                   >
                     Volver a Votaciones
                   </Button>,
-                  <Button 
-                    key="results"
-                    type="primary"
-                    size="large"
-                    onClick={() => navigate(`/votacion/${id}/resultados`)}
-                    style={{
-                      backgroundColor: '#1e3a8a',
-                      borderColor: '#1e3a8a',
-                      borderRadius: 8,
-                      height: 48,
-                      paddingLeft: 24,
-                      paddingRight: 24,
-                      fontSize: 16,
-                      fontWeight: 500
-                    }}
-                  >
-                    Ver Resultados
-                  </Button>
+                 
                 ]}
               />
             )}

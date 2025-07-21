@@ -92,11 +92,11 @@ export const votar = async (req, res) => {
     const { id: votacionId } = req.params;
     const { usuarioId, opcionId } = req.body;
     
-    console.log("Datos recibidos para votar:", {
-      usuarioId,
-      votacionId,
-      opcionId
-    });
+    // console.log("Datos recibidos para votar:", {
+    //   usuarioId,
+    //   votacionId,
+    //   opcionId
+    // });
 
     // Validación mejorada
     if (!usuarioId || !opcionId) {

@@ -32,6 +32,23 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { usuario, logout } = useAuth();
+  
+  // Función para determinar el rol del usuario
+  const getUserRole = () => {
+    if (usuario?.rol === 'superadmin' || usuario?.rol?.nombre === 'superadmin') {
+      return 'superadmin';
+    }
+    if (usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador') {
+      return 'admin';
+    }
+    if (usuario?.rol === 'estudiante' || usuario?.rol?.nombre === 'estudiante') {
+      return 'user';
+    }
+    return 'user';
+  };
+  
+  const userRole = getUserRole();
+  
   const [openKeys, setOpenKeys] = useState(() => {
     // Si la ruta actual es de un hijo de 'sub1' (eventos), abre 'sub1'
     if (['/VerEventos', '/crearEvento'].includes(location.pathname)) {
@@ -39,23 +56,23 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
     }
     
     // Si la ruta actual es de un hijo de 'sub_votaciones' (votaciones admin), abre 'sub_votaciones'
-    if (['/crear', '/votaciones'].includes(location.pathname) && 
-        (usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador')) {
+    if (['/crear', '/votaciones'].includes(location.pathname) && userRole === 'admin') {
       return ['sub_votaciones'];
     }
     
     if (['/sugerencias/nueva', '/sugerencias', '/mis-sugerencias'].includes(location.pathname) && 
-        usuario?.rol !== 'administrador' && usuario?.rol?.nombre !== 'administrador') {
+        userRole === 'user') {
       return ['sub2'];
     }
     return [];
   });
+  
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // Filtrar items del menú según el rol
+  // Items del menú para administrador
   const adminItems = [
     getItem('Inicio', '0', <FileTextOutlined />),
     getItem('Votaciones', 'sub_votaciones', <PieChartOutlined />, [
@@ -70,6 +87,7 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
     getItem('Dashboard', '5', <AuditOutlined />),
   ];
   
+  // Items del menú para usuario normal
   const userItems = [
     getItem('Inicio', '0', <FileTextOutlined />),
     getItem('Votaciones', '1', <PieChartOutlined />),
@@ -79,6 +97,12 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
       getItem('Ver Sugerencias', '7', <EyeOutlined />),
       getItem('Ver Mis Sugerencias', '8', <ScheduleOutlined />),
     ]),
+    getItem('Dashboard', '5', <AuditOutlined />),
+  ];
+  
+  // Items del menú para superadmin (solo Gestión de Usuarios y Dashboard)
+  const superAdminItems = [
+    getItem('Gestión de Usuarios', 'usuarios', <SettingOutlined />),
     getItem('Dashboard', '5', <AuditOutlined />),
   ];
 
@@ -93,6 +117,7 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
     if (item.key === '7') navigate('/sugerencias');
     if (item.key === '8') navigate('/mis-sugerencias');
     if (item.key === '9') navigate('/sugerencias/nueva');
+    if (item.key === 'usuarios') navigate('/usuarios');
     if (item.key === 'logout') logout();
   };
 
@@ -108,12 +133,25 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
     '/sugerencias': '7',
     '/mis-sugerencias': '8',
     '/sugerencias/nueva': '9',
+    '/usuarios': 'usuarios',
   };
 
   const selectedKey = 
     selectedKeyOverride != null 
       ? selectedKeyOverride 
       : (pathToKey[location.pathname] || '0');
+
+  // Función para obtener los items del menú según el rol
+  const getMenuItems = () => {
+    switch (userRole) {
+      case 'superadmin':
+        return superAdminItems;
+      case 'admin':
+        return adminItems;
+      case 'user':
+        return userItems;
+    }
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -124,7 +162,7 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
           defaultSelectedKeys={[selectedKey]}
           selectedKeys={[selectedKey]}
           mode="inline"
-          items={usuario?.rol === 'administrador' || usuario?.rol?.nombre === 'administrador' ? adminItems : userItems}
+          items={getMenuItems()}
           onClick={onMenuClick}
           openKeys={openKeys}
           onOpenChange={setOpenKeys}
