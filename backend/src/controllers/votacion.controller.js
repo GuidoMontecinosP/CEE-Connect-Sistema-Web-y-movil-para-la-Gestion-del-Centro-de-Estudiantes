@@ -133,7 +133,6 @@ export const votar = async (req, res) => {
       }
     });
   } catch (error) {
-    // Manejo de errores más específico
     const statusCode = error.message.includes("ya ha votado") ? 409 : 
                       error.message.includes("no encontrado") ? 404 : 
                       error.message.includes("no válido") ? 403 : 400;

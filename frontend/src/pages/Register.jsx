@@ -131,6 +131,7 @@ export default function Register() {
                   setContrasena(e.target.value);
                   setPasswordStrength(getPasswordStrength(e.target.value));
                 }}
+                placeholder="********"
                 required
                 style={passwordInputStyle}
               />
@@ -156,6 +157,7 @@ export default function Register() {
                 value={confirmarContrasena}
                 onChange={(e) => setConfirmarContrasena(e.target.value)}
                 required
+                placeholder="********"
                 style={passwordInputStyle}
               />
               <button

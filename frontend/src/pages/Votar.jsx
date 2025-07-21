@@ -176,6 +176,7 @@ function Votar() {
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }
   >
+    {contextHolder}
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
             

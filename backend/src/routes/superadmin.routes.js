@@ -22,6 +22,4 @@ router.get("/estadisticas", obtenerEstadisticasUsuarios);
 
 export default router;
 
-// Actualización para routes/index.routes.js - Agregar esta línea
-// import superadminRoutes from "./superadmin.routes.js";
-// router.use("/superadmin", superadminRoutes);
+

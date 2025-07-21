@@ -20,8 +20,8 @@ export default function PassOlvidada() {
       await authService.recuperarContrasena({ correo });
       setSuccess(true);
     } catch (error) {
-      console.log("Error al recuperar contraseña:", error.response?.data);
-      setError(error.response?.data?.details || "Error al enviar correo de recuperación");
+      console.log("Error al recuperar contraseña:", error);
+      setError(error.message || "Error al enviar correo de recuperación");
     } finally {
       setLoading(false);
     }

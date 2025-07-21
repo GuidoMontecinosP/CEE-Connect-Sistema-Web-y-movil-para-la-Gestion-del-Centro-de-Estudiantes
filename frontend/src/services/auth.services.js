@@ -28,8 +28,8 @@ export const authService = {
             console.log('Correo enviado:', response.data);
             return response.data;
         } catch (error) {
-            //console.log('Error en recuperarContrasena:', error.response?.data.errors);
-            const msg = error.response?.data.errors || error.response?.data.details || 'Error al enviar el correo de recuperación';
+            console.log('Error en recuperarContrasena:', error.response);
+            const msg = error.response?.data.message;
             throw new Error(msg);
         }
     }

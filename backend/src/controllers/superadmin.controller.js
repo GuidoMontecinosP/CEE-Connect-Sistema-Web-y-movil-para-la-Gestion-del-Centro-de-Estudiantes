@@ -133,29 +133,24 @@ export async function obtenerUsuarios(req, res) {
 
 export async function alternarRolUsuario(req, res) {
   try {
-    // Extraer y validar ID de usuario desde parámetros de ruta
     const {usuarioid  } = req.params;
     const idUsuario = parseInt(usuarioid,10);
     
 
     
 
-    // Obtener repositorios necesarios desde la conexión a la base de datos
     const repositorioUsuario = AppDataSource.getRepository(Usuario);
     const repositorioRol = AppDataSource.getRepository(Rol);
     
-    // Buscar usuario específico incluyendo información de rol
     const usuario = await repositorioUsuario.findOne({
       where: { id: parseInt(idUsuario) },
       relations: ["rol"]
     });
 
-    // Verificar que el usuario exista en la base de datos
     if (!usuario) {
       return handleErrorClient(res, 404, "Usuario no encontrado en el sistema");
     }
 
-    // Proteger superadministradores de cambios de rol
     if (usuario.rol?.isSuperAdmin) {
       return handleErrorClient(
         res, 
@@ -165,7 +160,6 @@ export async function alternarRolUsuario(req, res) {
       );
     }
 
-    // Obtener roles disponibles del sistema
     const rolAdmin = await repositorioRol.findOne({ 
       where: { nombre: "administrador" } 
     });
@@ -189,22 +183,18 @@ export async function alternarRolUsuario(req, res) {
       mensajeCambio = "estudiante a administrador";
     }
 
-    // Actualizar usuario con nuevo rol y timestamp
     await repositorioUsuario.update(parseInt(idUsuario), {
       rol: nuevoRol,
       updatedAt: new Date()
     });
 
-    // Obtener usuario actualizado para respuesta
     const usuarioActualizado = await repositorioUsuario.findOne({
       where: { id: parseInt(idUsuario) },
       relations: ["rol"]
     });
 
-    // Remover contraseña del objeto de respuesta por seguridad
     const { contrasena, ...usuarioRespuesta } = usuarioActualizado;
 
-    // Estructurar datos de respuesta con información del cambio
     const datosRespuesta = {
       usuario: usuarioRespuesta,
       cambio: {
@@ -224,7 +214,6 @@ export async function alternarRolUsuario(req, res) {
 
 export async function obtenerEstadisticasUsuarios(req, res) {
   try {
-    // Obtener repositorio de usuarios
     const repositorioUsuario = AppDataSource.getRepository(Usuario);
     
     // Calcular fecha de hace 30 días para estadística de nuevos usuarios
@@ -272,7 +261,6 @@ export async function obtenerEstadisticasUsuarios(req, res) {
       })
     ]);
 
-    // Estructurar objeto con todas las estadísticas
     const estadisticas = {
       totalUsuarios,
       estudiantesActivos,

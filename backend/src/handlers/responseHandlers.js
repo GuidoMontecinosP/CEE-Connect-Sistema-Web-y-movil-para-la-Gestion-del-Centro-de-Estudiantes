@@ -1,12 +1,6 @@
 "use strict";
 
-/**
- * Envía una respuesta exitosa (2xx)
- * @param {object} res - Objeto de respuesta de Express
- * @param {number} statusCode - Código HTTP (default: 200)
- * @param {string} message - Mensaje de éxito
- * @param {object} data - Información adicional
- */
+
 export function handleSuccess(res, statusCode = 200, message = "Operación exitosa", data = {}) {
   return res.status(statusCode).json({
     ok: true,
@@ -16,13 +10,7 @@ export function handleSuccess(res, statusCode = 200, message = "Operación exito
   });
 }
 
-/**
- * Envía una respuesta de error del cliente (4xx)
- * @param {object} res - Objeto de respuesta de Express
- * @param {number} statusCode - Código HTTP (default: 400)
- * @param {string} message - Mensaje de error
- * @param {object} details - Detalles adicionales del error
- */
+
 export function handleErrorClient(res, statusCode, message, details) {
   return res.status(statusCode).json({
     state: "Error",
@@ -32,12 +20,7 @@ export function handleErrorClient(res, statusCode, message, details) {
   });
 }
 
-/**
- * Envía una respuesta de error del servidor (5xx)
- * @param {object} res - Objeto de respuesta de Express
- * @param {number} statusCode - Código HTTP (default: 500)
- * @param {string} message - Mensaje de error del servidor
- */
+
 export function handleErrorServer(res, statusCode = 500, message = "Error interno del servidor") {
   return res.status(statusCode).json({
     ok: false,

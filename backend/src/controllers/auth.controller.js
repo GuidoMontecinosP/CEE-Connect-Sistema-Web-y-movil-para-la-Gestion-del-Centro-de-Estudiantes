@@ -15,7 +15,7 @@ import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/configDb.js";
 import bcrypt from "bcryptjs";
 
-// 💌 Configuración de transporte para envío de correos
+// Configuración de transporte para envío de correos
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// 🔐 Generar token de verificación
+// Generar token de verificación
 function generarTokenVerificacion(usuario) {
   return jwt.sign(
     { id: usuario.id, correo: usuario.correo },
@@ -40,7 +40,7 @@ function generarTokenRecuperacion(usuario) {
     { expiresIn: "1h" } // Token más corto para seguridad
   );
 }
-// 📩 VERIFICAR CORREO
+//  VERIFICAR CORREO
 export const verificarCorreo = async (req, res) => {   
   const { token } = req.params;      
   try {     
@@ -66,7 +66,6 @@ export const verificarCorreo = async (req, res) => {
   } 
 };
 
-// 🔐 LOGIN
 export async function login(req, res) {
   try {
     const { body } = req;
@@ -152,7 +151,6 @@ export async function register(req, res) {
   }
 }
 
-// 🔓 LOGOUT
 export async function logout(req, res) {
   try {
     res.clearCookie("jwt", { httpOnly: true });
@@ -196,7 +194,7 @@ export async function recuperarContrasena(req, res) {
         <p><strong>Este enlace expira en 1 hora.</strong></p>
         <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
         <hr>
-        <p><small>CEE Connect - Sistema de gestión institucional</small></p>
+        <p><small>CEE Connect - Sistema de gestión de CEE de la Universidad del Bío-Bío</small></p>
       `,
     });
 
@@ -207,7 +205,6 @@ export async function recuperarContrasena(req, res) {
   }
 }
 
-// (Cambiar la contraseña)
 export async function restablecerContrasena(req, res) {
   try {
     const { token } = req.params;

@@ -52,7 +52,7 @@ export default function CrearSugerencia() {
       
       const resultado = await sugerenciasService.crearSugerencia(datosSugerencia);
       
-      console.log("✅ Sugerencia creada exitosamente:", resultado);
+      //console.log(" Sugerencia creada exitosamente:", resultado);
       messageApi.success('Sugerencia creada exitosamente');
       
       // Limpiar formulario
