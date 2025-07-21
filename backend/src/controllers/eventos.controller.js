@@ -1,9 +1,19 @@
 import { crearEvento, modificarEvento, eventos, eliminarEvento } from "../services/eventos.services.js";
+import { crearEventoValidation, modificarEventoValidation } from "../validations/eventos.validation.js";
 
 export async function crearEventoController(req, res) {
+  const {error, value} = crearEventoValidation.validate(req.body);
+  if (error) {
+    console.log("Error de validación:", error.details);
+    return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+        errors: error.details.map(detail => detail.message)
+      });
+  }
+
   try {
-    console.log("paso aqui jasjd");
-    const { titulo, descripcion, fecha, hora, lugar, tipo } = req.body;
+    const { titulo, descripcion, fecha, hora, lugar, tipo } = value;
     const evento = await crearEvento({
       titulo,
       descripcion,
@@ -14,6 +24,7 @@ export async function crearEventoController(req, res) {
     });
 
     res.status(201).json({
+      success: true,
       message: "Evento creado exitosamente",
       evento,
     });
@@ -24,9 +35,22 @@ export async function crearEventoController(req, res) {
 }
 
 export async function modificarEventoController(req, res) {
+  console.log("req.body:", req.body);
+  console.log("req.params:", req.params);
+
+  const {error, value} = modificarEventoValidation.validate(req.body);
+  if (error) {
+    console.log("Error de validación:", error.details);
+    return res.status(400).json({
+        success: false,
+        message: error.details[0].message,
+        errors: error.details.map(detail => detail.message)
+      });
+  }
+
   try {
     const { id } = req.params;
-    const { titulo, descripcion, fecha, hora, lugar, tipo, estado } = req.body;
+    const { titulo, descripcion, fecha, hora, lugar, tipo, estado } = value;
 
     const eventoModificado = await modificarEvento(id, {
       titulo,

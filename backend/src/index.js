@@ -6,6 +6,7 @@ import indexRoutes from "./routes/index.routes.js";
 import passport from "passport";
 import "./config/passport.config.js";
 import cookieParser from "cookie-parser";          
+import "./components/eventos.cron.js";
 
 // Cargar variables de entorno
 dotenv.config();
@@ -34,8 +35,6 @@ app.get("/conexion", (req, res) => {
 
 // Rutas principales
 app.use("/api", indexRoutes);
-
-
 
 // Iniciar el servidor
 app.listen(PORT, () => {

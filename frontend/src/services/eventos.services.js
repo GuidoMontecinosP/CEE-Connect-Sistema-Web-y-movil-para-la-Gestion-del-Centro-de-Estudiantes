@@ -11,22 +11,25 @@ export const obtenerEventos = async () => {
 };
 
 export const crearEvento = async (evento) => {
+    // eslint-disable-next-line no-useless-catch
     try {
         const response = await axios.post('/eventos/crearEvento', evento);
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.mensaje || 'Error al crear el evento');
+        throw error
     }
 };
 
-export const modificarEvento = async (evento) => {
-    try {
-        const response = await axios.put(`/eventos/modificarEvento/${evento.id}`, evento);
-        return response.data;
-    } catch (error) {
-        throw new Error(error.response?.data?.mensaje || 'Error al modificar el evento');
-    }
-}
+export const modificarEvento = async (id, evento) => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const response = await axios.put(`/eventos/modificarEvento/${id}`, evento);
+    return response.data;
+  } catch (error) {
+    
+    throw error;
+  }
+};
 
 export const eliminarEvento = async (id) => {
     try {

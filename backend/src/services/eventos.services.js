@@ -1,16 +1,10 @@
 import { AppDataSource } from "../config/configDb.js";
 
-const usuarioRepo = AppDataSource.getRepository("Usuario");
 const eventoRepo = AppDataSource.getRepository("Evento");
 
 export const crearEvento = async (data) => {
   const { titulo, descripcion, fecha, hora, lugar, tipo } = data;
 
-//   const creador = await usuarioRepo.findOneBy({ id: creadaPorId });
-//   if (!creador) throw new Error("Usuario creador no encontrado"); // revisar
-
-  // const ahora = new Date();
-  // const hora = ahora.toTimeString().split(' ')[0]; // Esto para dejar hora con formato "HH:MM:SS"
   const nuevoEvento = eventoRepo.create({
     titulo,
     descripcion,
@@ -43,6 +37,7 @@ export const modificarEvento = async (id, data) => {
 
 export const eventos = async () => {
     const eventos = await eventoRepo.find({
+        where: { estado: "activo" },
       order: {
         fecha: "ASC",
         hora: "ASC"
