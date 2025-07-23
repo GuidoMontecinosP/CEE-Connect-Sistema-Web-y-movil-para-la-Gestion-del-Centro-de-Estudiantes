@@ -84,7 +84,7 @@ function CrearVotacion() {
   return (
     <>
       {contextHolder}
-      <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }}/>}>
+      <MainLayout breadcrumb>
             <div >
                <div style={{ maxWidth: 800, margin: '0 auto',  }}> 
               {/* Header de la página */}

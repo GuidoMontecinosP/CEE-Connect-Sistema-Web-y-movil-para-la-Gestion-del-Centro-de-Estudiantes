@@ -19,7 +19,8 @@ export default function CrearSugerencia() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { usuario } = useAuth();
+   const { usuario, isUserMuted, canCreateOrEdit, muteLoading, muteoInfo } = useAuth();
+
   
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -184,9 +185,12 @@ return (
                         fontSize: 16
                       }}
                     >
+                      <Option value="academico">Académico</Option>
+                      <Option value="bienestar">Bienestar</Option>
+                      <Option value="cultura">Cultura</Option>
+                      <Option value="deportes">Deportes</Option>
                       <Option value="infraestructura">Infraestructura</Option>
                       <Option value="eventos">Eventos</Option>
-                      <Option value="bienestar">Bienestar</Option>
                       <Option value="otros">Otro</Option>
                     </Select>
                   </Form.Item>

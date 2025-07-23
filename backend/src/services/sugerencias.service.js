@@ -1,6 +1,6 @@
 // backend/src/services/sugerencias.service.js
 "use strict";
-import { ILike, Or, And } from 'typeorm';
+import { ILike, Or, And, In } from 'typeorm';
 
 import { AppDataSource } from "../config/configDb.js";
 import SugerenciaSchema from "../entity/sugerencia.entity.js";
@@ -39,17 +39,35 @@ class SugerenciasService {
     return await this.sugerenciaRepository.save(nuevaSugerencia);
   }
 
-async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
+async obtenerSugerencias(page = 1, limit = 10, filtros = {}, isAdmin = false) {
   const skip = (page - 1) * limit;
   
   let whereConditions = {};
   
-  // Filtros de categoría y estado
+  // Si no es admin, excluir las sugerencias archivadas
+  if (!isAdmin) {
+    whereConditions.estado = In(["pendiente", "en proceso", "resuelta"]);
+  }
+  
+  // Filtros de categoría
   if (filtros.categoria) {
     whereConditions.categoria = filtros.categoria;
   }
   
+  // Filtros de estado (solo si es admin o si el estado no es 'archivada')
   if (filtros.estado) {
+    if (!isAdmin && filtros.estado === "archivada") {
+      // Si no es admin e intenta filtrar por archivadas, no devolver nada
+      return {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0
+        }
+      };
+    }
     whereConditions.estado = filtros.estado;
   }
   
@@ -57,18 +75,26 @@ async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
   if (filtros.busqueda) {
     const busqueda = filtros.busqueda.trim();
     if (busqueda) {
-      // Crear condiciones de búsqueda que incluyan los filtros existentes
+      // Crear condiciones base
+      let baseConditions = { ...whereConditions };
+      
+      // Si no es admin y no hay filtro de estado específico, mantener la restricción
+      if (!isAdmin && !filtros.estado) {
+        baseConditions.estado = In(["pendiente", "en proceso", "resuelta"]);
+      }
+      
+      // Crear condiciones de búsqueda
       const searchConditions = [
         { 
-          ...whereConditions, 
+          ...baseConditions,
           titulo: ILike(`%${busqueda}%`) 
         },
         { 
-          ...whereConditions, 
+          ...baseConditions,
           mensaje: ILike(`%${busqueda}%`) 
         },
         { 
-          ...whereConditions, 
+          ...baseConditions,
           categoria: ILike(`%${busqueda}%`) 
         }
       ];
@@ -244,27 +270,34 @@ async obtenerSugerencias(page = 1, limit = 10, filtros = {}) {
     };
   }
 
-  async obtenerSugerenciasPorUsuario(userId, page = 1, limit = 10) {
-    const skip = (page - 1) * limit;
+  async obtenerSugerenciasPorUsuario(userId, page = 1, limit = 10, isAdmin = false) {
+  const skip = (page - 1) * limit;
 
-    const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
-      where: { autor: { id: userId } },
-      relations: ["autor", "adminResponsable"],
-      order: { createdAt: "DESC" },
-      skip,
-      take: limit
-    });
+  let whereConditions = { autor: { id: userId } };
 
-    return {
-      data: sugerencias,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
+  // Si no es admin, excluir las sugerencias archivadas
+  if (!isAdmin) {
+    whereConditions.estado = In(["pendiente", "en proceso", "resuelta"]);
   }
+
+  const [sugerencias, total] = await this.sugerenciaRepository.findAndCount({
+    where: whereConditions,
+    relations: ["autor", "adminResponsable"],
+    order: { createdAt: "DESC" },
+    skip,
+    take: limit
+  });
+
+  return {
+    data: sugerencias,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
+}
 
   async obtenerEstadisticas() {
     const total = await this.sugerenciaRepository.count();

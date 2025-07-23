@@ -1,20 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Table, Typography, Input, Tag, Spin, Button, Modal, Tooltip, Space, Popconfirm, message, Breadcrumb
+  Table, Typography, Input, Tag, Spin, Button, Modal, Tooltip, Space, Popconfirm, message, Breadcrumb, Select
 } from 'antd';
 import {
-  MessageOutlined, SearchOutlined, EditOutlined, DeleteOutlined, HomeOutlined, UserOutlined
+  MessageOutlined, SearchOutlined, EditOutlined, DeleteOutlined, HomeOutlined, UserOutlined, ClearOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { sugerenciasService } from '../services/sugerencia.services.js';
 import MainLayout from '../components/MainLayout';    
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 export default function MisSugerencias() {
   const [sugerencias, setSugerencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [estadoFiltro, setEstadoFiltro] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [mensajeActivo, setMensajeActivo] = useState(null);
   const [eliminandoId, setEliminandoId] = useState(null);
@@ -35,6 +38,13 @@ export default function MisSugerencias() {
     const created = new Date(createdAt).getTime();
     const updated = new Date(updatedAt).getTime();
     return updated > created;
+  };
+
+  // Función para limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setSearchText('');
+    setCategoriaFiltro('');
+    setEstadoFiltro('');
   };
 
   // Función para eliminar sugerencia
@@ -72,10 +82,22 @@ export default function MisSugerencias() {
     cargarMisSugerencias();
   }, []);
 
+  // Filtrado mejorado que incluye búsqueda, categoría y estado
   const filtered = sugerencias.filter(s => {
-    const texto = `${s.titulo} ${s.categoria} ${s.estado}`.toLowerCase();
-    return texto.includes(searchText.toLowerCase());
+    const textoCoincide = !searchText || 
+      `${s.titulo} ${s.categoria} ${s.estado}`.toLowerCase().includes(searchText.toLowerCase());
+    
+    const categoriaCoincide = !categoriaFiltro || s.categoria === categoriaFiltro;
+    const estadoCoincide = !estadoFiltro || s.estado === estadoFiltro;
+    
+    return textoCoincide && categoriaCoincide && estadoCoincide;
   });
+
+  // Obtener categorías únicas para el filtro
+  const categoriasUnicas = [...new Set(sugerencias.map(s => s.categoria))].filter(Boolean);
+  
+  // Estados disponibles
+  const estadosDisponibles = ['pendiente', 'en proceso', 'resuelta'];
 
   const columns = [
     {
@@ -86,7 +108,12 @@ export default function MisSugerencias() {
     {
       title: 'Categoría',
       dataIndex: 'categoria',
-      key: 'categoria'
+      key: 'categoria',
+      render: (categoria) => {
+        if (!categoria) return 'N/A';
+        return categoria.charAt(0).toUpperCase() + categoria.slice(1).toLowerCase();
+      }
+
     },
     {
       title: 'Estado',
@@ -194,14 +221,65 @@ export default function MisSugerencias() {
           Mis Sugerencias
         </Title>
 
-        <Input
-          placeholder="Buscar sugerencias..."
-          prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ width: 300, marginBottom: 16, borderRadius: 8 }}
-          allowClear
-        />
+        {/* Barra de filtros */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 16, 
+          marginBottom: 16, 
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
+          <Input
+            placeholder="Buscar sugerencias..."
+            prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 300, borderRadius: 8 }}
+            allowClear
+          />
+<Select
+            placeholder="Filtrar por categoría"
+            style={{ width: 200 }}
+            value={categoriaFiltro || undefined}
+            onChange={setCategoriaFiltro}
+            allowClear
+          >
+            {categoriasUnicas.map(categoria => (
+              <Option key={categoria} value={categoria}>
+                {categoria ? categoria.charAt(0).toUpperCase() + categoria.slice(1).toLowerCase() : 'N/A'}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Filtrar por estado"
+            style={{ width: 200 }}
+            value={estadoFiltro || undefined}
+            onChange={setEstadoFiltro}
+            allowClear
+          >
+            {estadosDisponibles.map(estado => (
+              <Option key={estado} value={estado}>
+                <Tag color={
+                  estado === 'pendiente' ? 'orange' :
+                  estado === 'en proceso' ? 'blue' :
+                  estado === 'resuelta' ? 'green' : 'default'
+                }>
+                  {estado.toUpperCase()}
+                </Tag>
+              </Option>
+            ))}
+          </Select>
+
+          {(searchText || categoriaFiltro || estadoFiltro) && (
+            <Button
+              icon={<ClearOutlined />}
+              onClick={limpiarFiltros}
+              title="Limpiar filtros"
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
@@ -218,7 +296,9 @@ export default function MisSugerencias() {
             pagination={{ pageSize: 10 }}
             bordered
             locale={{
-              emptyText: 'Aún no has creado ninguna sugerencia',
+              emptyText: filtered.length === 0 && sugerencias.length > 0 
+                ? 'No se encontraron sugerencias con los filtros aplicados'
+                : 'Aún no has creado ninguna sugerencia',
             }}
           />
         )}

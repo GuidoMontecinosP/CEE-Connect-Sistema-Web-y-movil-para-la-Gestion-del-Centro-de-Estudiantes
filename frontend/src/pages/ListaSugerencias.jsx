@@ -13,14 +13,17 @@ import {
   Typography,
   Tag,
   Breadcrumb,
-  DatePicker
+  DatePicker,ConfigProvider
 } from 'antd';
 import {
   SearchOutlined,
   MessageOutlined,
   EditOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  AudioMutedOutlined,
+  ClearOutlined
 } from '@ant-design/icons';
+import esES from 'antd/locale/es_ES';
 import { sugerenciasService } from '../services/sugerencia.services.js';
 import { reportesService } from '../services/reporte.services.js';
 import { muteoService } from '../services/muteado.services.js';
@@ -61,6 +64,7 @@ const [loadingVaciarReportes, setLoadingVaciarReportes] = useState(false);
   const [mensajeActivo, setMensajeActivo] = useState('');
   const [msgAutor, setMsgAutor] = useState(null);
   const [msgFecha, setMsgFecha] = useState(null);
+  const [contactoAutor, setContactoAutor] = useState('');
 
   // Modal para responder/editar respuesta admin
   const [respModalVisible, setRespModalVisible] = useState(false);
@@ -419,11 +423,15 @@ const limpiarBusqueda = () => {
 
 
   // Ver mensaje de sugerencia
-  const abrirVerMensaje = s => {
-    setMensajeActivo(s.mensaje);
-    setMsgAutor(s.autor);
-    setMsgFecha(s.createdAt); 
-    setMsgModalVisible(true);
+  const abrirVerMensaje = async (s) => {
+    const res = await sugerenciasService.obtenerSugerenciaPorId(s.id);
+  const actualizado = res.data;
+  setMensajeActivo(actualizado.mensaje);
+  setMsgFecha(actualizado.updatedAt || actualizado.createdAt);
+  setMsgAutor(actualizado.autor);
+  setContactoAutor(actualizado.contacto || 'No disponible');
+  setMsgModalVisible(true);
+
   };
 
   // Ver respuesta admin
@@ -539,11 +547,11 @@ const limpiarBusqueda = () => {
           if (siguienteReporte) {
             setReporteInfo(siguienteReporte);
             setInfoReporteVisible(true);
-            messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+            //messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
           }
         }, 500);
       } else {
-        messageApi.info('No hay más reportes pendientes');
+      //  messageApi.info('No hay más reportes pendientes');
       }
       
       // Recargar sugerencias para actualizar el estado
@@ -600,11 +608,11 @@ const vaciarReportes = async (sugerenciaId) => {
         if (siguienteReporte) {
           setReporteInfo(siguienteReporte);
           setInfoReporteVisible(true);
-          messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
+         // messageApi.info(`Mostrando siguiente reporte (${siguienteIndex + 1}/${nuevosReportes.length})`);
         }
       }, 500);
     } else {
-      messageApi.info('No hay más reportes pendientes');
+      //messageApi.info('No hay más reportes pendientes');
     }
     
     // Recargar sugerencias para actualizar el estado
@@ -637,7 +645,9 @@ const vaciarReportes = async (sugerenciaId) => {
       setLoadingResp(false);
     }
   };
-
+    const estadosDisponibles = esAdmin 
+  ? ['pendiente', 'en proceso', 'resuelta', 'archivada']
+  : ['pendiente', 'en proceso', 'resuelta'];
   const columns = [
    
     { 
@@ -655,6 +665,10 @@ const vaciarReportes = async (sugerenciaId) => {
       'eventos': 'Eventos',
       'infraestructura': 'Infraestructura',
       'bienestar': 'Bienestar',
+      'academico': 'Académico',
+      'seguridad': 'Seguridad',
+      'deportes': 'Deportes',
+      'cultura': 'Cultura',
       'otros': 'Otros'
     };
     return categorias[categoria] || categoria;
@@ -717,49 +731,65 @@ const vaciarReportes = async (sugerenciaId) => {
           );
         }
         
-        if (esAdmin) {
-          return (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Button
-                disabled={!tieneResp(r)}
-                icon={<MessageOutlined />}
-                type='link'
-                style={{ color: '#52c41a' }}
-                onClick={() => abrirVerRespuesta(r)}
-              >
-                Ver
-              </Button>
-              <Button
-                disabled={r.estado === 'archivada'}
-                icon={<EditOutlined />}
-                type='primary'
-                size='small'
-                onClick={() => abrirResponder(r)}
-              >
-                {tieneResp(r) ? 'Editar' : 'Responder'}
-              </Button>
-              
-              {/* BOTÓN MEJORADO: Muestra contador de reportes */}
-              {r.isReportada && (
-                <Button
-                  icon={<ExclamationCircleOutlined />}
-                  type='link'
-                  style={{ color: '#ff4d4f' }}
-                  onClick={() => verInfoReporte(r)}
-                  title="Ver información del reporte"
-                >
-                  ! ({reportesDisponibles.filter(rep => rep.sugerencia?.id === r.id).length})
-                </Button>
-              )}
-            </div>
-          );
-        }
-        return null;
-      }
+       if (esAdmin) {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <Button
+        disabled={!tieneResp(r)}
+        icon={<MessageOutlined />}
+        type='link'
+        style={{ color: '#52c41a' }}
+        onClick={() => abrirVerRespuesta(r)}
+      >
+        Ver
+      </Button>
+      
+      <Button
+        disabled={r.estado === 'archivada'}
+        icon={<EditOutlined />}
+        type='primary'
+        size='small'
+        onClick={() => abrirResponder(r)}
+      >
+        {tieneResp(r) ? 'Editar' : 'Responder'}
+      </Button>
+      
+      <Button
+        type="primary"
+        size="small"
+        danger
+        icon={<AudioMutedOutlined />}
+        onClick={() => abrirMuteoModal(r.autor, 'autor')}
+      >
+        Mutear
+      </Button>
+      
+      {/* BOTÓN DE REPORTES: Movido al final para que aparezca siempre a la derecha */}
+      {(() => {
+        const count = reportesDisponibles.filter(rep => rep.sugerencia?.id === r.id).length;
+        return count > 0 ? (
+          <Button
+            icon={<ExclamationCircleOutlined />}
+            type='link'
+            style={{ color: '#ff4d4f' }}
+            onClick={() => verInfoReporte(r)}
+            title="Ver información del reporte"
+          >
+            ({count})
+          </Button>
+        ) : null;
+      })()}
+    </div>
+  );
+}
+return null;
+}
+    
     }
   ];
 
   return (
+    <ConfigProvider locale={esES}> 
     <MainLayout breadcrumb>
       {contextHolder}
       <Content style={{ padding: '25px 24px' }}>
@@ -834,12 +864,19 @@ const vaciarReportes = async (sugerenciaId) => {
     style={{ width: 200 }}
     allowClear
   >
-   
-    <Option value="infraestructura">Infraestructura</Option>
-    <Option value="eventos">Eventos</Option>
-    
+   <Option value="academico">Académico</Option>
     <Option value="bienestar">Bienestar</Option>
+     <Option value="cultura">Cultura</Option>
+     <Option value="deportes">Deportes</Option>
+      <Option value="eventos">Eventos</Option>
+    <Option value="infraestructura">Infraestructura</Option>
+   <Option value="seguridad">Seguridad</Option>
     <Option value="otros">Otros</Option>
+    
+    
+    
+    
+   
   </Select>
   
   <Select
@@ -851,11 +888,17 @@ const vaciarReportes = async (sugerenciaId) => {
     }}
     style={{ width: 200 }}
     allowClear
-  >
-    <Option value="pendiente">Pendiente</Option>
-    <Option value="en proceso">En proceso</Option>
-    <Option value="resuelta">Resuelta</Option>
-    <Option value="archivada">Archivada</Option>
+  >{estadosDisponibles.map(estado => (
+                <Option key={estado} value={estado}>
+                  <Tag color={
+                    estado === 'pendiente' ? 'orange' :
+                    estado === 'en proceso' ? 'blue' :
+                    estado === 'resuelta' ? 'green' : 'default'
+                  }>
+                    {estado.toUpperCase()}
+                  </Tag>
+                </Option>
+              ))}
   </Select>
   
   {/* Botón para limpiar todos los filtros */}
@@ -868,9 +911,10 @@ const vaciarReportes = async (sugerenciaId) => {
         setCurrentPage(1);
       }}
       style={{ marginLeft: 8 }}
+      icon={<ClearOutlined />}
     >
       Limpiar filtros
-    </Button>
+    </Button >
   )}
 </div>
         
@@ -937,6 +981,8 @@ const vaciarReportes = async (sugerenciaId) => {
               Autor: {msgAutor.nombre} {msgAutor.apellido}
                   <br/>
               Correo: {msgAutor.correo}
+                 <br/>
+              Contacto: {contactoAutor} 
             </Text>
           )}
         </Modal>
@@ -1345,5 +1391,6 @@ const vaciarReportes = async (sugerenciaId) => {
 
       </Content>
     </MainLayout>
+    </ConfigProvider>
   );
 }

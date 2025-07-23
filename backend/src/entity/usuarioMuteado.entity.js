@@ -1,4 +1,3 @@
-//routes/usuarioMuteado.routes.js
 import { EntitySchema } from "typeorm";
 
 const UsuarioMuteadoSchema = new EntitySchema({

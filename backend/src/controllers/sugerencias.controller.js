@@ -41,11 +41,12 @@ export async function obtenerSugerencias(req, res) {
     if (categoria) filtros.categoria = categoria;
     if (estado) filtros.estado = estado;
     if (busqueda) filtros.busqueda = busqueda; // Agregar esta línea
-    
+     const isAdmin = req.user.rol.nombre === 'administrador';
     const sugerencias = await sugerenciasService.obtenerSugerencias(
       parseInt(page),
       parseInt(limit),
-      filtros
+      filtros,
+      isAdmin
     );
     
     handleSuccess(res, 200, "Sugerencias obtenidas exitosamente", sugerencias);
@@ -174,11 +175,12 @@ export async function obtenerMisSugerencias(req, res) {
   try {
     const { page = 1, limit = 10 } = req.query;
     const userId = req.user.id;
-    
+    const isAdmin = req.user.rol.nombre === 'administrador';
     const misSugerencias = await sugerenciasService.obtenerSugerenciasPorUsuario(
       userId,
       parseInt(page),
-      parseInt(limit)
+      parseInt(limit),
+      isAdmin
     );
 
     handleSuccess(res, 200, "Mis sugerencias obtenidas exitosamente", misSugerencias);
