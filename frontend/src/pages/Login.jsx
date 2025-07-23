@@ -74,9 +74,9 @@ export default function Login() {
         }}
       >
         <img
-          src="/src/assets/escudo-color-gradiente-oscuro.png"
+          src="/escudo-color-gradiente-oscuro.png"
           alt="Logo UBB"
-          style={{ width: "220px", marginBottom: "2rem" }}
+          style={{ width: "220px", marginBottom: "0.01rem" }}
         />
 
         <h1 style={{ color: "#1e3a8a", marginBottom: "2rem", fontWeight: 700 }}>
