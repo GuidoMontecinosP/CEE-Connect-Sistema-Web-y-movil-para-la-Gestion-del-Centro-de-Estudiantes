@@ -206,9 +206,9 @@ function Votar() {
                 borderRadius: 12,
                 border: '1px solid #e2e8f0',
                 marginBottom: 32,
-                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                padding: 32,
               }}
-              bodyStyle={{ padding: 32 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ flex: 1 }}>
@@ -285,9 +285,9 @@ function Votar() {
                 }
                 style={{
                   borderRadius: 12,
-                  border: '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0',
+                  padding: 24,
                 }}
-                bodyStyle={{ padding: 32 }}
               >
                 <Alert
                   message="Información importante"
@@ -323,9 +323,9 @@ function Votar() {
                             border: opcionSeleccionada === opcion.id ? '2px solid #1e3a8a' : '1px solid #e2e8f0',
                             backgroundColor: opcionSeleccionada === opcion.id ? '#f0f9ff' : 'white',
                             transition: 'all 0.3s ease',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            padding: 16
                           }}
-                          bodyStyle={{ padding: 16 }}
                           onClick={() => setOpcionSeleccionada(opcion.id)}
                         >
                           <Radio value={opcion.id} style={{ fontSize: 16, fontWeight: 500 }}>

@@ -101,7 +101,7 @@ function AdminAnuncios() {
   ];
 
   return (
-    <MainLayout breadcrumb={null}>
+    <MainLayout breadcrumb>
       {contextHolder}
       {modalContextHolder}
       <div style={{ padding: 24 }}>

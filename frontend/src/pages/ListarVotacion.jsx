@@ -363,7 +363,7 @@ function ListarVotaciones() {
               </div>
 
               {/* Mostrar filtros */}
-              <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 32 }} bodyStyle={{ padding: 24 }}>
+              <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 32,padding: 24 }} >
                 <Title level={4} style={{ color: '#1e3a8a', margin: 0, display: 'flex', alignItems: 'center' }}>
                   <FilterOutlined style={{ marginRight: 8 }} />
                   Filtrar por Estado
@@ -395,7 +395,7 @@ function ListarVotaciones() {
                     
                     return (
                       <Col xs={24} lg={12} key={votacion.id}>
-                        <Card hoverable style={{ borderRadius: 12, border: '1px solid #e2e8f0', height: '100%' }} bodyStyle={{ padding: 24 }}>
+                        <Card hoverable style={{ borderRadius: 12, border: '1px solid #e2e8f0', height: '100%', padding: 24 }} >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                             <Title level={4} style={{ color: '#1e3a8a', margin: 0, flex: 1 }}>
                               {votacion.titulo}

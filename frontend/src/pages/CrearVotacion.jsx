@@ -102,9 +102,9 @@ function CrearVotacion() {
                 style={{
                   borderRadius: 12,
                   border: '1px solid #e2e8f0',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  padding: 40,
                 }}
-                bodyStyle={{ padding: 40 }}
               >
                 <div>
                   {/* Título de la votación */}
@@ -256,9 +256,9 @@ function CrearVotacion() {
                   marginTop: 24,
                   backgroundColor: '#f1f5f9',
                   border: '1px solid #e2e8f0',
-                  borderRadius: 12
+                  borderRadius: 12,
+                  padding: 24,
                 }}
-                bodyStyle={{ padding: 24 }}
               >
                 <Title level={5} style={{ color: '#1e3a8a', marginBottom: 12 }}>
                   💡 Consejos para crear una buena votación

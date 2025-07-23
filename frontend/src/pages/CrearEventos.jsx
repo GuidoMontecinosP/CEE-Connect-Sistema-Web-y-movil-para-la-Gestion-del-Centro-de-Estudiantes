@@ -71,7 +71,7 @@ function CrearEvento() {
   };
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+    <MainLayout breadcrumb>
       {contextHolder}
       <div>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -84,11 +84,13 @@ function CrearEvento() {
         </div>
         <Card
           style={{
+            maxWidth: 800,
+            margin: '0 auto',
             borderRadius: 12,
             border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            padding: 40,
           }}
-          bodyStyle={{ padding: 40 }}
         >
           <div>
             <div style={{ marginBottom: 24 }}>

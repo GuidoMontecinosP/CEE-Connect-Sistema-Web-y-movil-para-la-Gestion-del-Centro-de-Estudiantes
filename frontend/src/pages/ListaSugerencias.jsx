@@ -760,9 +760,9 @@ const vaciarReportes = async (sugerenciaId) => {
   ];
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+    <MainLayout breadcrumb>
       {contextHolder}
-      <Content style={{ padding: '48px 24px' }}>
+      <Content style={{ padding: '25px 24px' }}>
         {/* NUEVO: Indicador de reportes pendientes (solo admin) */}
         {esAdmin && reportesDisponibles.length > 0 && (
           <div style={{ 

@@ -186,10 +186,7 @@ export default function MisSugerencias() {
 
   return (
     <MainLayout
-      breadcrumb={
-        <Breadcrumb style={{ margin: '14px 0' }}>  </Breadcrumb>
-
-      }
+      breadcrumb
     >
       {contextHolder}
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>

@@ -43,9 +43,9 @@ export default function DashboardEstudiante() {
                 width: 500,
                 borderRadius: 12,
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                padding: 40,
               }}
-              bodyStyle={{ padding: 40 }}
             >
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <Title level={2} style={{ color: '#1e3a8a', marginBottom: 8 }}>
@@ -69,9 +69,9 @@ export default function DashboardEstudiante() {
                     backgroundColor: '#f1f5f9', 
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
-                    marginBottom: 24
+                    marginBottom: 24,
+                    padding: 16
                   }}
-                  bodyStyle={{ padding: 16 }}
                 >
                   <Paragraph style={{ color: 'Blue', marginBottom: 8, fontSize: 14 }}>
                     💡 <strong>Como estudiante puedes:</strong>
@@ -92,9 +92,9 @@ export default function DashboardEstudiante() {
                     backgroundColor: '#fef3c7', 
                     border: '1px solid #f59e0b',
                     borderRadius: 8,
-                    marginBottom: 24
+                    marginBottom: 24,
+                    padding: 16
                   }}
-                  bodyStyle={{ padding: 16 }}
                 >
                   <Paragraph style={{ color: 'purple', marginBottom: 8, fontSize: 14 }}>
                      <strong>Panel de Administrador:</strong>
@@ -113,9 +113,9 @@ export default function DashboardEstudiante() {
                     backgroundColor: '#fef3c7', 
                     border: '1px solid #f59e0b',
                     borderRadius: 8,
-                    marginBottom: 24
+                    marginBottom: 24,
+                    padding: 16
                   }}
-                  bodyStyle={{ padding: 16 }}
                 >
                   <Paragraph style={{ color: 'red', marginBottom: 8, fontSize: 14 }}>
                      <strong>Panel de Super Administrador:</strong>

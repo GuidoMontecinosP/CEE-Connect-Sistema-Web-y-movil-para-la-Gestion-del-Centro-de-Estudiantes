@@ -45,7 +45,7 @@ function Noticias() {
     } = theme.useToken();
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} /> }>
+    <MainLayout breadcrumb>
       <div
         style={{
           padding: 22,

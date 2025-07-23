@@ -29,6 +29,7 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
   const location = useLocation();
   const { usuario, logout } = useAuth();
   const token = theme.useToken().token;
+const [collapsed, setCollapsed] = useState(false);
 
   // Determinar rol
  const rol = (usuario?.rol?.nombre || usuario?.rol || '').toLowerCase();
@@ -117,7 +118,20 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible onCollapse={setOpenKeys} collapsedWidth={80}>
+   <Sider
+  collapsible
+  collapsed={collapsed}
+  onCollapse={setCollapsed}
+  collapsedWidth={80}
+  style={{
+    position: 'fixed',
+    height: '100vh',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 100,
+  }}
+>
         <div className="logo" />
         <Menu
           theme="dark"
@@ -129,7 +143,9 @@ const MainLayout = ({ children, breadcrumb, selectedKeyOverride }) => {
           items={itemsByRole[userRole]}
         />
       </Sider>
-      <Layout style={{ padding: '24px' }}>
+     <Layout style={{ marginLeft: collapsed ? 80 : 200, padding: '24px' }}>
+
+
         <Content style={{ margin: '0 0 24px' }}>
           {breadcrumb}
           <div
