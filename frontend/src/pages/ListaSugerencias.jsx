@@ -102,99 +102,125 @@ const [loadingVaciarReportes, setLoadingVaciarReportes] = useState(false);
   const esEstud = usuario?.rol?.nombre === 'estudiante';
 
   const cargar = async (page = 1, limit = 10, filtros = {}) => {
-    try {
-      setLoading(true);
-      
-      const res = await sugerenciasService.obtenerSugerencias(page, limit, filtros);
-
+  try {
+    setLoading(true);
     
+    const res = await sugerenciasService.obtenerSugerencias(page, limit, filtros);
+
     // Manejar la respuesta según la estructura de tu backend
     const data = res.data || res;
-    setSugerencias(data.data || []);
+    const sugerenciasData = data.data || [];
+    
+    // NUEVO: Obtener estado de muteo para cada autor de sugerencia (solo si es admin)
+    let sugerenciasConMuteo = sugerenciasData;
+    if (esAdmin) {
+      sugerenciasConMuteo = await Promise.all(
+        sugerenciasData.map(async (sugerencia) => {
+          try {
+            // Verificar muteo del autor de la sugerencia
+            let autorMuteado = false;
+            if (sugerencia.autor?.id) {
+              const muteoAutor = await muteoService.obtenerEstadoMuteo(sugerencia.autor.id);
+              autorMuteado = muteoAutor.data?.isMuted || false;
+            }
+            
+            return {
+              ...sugerencia,
+              autor: {
+                ...sugerencia.autor,
+                isMuted: autorMuteado
+              }
+            };
+          } catch (error) {
+            console.error('Error al verificar muteo del autor:', error);
+            return sugerencia; // Devolver la sugerencia original si hay error
+          }
+        })
+      );
+    }
+    
+    setSugerencias(sugerenciasConMuteo);
     setTotalRecords(data.pagination?.total || 0);
     setCurrentPage(page);
     setPageSize(limit);
-
-      
-      // NUEVO: Cargar reportes del usuario actual (solo si es estudiante)
-      if (esEstud) {
-        try {
-          const reportesRes = await reportesService.obtenerMisReportes();
-          setMisReportes(reportesRes.data || []); // Array de IDs de sugerencias reportadas
-          console.log('Mis reportes (IDs):', reportesRes.data);
-        } catch (error) {
-          console.error('Error al cargar mis reportes:', error);
-          setMisReportes([]);
-        }
+    
+    // Cargar reportes del usuario actual (solo si es estudiante)
+    if (esEstud) {
+      try {
+        const reportesRes = await reportesService.obtenerMisReportes();
+        setMisReportes(reportesRes.data || []);
+        console.log('Mis reportes (IDs):', reportesRes.data);
+      } catch (error) {
+        console.error('Error al cargar mis reportes:', error);
+        setMisReportes([]);
       }
-      
-      // NUEVO: Cargar reportes disponibles (solo si es admin)
-      if (esAdmin) {
-  try {
-    const reportesRes = await reportesService.obtenerReportes(1, 100);
-    const reportesData = reportesRes.data?.data || [];
-    
-    // Obtener estado de muteo para cada usuario en los reportes
-    const reportesConMuteo = await Promise.all(
-      reportesData.map(async (reporte) => {
-        try {
-          // Verificar muteo del usuario que reportó
-          let usuarioMuteado = false;
-          if (reporte.usuario?.id) {
-            const muteoUsuario = await muteoService.obtenerEstadoMuteo(reporte.usuario.id);
-            usuarioMuteado = muteoUsuario.data?.isMuted || false;
-          }
-          
-          // Verificar muteo del autor de la sugerencia
-          let autorMuteado = false;
-          if (reporte.sugerencia?.autor?.id) {
-            const muteoAutor = await muteoService.obtenerEstadoMuteo(reporte.sugerencia.autor.id);
-            autorMuteado = muteoAutor.data?.isMuted || false;
-          }
-          
-          return {
-            ...reporte,
-            usuario: {
-              ...reporte.usuario,
-              isMuted: usuarioMuteado
-            },
-            sugerencia: {
-              ...reporte.sugerencia,
-              autor: {
-                ...reporte.sugerencia?.autor,
-                isMuted: autorMuteado
-              }
-            }
-          };
-        } catch (error) {
-          console.error('Error al verificar muteo:', error);
-          return reporte; // Devolver el reporte original si hay error
-        }
-      })
-    );
-    
-    setReportesDisponibles(reportesConMuteo);
-    setReporteActualIndex(0);
-    console.log('Reportes disponibles:', reportesConMuteo.length);
-  } catch (error) {
-    console.error('Error al cargar reportes:', error);
-    setReportesDisponibles([]);
-  }
-}
-
-      
-      arr.length
-        ? messageApi.success(`${arr.length} sugerencias cargadas`)
-        : messageApi.info('No hay sugerencias');
-        
-    } catch (err) {
-      //console.error('Error al cargar sugerencias:', err);
-      //console.error('Error cargar sugerencias:', err);
-     // messageApi.error('No se pudieron cargar sugerencias');
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    // Cargar reportes disponibles (solo si es admin)
+    if (esAdmin) {
+      try {
+        const reportesRes = await reportesService.obtenerReportes(1, 100);
+        const reportesData = reportesRes.data?.data || [];
+        
+        // Obtener estado de muteo para cada usuario en los reportes
+        const reportesConMuteo = await Promise.all(
+          reportesData.map(async (reporte) => {
+            try {
+              // Verificar muteo del usuario que reportó
+              let usuarioMuteado = false;
+              if (reporte.usuario?.id) {
+                const muteoUsuario = await muteoService.obtenerEstadoMuteo(reporte.usuario.id);
+                usuarioMuteado = muteoUsuario.data?.isMuted || false;
+              }
+              
+              // Verificar muteo del autor de la sugerencia
+              let autorMuteado = false;
+              if (reporte.sugerencia?.autor?.id) {
+                const muteoAutor = await muteoService.obtenerEstadoMuteo(reporte.sugerencia.autor.id);
+                autorMuteado = muteoAutor.data?.isMuted || false;
+              }
+              
+              return {
+                ...reporte,
+                usuario: {
+                  ...reporte.usuario,
+                  isMuted: usuarioMuteado
+                },
+                sugerencia: {
+                  ...reporte.sugerencia,
+                  autor: {
+                    ...reporte.sugerencia?.autor,
+                    isMuted: autorMuteado
+                  }
+                }
+              };
+            } catch (error) {
+              console.error('Error al verificar muteo:', error);
+              return reporte;
+            }
+          })
+        );
+        
+        setReportesDisponibles(reportesConMuteo);
+        setReporteActualIndex(0);
+        console.log('Reportes disponibles:', reportesConMuteo.length);
+      } catch (error) {
+        console.error('Error al cargar reportes:', error);
+        setReportesDisponibles([]);
+      }
+    }
+
+    // const arr = sugerenciasConMuteo;
+    // arr.length
+    //   ? messageApi.success(`${arr.length} sugerencias cargadas`)
+    //   : messageApi.info('No hay sugerencias');
+      
+  } catch (err) {
+    // console.error('Error al cargar sugerencias:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const buscarSugerencias = (valor) => {
   setSearchText(valor);
@@ -314,33 +340,46 @@ const limpiarBusqueda = () => {
         }));
       }
       
-      // También actualizar en la lista de reportes disponibles
+      // CORREGIDO: Actualizar TODOS los reportes que contengan este usuario
       setReportesDisponibles(prev => prev.map(reporte => {
-        if (reporte.id === reporteInfo.id) {
-          if (tipoMuteo === 'reportador' && reporte.usuario?.id === usuarioAMutear.id) {
-            return {
-              ...reporte,
-              usuario: {
-                ...reporte.usuario,
-                isMuted: true
-              }
-            };
-          } else if (tipoMuteo === 'autor' && reporte.sugerencia?.autor?.id === usuarioAMutear.id) {
-            return {
-              ...reporte,
-              sugerencia: {
-                ...reporte.sugerencia,
-                autor: {
-                  ...reporte.sugerencia.autor,
-                  isMuted: true
-                }
-              }
-            };
-          }
+        let reporteActualizado = { ...reporte };
+        
+        // Actualizar usuario reportador en todos los reportes
+        if (tipoMuteo === 'reportador' && reporte.usuario?.id === usuarioAMutear.id) {
+          reporteActualizado.usuario = {
+            ...reporte.usuario,
+            isMuted: true
+          };
         }
-        return reporte;
+        
+        // Actualizar autor de la sugerencia en todos los reportes
+        if (tipoMuteo === 'autor' && reporte.sugerencia?.autor?.id === usuarioAMutear.id) {
+          reporteActualizado.sugerencia = {
+            ...reporte.sugerencia,
+            autor: {
+              ...reporte.sugerencia.autor,
+              isMuted: true
+            }
+          };
+        }
+        
+        return reporteActualizado;
       }));
     }
+    
+    // Actualizar también la lista principal de sugerencias
+    setSugerencias(prev => prev.map(sugerencia => {
+      if (sugerencia.autor?.id === usuarioAMutear.id) {
+        return {
+          ...sugerencia,
+          autor: {
+            ...sugerencia.autor,
+            isMuted: true
+          }
+        };
+      }
+      return sugerencia;
+    }));
     
   } catch (error) {
     console.error('Error al mutear usuario:', error);
@@ -350,7 +389,7 @@ const limpiarBusqueda = () => {
   }
 };
 
-  const desmutearUsuario = async (userId, nombreUsuario) => {
+const desmutearUsuario = async (userId, nombreUsuario) => {
   try {
     setLoadingDesmuteo(true);
     await muteoService.desmutearUsuario(userId);
@@ -383,35 +422,46 @@ const limpiarBusqueda = () => {
         }));
       }
       
-      // También actualizar en la lista de reportes disponibles
+      // CORREGIDO: Actualizar TODOS los reportes que contengan este usuario
       setReportesDisponibles(prev => prev.map(reporte => {
-        if (reporte.id === reporteInfo.id) {
-          let reporteActualizado = { ...reporte };
-          
-          // Actualizar usuario reportador
-          if (reporte.usuario?.id === userId) {
-            reporteActualizado.usuario = {
-              ...reporte.usuario,
-              isMuted: false
-            };
-          }
-          
-          // Actualizar autor de la sugerencia
-          if (reporte.sugerencia?.autor?.id === userId) {
-            reporteActualizado.sugerencia = {
-              ...reporte.sugerencia,
-              autor: {
-                ...reporte.sugerencia.autor,
-                isMuted: false
-              }
-            };
-          }
-          
-          return reporteActualizado;
+        let reporteActualizado = { ...reporte };
+        
+        // Actualizar usuario reportador en todos los reportes
+        if (reporte.usuario?.id === userId) {
+          reporteActualizado.usuario = {
+            ...reporte.usuario,
+            isMuted: false
+          };
         }
-        return reporte;
+        
+        // Actualizar autor de la sugerencia en todos los reportes
+        if (reporte.sugerencia?.autor?.id === userId) {
+          reporteActualizado.sugerencia = {
+            ...reporte.sugerencia,
+            autor: {
+              ...reporte.sugerencia.autor,
+              isMuted: false
+            }
+          };
+        }
+        
+        return reporteActualizado;
       }));
     }
+    
+    // Actualizar también la lista principal de sugerencias
+    setSugerencias(prev => prev.map(sugerencia => {
+      if (sugerencia.autor?.id === userId) {
+        return {
+          ...sugerencia,
+          autor: {
+            ...sugerencia.autor,
+            isMuted: false
+          }
+        };
+      }
+      return sugerencia;
+    }));
     
   } catch (error) {
     console.error('Error al desmutear usuario:', error);
@@ -420,7 +470,6 @@ const limpiarBusqueda = () => {
     setLoadingDesmuteo(false);
   }
 };
-
 
   // Ver mensaje de sugerencia
   const abrirVerMensaje = async (s) => {
@@ -754,15 +803,28 @@ const vaciarReportes = async (sugerenciaId) => {
         {tieneResp(r) ? 'Editar' : 'Responder'}
       </Button>
       
-      <Button
-        type="primary"
-        size="small"
-        danger
-        icon={<AudioMutedOutlined />}
-        onClick={() => abrirMuteoModal(r.autor, 'autor')}
-      >
-        Mutear
-      </Button>
+     {r.autor?.isMuted ? (
+        <Button
+          type="primary"
+          size="small"
+          icon={<AudioMutedOutlined />}
+          onClick={() => desmutearUsuario(r.autor.id, r.autor.nombre)}
+          loading={loadingDesmuteo}
+          style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+        >
+          Desmutear
+        </Button>
+      ) : (
+        <Button
+          type="primary"
+          size="small"
+          danger
+          icon={<AudioMutedOutlined />}
+          onClick={() => abrirMuteoModal(r.autor, 'autor')}
+        >
+          Mutear
+        </Button>
+      )}
       
       {/* BOTÓN DE REPORTES: Movido al final para que aparezca siempre a la derecha */}
       {(() => {
