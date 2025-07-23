@@ -24,7 +24,7 @@ export function authenticateJwt(req, res, next) {
       const usuarioRepository = AppDataSource.getRepository(Usuario);
       const usuario = await usuarioRepository.findOne({
         where: { id: payload.id },
-        relations: ["rol"], // ✅ Trae también el rol
+        relations: ["rol"], //  Trae también el rol
       });
 
       if (!usuario || usuario.estado !== "activo") {

@@ -27,17 +27,17 @@ export const authValidation = Joi.object({
       "string.max": "El correo debe tener como máximo 60 caracteres.",
     }),
 
-  // 👇 Corrige nombre a 'contrasena' para coincidir con el backend
+  
   contrasena: Joi.string()
     .min(8)
-    .max(26)
+    .max(50)
     .pattern(/^[a-zA-Z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]+$/)
     .required()
     .messages({
       "string.empty": "La contraseña no puede estar vacía.",
       "any.required": "La contraseña es obligatoria.",
       "string.min": "La contraseña debe tener al menos 8 caracteres.",
-      "string.max": "La contraseña debe tener como máximo 26 caracteres.",
+      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
       "string.pattern.base": "La contraseña contiene caracteres inválidos.",
     }),
 }).unknown(false).messages({
@@ -52,6 +52,9 @@ export const registerValidation = Joi.object({
     .pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
     .required()
     .messages({
+      "string.min": "El nombre debe tener al menos 3 caracteres.",
+      "string.max": "El nombre debe tener como máximo 50 caracteres.",
+      "string.pattern.base": "El nombre solo puede contener letras y espacios.",
       "string.empty": "El nombre no puede estar vacío.",
       "any.required": "El nombre es obligatorio.",
       "string.pattern.base": "El nombre solo puede contener letras y espacios.",
@@ -76,14 +79,14 @@ export const registerValidation = Joi.object({
 
   contrasena: Joi.string()
     .min(8)
-    .max(26)
+    .max(50)
     .pattern(/^[a-zA-Z0-9!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|`~]+$/)
     .required()
     .messages({
       "string.empty": "La contraseña no puede estar vacía.",
       "any.required": "La contraseña es obligatoria.",
       "string.min": "La contraseña debe tener al menos 8 caracteres.",
-      "string.max": "La contraseña debe tener como máximo 26 caracteres.",
+      "string.max": "La contraseña debe tener como máximo 50 caracteres.",
       "string.pattern.base": "La contraseña contiene caracteres inválidos.",
     }),
 

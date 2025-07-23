@@ -1,4 +1,4 @@
-import axios from './root.services.js';
+import axios from './api.js';
 
 export const sugerenciasService = {
   // Crear nueva sugerencia
@@ -38,7 +38,8 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
     const response = await axios.get(`/sugerencias?${params.toString()}`);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.mensaje || 'Error al obtener sugerencias');
+   // console.log("Error en obtenersu", error.response?.data);
+    throw new Error(error.response?.data || 'Error al obtener sugerencias');
   }
 },
 
@@ -59,11 +60,11 @@ obtenerSugerencias: async (page = 1, limit = 10, filtros = {}) => {
     //console.log('Datos enviados al servidor:', datos); // Para debug
     //console.log('ID de la sugerencia:', id); // Para debug
     const response = await axios.patch(`/sugerencias/${id}`, datos);
-    console.log('Respuesta del servidor:', response.data); // Para debug
+   // console.log('Respuesta del servidor:', response.data); // Para debug
     return response.data;
   } catch (error) {
     //console.log('Error en actualizarSugerencia:', error.response?.data.errors);
-    console.log('Error en actualizarSugerencia:', );
+   // console.log('Error en actualizarSugerencia:', );
     const msg = error.response?.data.errors|| error.response?.data.details|| 'Error al actualizar sugerencia';
     throw new Error(msg);
   }

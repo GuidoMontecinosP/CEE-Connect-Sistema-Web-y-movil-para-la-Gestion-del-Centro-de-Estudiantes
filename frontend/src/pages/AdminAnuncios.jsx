@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Input, Modal, Space, Table, Typography, message, Select } from 'antd';
 import MainLayout from '../components/MainLayout.jsx';
+import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { obtenerAnuncios, crearAnuncio, modificarAnuncio, eliminarAnuncio } from '../services/anuncios.services.js';
 
 const { Title } = Typography;
@@ -13,6 +14,8 @@ function AdminAnuncios() {
   const [anuncioEdit, setAnuncioEdit] = useState(null);
   const [form, setForm] = useState({ titulo: '', epilogo: '', link: '', tipo: 'avisos importantes' });
   const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
+
 
   const fetchAnuncios = async () => {
     setLoading(true);
@@ -63,26 +66,24 @@ function AdminAnuncios() {
       fetchAnuncios();
       handleCloseModal();
     } catch (e) {
+      console.log(e);
       messageApi.error(e.message || 'Error al guardar el anuncio');
     }
   };
 
-  const handleDelete = async (id) => {
-    Modal.confirm({
+  const handleDelete = (id) => {
+    modal.confirm({
       title: '¿Eliminar anuncio?',
+      icon: <ExclamationCircleOutlined />,
       content: 'Esta acción no se puede deshacer.',
       okText: 'Eliminar',
       okType: 'danger',
       cancelText: 'Cancelar',
-      onOk: async () => {
-        try {
-          await eliminarAnuncio(id);
-          messageApi.success('Anuncio eliminado');
-          fetchAnuncios();
-        } catch (e) {
-          messageApi.error(e.message || 'Error al eliminar');
-        }
-      }
+      async onOk() {
+        await eliminarAnuncio(id);
+        fetchAnuncios();
+        messageApi.success('Anuncio eliminado');
+      },
     });
   };
 
@@ -100,8 +101,9 @@ function AdminAnuncios() {
   ];
 
   return (
-    <MainLayout breadcrumb={null}>
+    <MainLayout breadcrumb>
       {contextHolder}
+      {modalContextHolder}
       <div style={{ padding: 24 }}>
         <Title level={2} style={{ marginBottom: 24 }}>Administrar Anuncios del CEE</Title>
         <Button type="primary" style={{ marginBottom: 16 }} onClick={() => handleOpenModal()}>Nuevo Anuncio</Button>

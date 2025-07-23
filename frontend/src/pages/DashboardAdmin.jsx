@@ -31,7 +31,7 @@ export default function DashboardEstudiante() {
  
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Dashboard' }]} /> }>
+    <MainLayout>
       <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -43,9 +43,9 @@ export default function DashboardEstudiante() {
                 width: 500,
                 borderRadius: 12,
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                padding: 40,
               }}
-              bodyStyle={{ padding: 40 }}
             >
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <Title level={2} style={{ color: '#1e3a8a', marginBottom: 8 }}>
@@ -69,16 +69,17 @@ export default function DashboardEstudiante() {
                     backgroundColor: '#f1f5f9', 
                     border: '1px solid #e2e8f0',
                     borderRadius: 8,
-                    marginBottom: 24
+                    marginBottom: 24,
+                    padding: 16
                   }}
-                  bodyStyle={{ padding: 16 }}
                 >
-                  <Paragraph style={{ color: '#64748b', marginBottom: 8, fontSize: 14 }}>
+                  <Paragraph style={{ color: 'Blue', marginBottom: 8, fontSize: 14 }}>
                     💡 <strong>Como estudiante puedes:</strong>
                   </Paragraph>
                   <ul style={{ color: '#64748b', fontSize: 14, marginBottom: 0, paddingLeft: 20 }}>
                     <li>Ver y participar en votaciones activas</li>
                     <li>Consultar eventos próximos</li>
+                    <li>Crear sugerencias para mejorar la comunidad</li>
                     <li>Leer las últimas noticias de la universidad</li>
                   </ul>
                 </Card>
@@ -91,17 +92,38 @@ export default function DashboardEstudiante() {
                     backgroundColor: '#fef3c7', 
                     border: '1px solid #f59e0b',
                     borderRadius: 8,
-                    marginBottom: 24
+                    marginBottom: 24,
+                    padding: 16
                   }}
-                  bodyStyle={{ padding: 16 }}
                 >
-                  <Paragraph style={{ color: '#92400e', marginBottom: 8, fontSize: 14 }}>
+                  <Paragraph style={{ color: 'purple', marginBottom: 8, fontSize: 14 }}>
                      <strong>Panel de Administrador:</strong>
                   </Paragraph>
                   <ul style={{ color: '#a16207', fontSize: 14, marginBottom: 0, paddingLeft: 20 }}>
                     <li>Crear y gestionar votaciones</li>
                     <li>Administrar eventos</li>
-                    <li>Acceso a todas las funcionalidades</li>
+                    <li>Crea y gestionar sugerencias</li>
+                  </ul>
+                </Card>
+              )}
+              {/* Información adicional para superadministradores */}
+              {usuario?.rol?.nombre === 'superadmin' && (
+                <Card 
+                  style={{ 
+                    backgroundColor: '#fef3c7', 
+                    border: '1px solid #f59e0b',
+                    borderRadius: 8,
+                    marginBottom: 24,
+                    padding: 16
+                  }}
+                >
+                  <Paragraph style={{ color: 'red', marginBottom: 8, fontSize: 14 }}>
+                     <strong>Panel de Super Administrador:</strong>
+                  </Paragraph>
+                  <ul style={{ color: '#a16207', fontSize: 14, marginBottom: 0, paddingLeft: 20 }}>
+                    <li>Gestionar a los usuarios</li>
+                    <li>Analizar Estadísticas</li>
+                    <li>Administrar el sistema</li>
                   </ul>
                 </Card>
               )}

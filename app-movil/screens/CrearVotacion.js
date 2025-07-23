@@ -76,7 +76,7 @@ export default function CrearVotacion({ navigation }) {
               setTitulo('');
               setOpciones(['', '']);
               // Volver a la lista
-              navigation.goBack();
+              navigation.navigate('ListaVotaciones');
             }
           }
         ]
@@ -185,7 +185,7 @@ export default function CrearVotacion({ navigation }) {
       <View style={styles.actionButtons}>
         <TouchableOpacity
           style={styles.cancelButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('ListaVotaciones')}
           disabled={loading}
         >
           <Text style={styles.cancelButtonText}>Cancelar</Text>

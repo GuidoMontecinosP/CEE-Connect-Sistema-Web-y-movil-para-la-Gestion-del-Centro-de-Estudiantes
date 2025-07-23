@@ -23,7 +23,6 @@ passport.use(
   new JwtStrategy(opts, async (payload, done) => {
     try {
       // Aquí payload ya trae todo lo que firmaste: id, correo, rol/isAdmin…
-      // Si quieres validar contra BD, hazlo aquí y luego:
       return done(null, payload);
     } catch (error) {
       return done(error, false);

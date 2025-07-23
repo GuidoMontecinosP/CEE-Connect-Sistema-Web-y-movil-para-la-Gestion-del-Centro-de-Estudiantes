@@ -1,16 +1,9 @@
+
 import axios from "./root.services.js";
-import Cookies from "js-cookie";
 
 export const obtenerAnuncios = async () => {
-    const token = Cookies.get('token');
     try {
-        const response = await axios.get(
-            '/anuncios/anuncios',
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
+        const response = await axios.get('/anuncios/anuncios',
         );
         return response.data;
     } catch (error) {
@@ -19,16 +12,9 @@ export const obtenerAnuncios = async () => {
 };
 
 export const crearAnuncio = async (anuncio) => {
-    const token = Cookies.get('token');
+   
     try {
-        const response = await axios.post(
-            '/anuncios/crearAnuncio',
-            anuncio,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
+        const response = await axios.post('/anuncios/crearAnuncio',anuncio,
         );
         return response.data;
     } catch (error) {
@@ -39,28 +25,21 @@ export const crearAnuncio = async (anuncio) => {
 };
 
 export const modificarAnuncio = async (id, anuncio) => {
-    const token = Cookies.get('token');
-    const response = await axios.put(
-        `/anuncios/modificarAnuncio/${id}`,
-        anuncio,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-    return response.data;
+    try {
+        const response = await axios.put(`/anuncios/modificarAnuncio/${id}`, anuncio,
+        );
+        return response.data;
+    } catch (error) {
+        console.log(error);
+        // Mostrar mensaje detallado del backend si existe
+        const mensaje = error.response?.data?.message || error.response?.data?.mensaje || error.message || 'Error al modificar anuncio';
+        throw new Error(mensaje);
+    }
 };
 
 export const eliminarAnuncio = async (id) => {
-    const token = Cookies.get('token');
-    const response = await axios.delete(
-        `/anuncios/eliminarAnuncio/${id}`,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
+    const response = await axios.delete(`/anuncios/eliminarAnuncio/${id}`,
+       
     );
     return response.data;
 };

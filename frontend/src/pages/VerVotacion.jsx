@@ -20,6 +20,7 @@ function VerVotacion() {
   const [participantes, setParticipantes] = useState([]);
   const [totalVotos, setTotalVotos] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [messageApi, contextHolder] = message.useMessage();
   const [globalSearchText, setGlobalSearchText] = useState('');
 
   useEffect(() => {
@@ -46,7 +47,7 @@ function VerVotacion() {
           setParticipantes([]);
         }
       } catch (err) {
-        message.error('No se pudieron cargar los datos de la votación');
+        messageApi.error('No se pudieron cargar los datos de la votación');
       } finally {
         setLoading(false);
       }
@@ -87,15 +88,7 @@ function VerVotacion() {
   };
 
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: ['usuario', 'id'],
-      key: 'id',
-      width: 80,
-      sorter: (a, b) => (a.usuario?.id || 0) - (b.usuario?.id || 0),
-      sortDirections: ['descend', 'ascend'],
-      render: (id) => <Text strong>{id || 'N/A'}</Text>
-    },
+    
     {
       title: 'Nombre',
       dataIndex: ['usuario', 'nombre'],
@@ -183,10 +176,12 @@ function VerVotacion() {
 
   return (
     <MainLayout
+    selectedKeyOverride="1" 
     breadcrumb={
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }
   >
+    {      contextHolder}
         <Content style={{ padding: '48px 24px' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
@@ -201,7 +196,7 @@ function VerVotacion() {
 
             <Row gutter={[24, 24]}>
               <Col xs={24} lg={12}>
-                <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0' }} bodyStyle={{ padding: 24 }}>
+                <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0',padding: 24 }} >
                   <Title level={3} style={{ color: '#1e3a8a', marginBottom: 16 }}>
                     <EyeOutlined style={{ marginRight: 8 }} />
                     Opciones de Votación
@@ -211,8 +206,9 @@ function VerVotacion() {
                       <Card key={opcion.id} size="small" style={{
                         backgroundColor: '#f8f9fa',
                         border: '1px solid #e2e8f0',
-                        borderRadius: 8
-                      }} bodyStyle={{ padding: 16 }}>
+                        borderRadius: 8,
+                        padding: 16,
+                      }} >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Text strong style={{ fontSize: '16px' }}>
                             {index + 1}. {opcion.textoOpcion}
@@ -232,7 +228,7 @@ function VerVotacion() {
               </Col>
 
               <Col xs={24} lg={12}>
-                <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0' }} bodyStyle={{ padding: 24 }}>
+                <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0',padding:24 }} >
                   <Title level={3} style={{ color: '#1e3a8a', marginBottom: 16 }}>
                     <UserOutlined style={{ marginRight: 8 }} />
                     Estadísticas de Participación
@@ -247,7 +243,7 @@ function VerVotacion() {
               </Col>
             </Row>
 
-            <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 24 }} bodyStyle={{ padding: 24 }}>
+            <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 24,padding:24 }} >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Title level={3} style={{ color: '#1e3a8a', margin: 0 }}>
                   <UserOutlined style={{ marginRight: 8 }} />

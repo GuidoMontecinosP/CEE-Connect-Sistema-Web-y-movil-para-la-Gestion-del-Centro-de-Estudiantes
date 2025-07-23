@@ -94,7 +94,7 @@ function VerEventos() {
 
   return (
     <>     
-      <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+      <MainLayout breadcrumb>
       {contextHolder}
         <div >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>

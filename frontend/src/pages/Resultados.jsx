@@ -38,6 +38,7 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
       })
       .catch(err => {
         message.error(`Error al cargar resultados: ${err.message}`);
+        console.log("Error al cargar resultados:", err);
         setLoading(false);
       });
   }, [id]);
@@ -78,9 +79,8 @@ const esAdministrador = usuario?.rol?.nombre === 'administrador';
   if (loading) {
     return (
       <MainLayout
-    breadcrumb={
-      <Breadcrumb style={{ margin: '14px 0' }}  />
-    }
+    breadcrumb
+      
   >
           <Content style={{ padding: '48px 24px' }}>
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
@@ -159,6 +159,7 @@ if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
 
   return (
      <MainLayout
+     selectedKeyOverride="1" 
     breadcrumb={
       <Breadcrumb style={{ margin: '14px 0' }}  />
     }

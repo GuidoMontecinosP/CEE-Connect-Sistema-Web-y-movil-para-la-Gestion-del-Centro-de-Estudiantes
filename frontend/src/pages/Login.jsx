@@ -74,9 +74,9 @@ export default function Login() {
         }}
       >
         <img
-          src="/src/assets/escudo-color-gradiente-oscuro.png"
+          src="/escudo-color-gradiente-oscuro.png"
           alt="Logo UBB"
-          style={{ width: "220px", marginBottom: "2rem" }}
+          style={{ width: "220px", marginBottom: "0.01rem" }}
         />
 
         <h1 style={{ color: "#1e3a8a", marginBottom: "2rem", fontWeight: 700 }}>
@@ -134,7 +134,24 @@ export default function Login() {
                {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             </button>
           </div>
-
+               <div style={{ textAlign: "right", marginBottom: "1rem" }}>
+            <button
+              type="button"
+              onClick={() => navigate("/recuperar-contrasena")}
+              disabled={loading}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#1e3a8a",
+                fontSize: "14px",
+                textDecoration: "underline",
+                cursor: "pointer",
+                padding: "0"
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
           {error && (
             <div style={{ 
               color: "crimson", 

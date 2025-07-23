@@ -21,6 +21,10 @@ const RolSchema = new EntitySchema({
       default: false,
       nullable: false,
     },
+    isSuperAdmin: {
+      type: "boolean",
+      default: false,
+    },
     createdAt: {
       type: "timestamp with time zone",
       default: () => "CURRENT_TIMESTAMP",

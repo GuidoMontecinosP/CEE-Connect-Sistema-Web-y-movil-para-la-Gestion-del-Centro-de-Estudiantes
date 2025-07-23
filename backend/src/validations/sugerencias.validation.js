@@ -222,7 +222,15 @@ export const esquemaPaginacion = Joi.object({
     .optional()
     .messages({
       'any.only': `El estado debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}`
+    }),
+    busqueda: Joi.string()
+    .trim()
+    .allow('', null)
+    .optional()
+    .messages({
+      'string.base': 'El término de búsqueda debe ser un texto'
     })
+
 });
 
 export const esquemaFiltrosAdmin = Joi.object({

@@ -1,92 +1,214 @@
+// screens/LoginScreen.js
 import React, { useState, useContext } from 'react';
 import {
   View,
-  TextInput,
-  Alert,
   Text,
-  StyleSheet,
+  TextInput,
   TouchableOpacity,
+  StyleSheet,
+  Image,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ImageBackground,
 } from 'react-native';
-import { login as loginRequest } from '../services/auth.services';
+import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/Authcontext';
+import { login as apiLogin } from '../services/auth.services'; // Tu servicio de login
 
 export default function LoginScreen() {
   const [correo, setCorreo] = useState('');
-  const [password, setPassword] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const navigation = useNavigation();
   const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
+    if (!correo || !contrasena) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const { token, user } = await loginRequest(correo, password);
-      login(token, user);
-      Alert.alert('Bienvenido a CEE Connect', user.rol.nombre);
-    } catch (err) {
-    //  console.log('🛑 Error en login:', err);
-      Alert.alert('Error', err.message);
+      const { token, user } = await apiLogin(correo, contrasena);
+      await login(token, user);
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bienvenido a CEE Connect</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <ImageBackground
+          source={require('../assets/favicon.png')}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <View style={styles.overlay} />
+        </ImageBackground>
+        
+        <View style={styles.formContainer}>
+          <Image
+            source={require('../assets/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
 
-      <TextInput
-        placeholder="Ingrese su correo institucional"
-        value={correo}
-        onChangeText={setCorreo}
-        autoCapitalize="none"
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Ingrese su contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
+          <Text style={styles.title}>Iniciar Sesión</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Ingresar</Text>
-      </TouchableOpacity>
-    </View>
+          <View style={styles.form}>
+            <Text style={styles.label}>Correo institucional</Text>
+            <TextInput
+              style={styles.input}
+              value={correo}
+              onChangeText={setCorreo}
+              placeholder="usuario@alumnos.ubiobio.cl"
+              placeholderTextColor="#9ca3af"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+
+            <Text style={styles.label}>Contraseña</Text>
+            <TextInput
+              style={styles.input}
+              value={contrasena}
+              onChangeText={setContrasena}
+              placeholder="Contraseña"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              autoComplete="password"
+            />
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.registerLinkContainer}>
+            <Text style={styles.registerText}>¿No tienes una cuenta? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
+              <Text style={styles.registerLink}>Regístrate aquí</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    width: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  formContainer: {
+    flex: 1,
+    marginTop: '40%',
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 40,
+    paddingTop: 40,
+    paddingBottom: 60,
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    padding: 20,
+  },
+  logo: {
+    width: 180,
+    height: 120,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: '700',
     color: '#1e3a8a',
-    fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 360,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 12,
   },
   input: {
     width: '100%',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    padding: 10,
-    marginBottom: 15,
+    padding: 12,
+    marginBottom: 16,
     borderRadius: 6,
-    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    color: '#374151',
   },
   button: {
-    backgroundColor: '#1e3a8a',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-    marginTop: 10,
     width: '100%',
+    padding: 15,
+    backgroundColor: '#1e3a8a',
+    borderRadius: 6,
     alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: '#9ca3af',
   },
   buttonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  registerLinkContainer: {
+    flexDirection: 'row',
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  registerText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  registerLink: {
+    fontSize: 14,
+    color: '#1e3a8a',
+    fontWeight: '600',
   },
 });

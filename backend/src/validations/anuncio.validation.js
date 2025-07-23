@@ -25,7 +25,7 @@ export const crearAnuncioValidation = Joi.object({
         .messages({
             "string.empty": "El epílogo del anuncio no puede estar vacío.",
             "string.base": "El epílogo debe ser un texto.",
-            "string.min": "El epílogo debe tener al menos 10 caracteres.",
+            "string.min": "El epílogo debe tener al menos 20 caracteres.",
             "string.max": "El epílogo no puede exceder los 500 caracteres.",
             "string.pattern.base": "El epílogo contiene caracteres no permitidos",
             "any.required": "El epílogo es obligatorio.",
@@ -92,6 +92,6 @@ export const modificarAnuncioValidation = Joi.object({
             "any.only": "El tipo de anuncio no es válido.",
         }),
     estado: Joi.boolean().optional(),
-});
+}).unknown(true);
 
 export default { crearAnuncioValidation, modificarAnuncioValidation };  

@@ -5,8 +5,7 @@ import { connectDB } from "./config/configDb.js";
 import indexRoutes from "./routes/index.routes.js";
 import passport from "passport";
 import "./config/passport.config.js";
-import cookieParser from "cookie-parser";    
-import authRoutes from "./routes/auth.routes.js"   
+import cookieParser from "cookie-parser";          
 import "./components/eventos.cron.js";
 
 // Cargar variables de entorno
@@ -37,15 +36,8 @@ app.get("/conexion", (req, res) => {
 // Rutas principales
 app.use("/api", indexRoutes);
 
-// ✅ Rutas de autenticación
-app.use("/api/auth", authRoutes);
-
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}/api`);
-
-
-
-
 
 });

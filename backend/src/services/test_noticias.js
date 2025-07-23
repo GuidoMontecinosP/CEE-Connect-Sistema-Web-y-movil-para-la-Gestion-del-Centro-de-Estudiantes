@@ -20,7 +20,7 @@ export async function obtenerNoticiasUBB() {
   }
 
   console.log('🌐 Realizando scraping de noticias UBB...');
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   const page = await browser.newPage();
   await page.goto('https://noticias.ubiobio.cl/', { waitUntil: 'networkidle2' });
   await new Promise(res => setTimeout(res, 2000));

@@ -215,7 +215,7 @@ if (!esAdministrador && !resultados.votacion.resultadosPublicados) {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          📅 Estado:{' '}
+           Estado:{' '}
           {resultados.votacion.estado === 'activa'
             ? '🟢 Activa'
             : '🔴 Cerrada'}

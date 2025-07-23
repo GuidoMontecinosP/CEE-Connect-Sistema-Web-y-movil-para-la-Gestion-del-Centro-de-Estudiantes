@@ -23,7 +23,7 @@ function Eventos (){
 
     return (
         <MainLayout
-            breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} items={[{ title: 'Eventos' }]} />}
+            breadcrumb
         >
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>

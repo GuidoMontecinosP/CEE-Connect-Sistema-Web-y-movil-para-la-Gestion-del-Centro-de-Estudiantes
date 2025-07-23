@@ -516,7 +516,7 @@ const limpiarBusqueda = () => {
     
     try {
       await reportesService.eliminarReporte(reporteInfo.id);
-      message.success('Reporte eliminado exitosamente');
+      messageApi.success('Reporte eliminado exitosamente');
       
       // Cerrar modal actual
       setInfoReporteVisible(false);
@@ -760,9 +760,9 @@ const vaciarReportes = async (sugerenciaId) => {
   ];
 
   return (
-    <MainLayout breadcrumb={<Breadcrumb style={{ margin: '14px 0' }} />}>
+    <MainLayout breadcrumb>
       {contextHolder}
-      <Content style={{ padding: '48px 24px' }}>
+      <Content style={{ padding: '25px 24px' }}>
         {/* NUEVO: Indicador de reportes pendientes (solo admin) */}
         {esAdmin && reportesDisponibles.length > 0 && (
           <div style={{ 
@@ -1247,14 +1247,12 @@ const vaciarReportes = async (sugerenciaId) => {
                   label="Razón del muteo"
                   rules={[{ required: true, message: 'Ingresa la razón del muteo' }]}
                 >
-                  <Select placeholder="Selecciona la razón del muteo">
-                    <Option value="spam">Spam</Option>
-                    <Option value="contenido_inapropiado">Contenido inapropiado</Option>
-                    <Option value="lenguaje_ofensivo">Lenguaje ofensivo</Option>
-                    <Option value="reportes_falsos">Reportes falsos</Option>
-                    <Option value="conducta_disruptiva">Conducta disruptiva</Option>
-                    <Option value="otro">Otro</Option>
-                  </Select>
+                  <Input.TextArea 
+            rows={3} 
+            placeholder="Describe la razón del muteo..." 
+            showCount
+            maxLength={500}
+          />
                 </Form.Item>
                 <Form.Item
                   name="fecha_fin"
