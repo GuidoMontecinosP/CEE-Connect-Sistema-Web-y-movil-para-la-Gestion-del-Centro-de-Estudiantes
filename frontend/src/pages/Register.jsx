@@ -16,13 +16,22 @@ export default function Register() {
   const [messageApi, contextHolder] = message.useMessage();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordTooltip, setShowPasswordTooltip] = useState(false);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
+    // Validar que las contraseñas coincidan
     if (contrasena !== confirmarContrasena) {
       setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    // Validar fortaleza de la contraseña
+    const passwordValidation = validatePassword(contrasena);
+    if (!passwordValidation.isValid) {
+      setError(`La contraseña debe cumplir: ${passwordValidation.missingRequirements.join(", ")}`);
       return;
     }
 
@@ -80,7 +89,7 @@ export default function Register() {
         <div
           style={{
             flex: 1,
-            padding: "60px 40px",
+            padding: "40px 40px",
             backgroundColor: "#ffffff",
             display: "flex",
             flexDirection: "column",
@@ -90,12 +99,12 @@ export default function Register() {
           }}
         >
           <img
-            src="/src/assets/escudo-color-gradiente-oscuro.png"
+            src="/escudo-color-gradiente-oscuro.png"
             alt="Logo UBB"
             style={{ width: "220px", marginBottom: "0.5rem" }}
           />
 
-          <h1 style={{ color: "#1e3a8a", marginBottom: "0.5rem", fontWeight: 700 }}>
+          <h1 style={{ color: "#1e3a8a", marginBottom: "0.5rem", marginTop: "-0.5rem", fontWeight: 700 }}>
             Registrarse
           </h1>
 
@@ -144,9 +153,60 @@ export default function Register() {
               </button>
             </div>
 
+            {/* Barra de progreso con ícono de info */}
             {contrasena && (
-              <div style={{ marginTop: "-0.8rem", marginBottom: "1rem", fontSize: "13px", color: getColorStrength(passwordStrength) }}>
-                Seguridad: {passwordStrength}
+              <div style={{ marginTop: "-0.8rem", marginBottom: "1rem" }}>
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "space-between", 
+                  alignItems: "center",
+                  marginBottom: "6px"
+                }}>
+                  <div style={{ fontSize: "13px", color: getColorStrength(passwordStrength) }}>
+                    Seguridad: {passwordStrength}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ fontSize: "12px", color: "#666" }}>
+                      {validatePassword(contrasena).score}/5
+                    </div>
+                    {!validatePassword(contrasena).isValid && (
+                      <div 
+                        style={infoIconStyle}
+                        onMouseEnter={() => setShowPasswordTooltip(true)}
+                        onMouseLeave={() => setShowPasswordTooltip(false)}
+                      >
+                        !
+                        {showPasswordTooltip && (
+                          <div style={tooltipStyle}>
+                            <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "8px", color: "#333" }}>
+                              Faltan requisitos:
+                            </div>
+                            {validatePassword(contrasena).missingRequirements.map((req, index) => (
+                              <div key={index} style={{ fontSize: "12px", color: "#666", marginBottom: "2px" }}>
+                                • {req}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div style={{
+                  width: "100%",
+                  height: "6px",
+                  backgroundColor: "#e0e0e0",
+                  borderRadius: "3px",
+                  overflow: "hidden"
+                }}>
+                  <div style={{
+                    width: `${(validatePassword(contrasena).score / 5) * 100}%`,
+                    height: "100%",
+                    backgroundColor: getProgressColor(validatePassword(contrasena).score),
+                    transition: "all 0.3s ease",
+                    borderRadius: "3px"
+                  }} />
+                </div>
               </div>
             )}
 
@@ -189,6 +249,35 @@ export default function Register() {
         </div>
       </div>
     </>
+  );
+}
+
+// Componente para mostrar los requisitos de la contraseña
+function PasswordRequirements({ password }) {
+  const requirements = [
+    { text: "Mínimo 8 caracteres", test: password.length >= 8 },
+    { text: "Una mayúscula", test: /[A-Z]/.test(password) },
+    { text: "Una minúscula", test: /[a-z]/.test(password) },
+    { text: "Un número", test: /[0-9]/.test(password) },
+    { text: "Un símbolo", test: /[!@#$%^&*(),.?":{}|<>\-_\[\]\/\\+=~;']/.test(password) }
+  ];
+
+  return (
+    <div style={{ fontSize: "12px", lineHeight: "1.3" }}>
+      {requirements.map((req, index) => (
+        <div key={index} style={{ 
+          color: req.test ? "limegreen" : "#999",
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "2px"
+        }}>
+          <span style={{ marginRight: "5px" }}>
+            {req.test ? "✓" : "○"}
+          </span>
+          {req.text}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -244,12 +333,71 @@ const buttonStyle = {
   cursor: "pointer",
 };
 
+const tooltipStyle = {
+  position: "absolute",
+  top: "100%",
+  right: "0",
+  backgroundColor: "#fff",
+  border: "1px solid #ddd",
+  borderRadius: "6px",
+  padding: "12px",
+  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  zIndex: 10,
+  marginTop: "4px",
+  minWidth: "200px"
+};
+
+const infoIconStyle = {
+  position: "relative",
+  width: "16px",
+  height: "16px",
+  borderRadius: "50%",
+  backgroundColor: "#ff4d4f",
+  color: "white",
+  fontSize: "12px",
+  fontWeight: "bold",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "help"
+};
+
+// Función para obtener el color de la barra de progreso
+function getProgressColor(score) {
+  if (score <= 2) return "#ff4d4f"; // Rojo
+  if (score <= 3) return "#faad14"; // Amarillo
+  if (score <= 4) return "#52c41a"; // Verde claro
+  return "#389e0d"; // Verde oscuro
+}
+
+// Función mejorada para evaluar la fortaleza de la contraseña
 function getPasswordStrength(password) {
-  if (password.length < 8) return "débil";
-  if (!/[A-Z]/.test(password)) return "media";
-  if (!/[0-9]/.test(password)) return "media";
-  if (!/[!@#$%^&*]/.test(password)) return "media";
+  const validation = validatePassword(password);
+  
+  if (password.length === 0) return "";
+  if (validation.score <= 2) return "débil";
+  if (validation.score <= 4) return "media";
   return "fuerte";
+}
+
+// Función para validar todos los requisitos de la contraseña
+function validatePassword(password) {
+  const requirements = [
+    { name: "mínimo 8 caracteres", test: password.length >= 8 },
+    { name: "una mayúscula", test: /[A-Z]/.test(password) },
+    { name: "una minúscula", test: /[a-z]/.test(password) },
+    { name: "un número", test: /[0-9]/.test(password) },
+    { name: "un símbolo", test: /[!@#$%^&*(),.?":{}|<>\-_\[\]\/\\+=~;']/.test(password) }
+  ];
+
+  const passedRequirements = requirements.filter(req => req.test);
+  const missingRequirements = requirements.filter(req => !req.test).map(req => req.name);
+
+  return {
+    isValid: requirements.every(req => req.test),
+    score: passedRequirements.length,
+    missingRequirements
+  };
 }
 
 function getColorStrength(strength) {

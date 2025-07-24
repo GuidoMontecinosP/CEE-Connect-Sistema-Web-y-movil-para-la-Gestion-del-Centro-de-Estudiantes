@@ -51,7 +51,7 @@ export const verificarCorreo = async (req, res) => {
     if (!usuario) {       
       return res.status(404).json({ message: "Usuario no encontrado" });     
     }          
-    console.log(`usuario.verificado (antes):`, usuario.verificado);
+    //console.log(`usuario.verificado (antes):`, usuario.verificado);
 
     usuario.verificado = true;     
     await repo.save(usuario);          
