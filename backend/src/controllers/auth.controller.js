@@ -41,29 +41,41 @@ function generarTokenRecuperacion(usuario) {
   );
 }
 //  VERIFICAR CORREO
-export const verificarCorreo = async (req, res) => {   
-  const { token } = req.params;      
-  try {     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);     
-    const repo = AppDataSource.getRepository("Usuario");          
-    const usuario = await repo.findOneBy({ id: decoded.id });          
+export const verificarCorreo = async (req, res) => {
+    const { token } = req.params;
     
-    if (!usuario) {       
-      return res.status(404).json({ message: "Usuario no encontrado" });     
-    }          
-    //console.log(`usuario.verificado (antes):`, usuario.verificado);
-
-    usuario.verificado = true;     
-    await repo.save(usuario);          
-    
-    res.status(200).json({        
-      message: "Cuenta verificada con éxito.",       
-     verificado: true    
-    });   
-  } catch (err) {     
-    console.error("Error:", err);     
-    res.status(400).json({ message: "Token inválido o expirado." });   
-  } 
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const repo = AppDataSource.getRepository("Usuario");
+        
+        const usuario = await repo.findOneBy({ id: decoded.id });
+        
+        if (!usuario) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+        
+        // Verificar si ya estaba verificado
+        if (usuario.verificado) {
+            return res.status(200).json({
+                message: "Cuenta ya verificada anteriormente.",
+                verificado: true,
+                already_verified: true  // Agregar esta bandera
+            });
+        }
+        
+        // Si no estaba verificado, verificar ahora
+        usuario.verificado = true;
+        await repo.save(usuario);
+        
+        res.status(200).json({
+            message: "Cuenta verificada con éxito.",
+            verificado: true,
+            already_verified: false  // Agregar esta bandera
+        });
+    } catch (err) {
+        console.error("Error:", err);
+        res.status(400).json({ message: "Token inválido o expirado." });
+    }
 };
 
 export async function login(req, res) {
