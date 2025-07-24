@@ -3,7 +3,11 @@ import {
   crearVotacion, 
   obtenerVotacionPorId, 
   cerrarVotacion, 
-  obtenerResultados,obtenerParticipantes,publicarResultados
+  obtenerResultados,
+  obtenerParticipantes,
+  publicarResultados,
+  obtenerVotacionesPorEstado,
+  buscarVotaciones
 } from "../services/votacion.services.js";
 import { 
   emitirVoto, 
@@ -14,10 +18,46 @@ import
   
 export const getVotaciones = async (req, res) => {
   try {
-    const votaciones = await obtenerVotaciones();
+    // Obtener parámetros de paginación y filtros desde query params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const estado = req.query.estado;
+    const busqueda = req.query.busqueda;
+    const resultadosPublicados = req.query.resultadosPublicados;
+
+    // Construir objeto de filtros
+    const filtros = {};
+    if (resultadosPublicados !== undefined) {
+      filtros.resultadosPublicados = resultadosPublicados === 'true';
+    }
+    if (busqueda) {
+      filtros.busqueda = busqueda.trim();
+    }
+
+    let resultado;
+    
+    if (busqueda && !estado) {
+      // Búsqueda general sin filtro de estado
+      resultado = await buscarVotaciones(busqueda.trim(), page, limit, {
+        resultadosPublicados: filtros.resultadosPublicados
+      });
+    } else if (estado && !busqueda) {
+      // Filtro solo por estado
+      resultado = await obtenerVotacionesPorEstado(estado, page, limit, filtros);
+    } else if (estado && busqueda) {
+      // Búsqueda con filtro de estado
+      resultado = await buscarVotaciones(busqueda.trim(), page, limit, {
+        estado,
+        resultadosPublicados: filtros.resultadosPublicados
+      });
+    } else {
+      // Obtener todas las votaciones con filtros opcionales
+      resultado = await obtenerVotaciones(page, limit, filtros);
+    }
+
     res.json({
       success: true,
-      data: votaciones
+      ...resultado
     });
   } catch (error) {
     res.status(500).json({
@@ -62,7 +102,6 @@ export const createVotacion = async (req, res) => {
   }
 };
 
-
 export const getVotacionById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,6 +126,7 @@ export const getVotacionById = async (req, res) => {
     });
   }
 };
+
 export const votar = async (req, res) => {
   try {
     const { id: votacionId } = req.params;
@@ -219,13 +259,36 @@ export const getResultados = async (req, res) => {
 export const getParticipantes = async (req, res) => {
   try {
     const votacionId = parseInt(req.params.id, 10);
-    if (isNaN(votacionId)) return res.status(400).json({ success: false, message: "ID inválido" });
+    if (isNaN(votacionId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "ID inválido" 
+      });
+    }
 
-    const data = await obtenerParticipantes(votacionId);
-    return res.json({ success: true, ...data });
+    // Obtener parámetros de paginación y filtros
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const busqueda = req.query.busqueda;
+
+    // Construir objeto de filtros
+    const filtros = {};
+    if (busqueda) {
+      filtros.busqueda = busqueda.trim();
+    }
+
+    const resultado = await obtenerParticipantes(votacionId, page, limit, filtros);
+    
+    return res.json({ 
+      success: true, 
+      ...resultado 
+    });
   } catch (error) {
     const code = error.message.includes("no encontrada") ? 404 : 500;
-    return res.status(code).json({ success: false, message: error.message });
+    return res.status(code).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 
@@ -233,10 +296,14 @@ export const putPublicarResultados = async (req, res) => {
   try {
     const { id } = req.params;
     const resultado = await publicarResultados(id);
-    res.json(resultado);
+    res.json({
+      success: true,
+      ...resultado
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
-
-

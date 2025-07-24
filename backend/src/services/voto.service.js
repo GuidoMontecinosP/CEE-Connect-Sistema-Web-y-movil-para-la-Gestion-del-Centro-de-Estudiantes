@@ -1,4 +1,5 @@
 import { AppDataSource } from "../config/configDb.js";
+import { randomUUID } from 'crypto';
 const votacionRepo = AppDataSource.getRepository("Votacion");
 const respuestaRepo = AppDataSource.getRepository("RespuestaVotacion");
 const tokenRepo = AppDataSource.getRepository("TokenVotacion");
@@ -7,7 +8,8 @@ const opcionRepo = AppDataSource.getRepository("OpcionVotacion");
 
 
 export const emitirVoto = async ({ usuarioId, votacionId, opcionId }) => {
-  const { randomUUID } = await import('crypto');
+  
+
 
   // Verificar que la votación existe y está activa
   const votacion = await votacionRepo.findOneBy({ 

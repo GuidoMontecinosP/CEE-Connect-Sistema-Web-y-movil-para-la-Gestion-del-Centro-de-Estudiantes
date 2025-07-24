@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { votacionService } from '../services/votacion.services';
 import {
-  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu, Input,Breadcrumb
+  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Table, Menu, Input,Breadcrumb, ConfigProvider
 } from 'antd';
 import {
   ArrowLeftOutlined, CheckCircleOutlined, StopOutlined, UserOutlined,
   CalendarOutlined, FileTextOutlined, PieChartOutlined, CarryOutOutlined,
   EyeOutlined, AuditOutlined, DesktopOutlined, SearchOutlined
 } from '@ant-design/icons';
-
+import esES from 'antd/locale/es_ES';
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 import MainLayout from '../components/MainLayout';
@@ -175,6 +175,7 @@ function VerVotacion() {
   }
 
   return (
+    <ConfigProvider locale={esES}> 
     <MainLayout
     selectedKeyOverride="1" 
     breadcrumb={
@@ -298,6 +299,7 @@ function VerVotacion() {
           </div>
         </Content>
       </MainLayout>
+      </ConfigProvider>
   );
 }
 

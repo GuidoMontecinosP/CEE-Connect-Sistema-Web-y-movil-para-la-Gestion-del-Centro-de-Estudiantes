@@ -16,6 +16,7 @@ import {
   DatePicker,ConfigProvider
 } from 'antd';
 import {
+  PlusOutlined,
   SearchOutlined,
   MessageOutlined,
   EditOutlined,
@@ -893,9 +894,10 @@ return null;
             <Button
               type='primary'
               size='large'
-              style={{ backgroundColor: '#1e3a8a', borderRadius: 8, fontWeight: 'bold' }}
+              style={{ backgroundColor: '#1e3a8a', borderRadius: 8, fontWeight: 'bold', height: 48 }}
+              icon={<PlusOutlined />}
               onClick={() => navigate('/sugerencias/nueva')}>
-              + Nueva sugerencia
+              Nueva sugerencia
             </Button>
           </div>
         )}

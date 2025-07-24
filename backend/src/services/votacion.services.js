@@ -1,25 +1,56 @@
 import { AppDataSource } from "../config/configDb.js";
-import { Not, IsNull } from "typeorm";
-
+import { Not, IsNull, Like } from "typeorm";
 
 const votacionRepo = AppDataSource.getRepository("Votacion");
 const opcionRepo = AppDataSource.getRepository("OpcionVotacion");
 const respuestaRepo = AppDataSource.getRepository("RespuestaVotacion");
 
-export const obtenerVotaciones = async () => {
+export const obtenerVotaciones = async (page = 1, limit = 10, filtros = {}) => {
+  // Validar parámetros
+  const pageNumber = Math.max(1, parseInt(page));
+  const limitNumber = Math.min(Math.max(1, parseInt(limit)), 50); // Máximo 50 por página
+  const skip = (pageNumber - 1) * limitNumber;
+
+  // Construir condiciones de búsqueda
+  const whereConditions = {};
+  
+  // Filtro por estado
+  if (filtros.estado) {
+    whereConditions.estado = filtros.estado;
+  }
+  
+  // Filtro por búsqueda en el título
+  if (filtros.busqueda) {
+    whereConditions.titulo = Like(`%${filtros.busqueda}%`);
+  }
+
+  // Filtro por resultados publicados (solo para votaciones cerradas)
+  if (filtros.resultadosPublicados !== undefined) {
+    whereConditions.resultadosPublicados = filtros.resultadosPublicados;
+  }
+
+  // Obtener total de registros con filtros aplicados
+  const total = await votacionRepo.count({ where: whereConditions });
+  
   const votaciones = await votacionRepo.find({
+    where: whereConditions,
     relations: {
       opciones: true,
     },
     order: {
       fechaCreacion: "DESC",
     },
+    skip: skip,
+    take: limitNumber,
   });
 
   // Ordenar: activas primero, luego cerradas por fecha de cierre DESC, luego publicadas por fecha de publicación DESC
-  return votaciones.sort((a, b) => {
- 
-    // 3. Si ambas están cerradas, separar por si están publicadas o no
+  const votacionesOrdenadas = votaciones.sort((a, b) => {
+    // Prioridad: activas primero
+    if (a.estado === "activa" && b.estado !== "activa") return -1;
+    if (a.estado !== "activa" && b.estado === "activa") return 1;
+    
+    // Si ambas están cerradas, separar por si están publicadas o no
     if (a.estado === "cerrada" && b.estado === "cerrada") {
       // Las no publicadas van antes que las publicadas
       if (!a.resultadosPublicados && b.resultadosPublicados) return -1;
@@ -38,7 +69,28 @@ export const obtenerVotaciones = async () => {
     // Fallback: ordenar por fecha de creación
     return new Date(b.fechaCreacion) - new Date(a.fechaCreacion);
   });
+
+  // Calcular información de paginación
+  const totalPages = Math.ceil(total / limitNumber);
+  const hasNextPage = pageNumber < totalPages;
+  const hasPrevPage = pageNumber > 1;
+
+  return {
+    data: votacionesOrdenadas,
+    filtros: filtros, // Devolver los filtros aplicados
+    pagination: {
+      currentPage: pageNumber,
+      totalPages,
+      totalItems: total,
+      itemsPerPage: limitNumber,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? pageNumber + 1 : null,
+      prevPage: hasPrevPage ? pageNumber - 1 : null
+    }
+  };
 };
+
 export const crearVotacion = async (data) => {
   const { titulo, opciones } = data;
 
@@ -47,7 +99,6 @@ export const crearVotacion = async (data) => {
     throw new Error("Debe haber al menos 2 opciones para votar");
   }
 
-  
   if (opciones.length > 10) {
     throw new Error("Máximo 10 opciones permitidas");
   }
@@ -100,7 +151,6 @@ export const cerrarVotacion = async (votacionId) => {
     { 
       estado: "cerrada",
       fechaCierre: now,
-    
     }
   );
 
@@ -122,7 +172,6 @@ export const obtenerResultados = async (votacionId) => {
     throw new Error("Votación no encontrada");
   }
 
-  
   const resultados = [];
   
   for (const opcion of votacion.opciones) {
@@ -150,40 +199,80 @@ export const obtenerResultados = async (votacionId) => {
   };
 };
 
-export const obtenerParticipantes = async (votacionId) => {
+export const obtenerParticipantes = async (votacionId, page = 1, limit = 20, filtros = {}) => {
+  // Validar parámetros
+  const pageNumber = Math.max(1, parseInt(page));
+  const limitNumber = Math.min(Math.max(1, parseInt(limit)), 100); // Máximo 100 participantes por página
+  const skip = (pageNumber - 1) * limitNumber;
+
   // 1) Validar existencia de la votación
   const votacion = await votacionRepo.findOneBy({ id: votacionId });
   if (!votacion) throw new Error("Votación no encontrada");
 
-  // 2) Obtener todas las respuestas con su usuario
-  const respuestas = await respuestaRepo.find({
-    where: { opcion: { votacion: { id: votacionId } } },
-    relations: { usuario: true },
-    order: { fechaVoto: "DESC" }
+  // Construir condiciones de búsqueda
+  const whereConditions = { 
+    opcion: { votacion: { id: votacionId } } 
+  };
+
+  // Filtro por búsqueda en nombre o correo del usuario
+  if (filtros.busqueda) {
+    whereConditions.usuario = [
+      { nombre: Like(`%${filtros.busqueda}%`) },
+      { correo: Like(`%${filtros.busqueda}%`) }
+    ];
+  }
+
+  // 2) Contar total de participantes con filtros
+  const totalParticipantes = await respuestaRepo.count({
+    where: whereConditions,
+    relations: { usuario: true }
   });
 
-  // 3) Formatear el array para el frontend
+  // 3) Obtener respuestas paginadas con su usuario
+  const respuestas = await respuestaRepo.find({
+    where: whereConditions,
+    relations: { usuario: true, opcion: true },
+    order: { fechaVoto: "DESC" },
+    skip: skip,
+    take: limitNumber
+  });
+
+  // 4) Formatear el array para el frontend
   const participantes = respuestas.map(r => ({
     usuario: {
-      id:     r.usuario?.id,
-      nombre: r.usuario?.nombre  || "Sin nombre",
-      correo: r.usuario?.correo  || "Sin correo"
+      id: r.usuario?.id,
+      nombre: r.usuario?.nombre || "Sin nombre",
+      correo: r.usuario?.correo || "Sin correo"
     },
+    opcionVotada: r.opcion?.textoOpcion,
     fechaVoto: r.fechaVoto
   }));
 
-  // 4) Total de votos (incluye todos)
-  const totalVotos = respuestas.length;
+  // 5) Calcular información de paginación
+  const totalPages = Math.ceil(totalParticipantes / limitNumber);
+  const hasNextPage = pageNumber < totalPages;
+  const hasPrevPage = pageNumber > 1;
 
-  // 5) Devolver el paquete completo
+  // 6) Devolver el paquete completo
   return {
     votacion: {
-      id:     votacion.id,
+      id: votacion.id,
       titulo: votacion.titulo,
       estado: votacion.estado
     },
-    totalVotos,
-    participantes
+    totalVotos: totalParticipantes,
+    participantes,
+    filtros: filtros, // Devolver los filtros aplicados
+    pagination: {
+      currentPage: pageNumber,
+      totalPages,
+      totalItems: totalParticipantes,
+      itemsPerPage: limitNumber,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? pageNumber + 1 : null,
+      prevPage: hasPrevPage ? pageNumber - 1 : null
+    }
   };
 };
 
@@ -216,4 +305,98 @@ export const publicarResultados = async (votacionId) => {
   return { mensaje: "Resultados publicados correctamente" };
 };
 
+// Función auxiliar para obtener votaciones por estado con paginación
+export const obtenerVotacionesPorEstado = async (estado, page = 1, limit = 10, filtros = {}) => {
+  const pageNumber = Math.max(1, parseInt(page));
+  const limitNumber = Math.min(Math.max(1, parseInt(limit)), 50);
+  const skip = (pageNumber - 1) * limitNumber;
 
+  // Construir condiciones de búsqueda
+  const whereConditions = { estado };
+  
+  // Filtro por búsqueda en el título
+  if (filtros.busqueda) {
+    whereConditions.titulo = Like(`%${filtros.busqueda}%`);
+  }
+
+  // Filtro por resultados publicados (solo para votaciones cerradas)
+  if (filtros.resultadosPublicados !== undefined && estado === "cerrada") {
+    whereConditions.resultadosPublicados = filtros.resultadosPublicados;
+  }
+
+  const [votaciones, total] = await votacionRepo.findAndCount({
+    where: whereConditions,
+    relations: { opciones: true },
+    order: { fechaCreacion: "DESC" },
+    skip: skip,
+    take: limitNumber
+  });
+
+  const totalPages = Math.ceil(total / limitNumber);
+  const hasNextPage = pageNumber < totalPages;
+  const hasPrevPage = pageNumber > 1;
+
+  return {
+    data: votaciones,
+    filtros: { estado, ...filtros }, // Devolver los filtros aplicados
+    pagination: {
+      currentPage: pageNumber,
+      totalPages,
+      totalItems: total,
+      itemsPerPage: limitNumber,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? pageNumber + 1 : null,
+      prevPage: hasPrevPage ? pageNumber - 1 : null
+    }
+  };
+};
+
+// Nueva función para búsqueda avanzada de votaciones
+export const buscarVotaciones = async (termino, page = 1, limit = 10, filtros = {}) => {
+  const pageNumber = Math.max(1, parseInt(page));
+  const limitNumber = Math.min(Math.max(1, parseInt(limit)), 50);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  // Construir condiciones de búsqueda
+  const whereConditions = {
+    titulo: Like(`%${termino}%`)
+  };
+
+  // Aplicar filtros adicionales
+  if (filtros.estado) {
+    whereConditions.estado = filtros.estado;
+  }
+
+  if (filtros.resultadosPublicados !== undefined) {
+    whereConditions.resultadosPublicados = filtros.resultadosPublicados;
+  }
+
+  const [votaciones, total] = await votacionRepo.findAndCount({
+    where: whereConditions,
+    relations: { opciones: true },
+    order: { fechaCreacion: "DESC" },
+    skip: skip,
+    take: limitNumber
+  });
+
+  const totalPages = Math.ceil(total / limitNumber);
+  const hasNextPage = pageNumber < totalPages;
+  const hasPrevPage = pageNumber > 1;
+
+  return {
+    data: votaciones,
+    termino: termino,
+    filtros: filtros,
+    pagination: {
+      currentPage: pageNumber,
+      totalPages,
+      totalItems: total,
+      itemsPerPage: limitNumber,
+      hasNextPage,
+      hasPrevPage,
+      nextPage: hasNextPage ? pageNumber + 1 : null,
+      prevPage: hasPrevPage ? pageNumber - 1 : null
+    }
+  };
+};

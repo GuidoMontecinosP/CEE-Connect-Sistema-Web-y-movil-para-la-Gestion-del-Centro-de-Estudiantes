@@ -1,46 +1,91 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { votacionService } from '../services/votacion.services';
 import { votoService } from '../services/voto.services';
-import { Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, Divider, Radio, Badge, ConfigProvider,Breadcrumb, Modal } from 'antd';
-import { CheckCircleOutlined, StopOutlined, BarChartOutlined, FilterOutlined, PlusOutlined, EyeOutlined, CheckOutlined,FileTextOutlined,PieChartOutlined,DesktopOutlined,CarryOutOutlined,AuditOutlined,SendOutlined  } from '@ant-design/icons';
+import { 
+  Layout, Card, Button, Typography, Space, Row, Col, Tag, Spin, message, 
+  Divider, Radio, Badge, ConfigProvider, Modal, Input, Pagination, Empty, Select 
+} from 'antd';
+import { 
+  CheckCircleOutlined, StopOutlined, BarChartOutlined, FilterOutlined, 
+  PlusOutlined, EyeOutlined, CheckOutlined, SendOutlined, SearchOutlined,
+  ReloadOutlined, ClearOutlined
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import esES from 'antd/locale/es_ES';
-import MainLayout from '../components/MainLayout';    
-const { Content, Sider } = Layout;
+import MainLayout from '../components/MainLayout';
+import { debounce } from 'lodash';
+
+const { Content } = Layout;
 const { Title, Text } = Typography;
+const { Search } = Input;
+const { Option } = Select;
 
 function ListarVotaciones() {
   const [votaciones, setVotaciones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtroEstado, setFiltroEstado] = useState('activa'); 
+  const [filtroEstado, setFiltroEstado] = useState('todas');
+  const [filtroResultados, setFiltroResultados] = useState(null);
+  const [terminoBusqueda, setTerminoBusqueda] = useState('');
   const [cerrandoVotacion, setCerrandoVotacion] = useState(null);
   const [publicandoResultados, setPublicandoResultados] = useState(null);
-  const [votosUsuario, setVotosUsuario] = useState({}); // Para guardar qué votaciones ya votó el usuario
+  const [votosUsuario, setVotosUsuario] = useState({});
+  
+  // Estados para paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPorPagina, setItemsPorPagina] = useState(10);
+  const [pagination, setPagination] = useState({});
+  
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
   const [messageApi, contextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
 
-
   // Verificar roles del usuario
   const esAdministrador = usuario?.rol?.nombre === 'administrador';
   const esEstudiante = usuario?.rol?.nombre === 'estudiante';
   const usuarioId = usuario?.id;
 
-  useEffect(() => {
-    cargarVotaciones();
-  }, []);
-
-  const cargarVotaciones = async () => {
+  // Función para cargar votaciones con filtros y paginación
+  const cargarVotaciones = useCallback(async (resetPage = false) => {
     setLoading(true);
     try {
-      const res = await votacionService.obtenerVotaciones();
+      const page = resetPage ? 1 : paginaActual;
+      
+      // Construir parámetros de consulta
+      const parametros = {
+        page,
+        limit: itemsPorPagina
+      };
+
+      // Agregar filtros solo si están definidos
+      if (filtroEstado && filtroEstado !== 'todas') {
+        if (filtroEstado === 'publicadas') {
+          parametros.estado = 'cerrada';
+          parametros.resultadosPublicados = true;
+        } else if (filtroEstado === 'cerrada') {
+          parametros.estado = 'cerrada';
+          // Si hay filtro de resultados específico, aplicarlo
+          if (filtroResultados !== null) {
+            parametros.resultadosPublicados = filtroResultados;
+          }
+        } else {
+          parametros.estado = filtroEstado;
+        }
+      }
+
+      if (terminoBusqueda?.trim()) {
+        parametros.busqueda = terminoBusqueda.trim();
+      }
+
+      const res = await votacionService.obtenerVotaciones(parametros);
       let votacionesData = res.data;
       
-      // Si no es administrador, mostrar votaciones activas y cerradas con resultados publicados
-      if (!esAdministrador) {
+      // Filtrar según el rol del usuario
+      if (esEstudiante) {
+        // Los estudiantes solo pueden ver votaciones activas y cerradas con resultados publicados
         votacionesData = votacionesData.filter(votacion => 
           votacion.estado === 'activa' || 
           (votacion.estado === 'cerrada' && votacion.resultadosPublicados)
@@ -48,13 +93,17 @@ function ListarVotaciones() {
       }
       
       setVotaciones(votacionesData);
+      setPagination(res.pagination);
+      setTotalItems(res.pagination.totalItems);
       
+      if (resetPage) {
+        setPaginaActual(1);
+      }
 
       // Verificar qué votaciones ya votó el usuario
       if (usuarioId && votacionesData.length > 0) {
         const votosStatus = {};
         
-        // Crear promesas para verificar cada votación
         const verificaciones = votacionesData.map(async (votacion) => {
           try {
             const yaVotoRes = await votoService.verificarSiYaVoto(usuarioId, votacion.id);
@@ -69,12 +118,32 @@ function ListarVotaciones() {
         setVotosUsuario(votosStatus);
       }
       
-      setLoading(false);
     } catch (err) {
       messageApi.error(`Error al cargar votaciones: ${err.message}`);
+    } finally {
       setLoading(false);
     }
-  };
+  }, [paginaActual, itemsPorPagina, filtroEstado, filtroResultados, terminoBusqueda, esEstudiante, usuarioId, messageApi]);
+
+  // Búsqueda con debounce
+  const debouncedBusqueda = useCallback(
+    debounce((termino) => {
+      setTerminoBusqueda(termino);
+      setPaginaActual(1); // Resetear a página 1 al buscar
+    }, 500),
+    []
+  );
+
+  // Efectos
+  useEffect(() => {
+    cargarVotaciones(true);
+  }, [filtroEstado, filtroResultados, terminoBusqueda, itemsPorPagina]);
+
+  useEffect(() => {
+    if (paginaActual > 1) {
+      cargarVotaciones();
+    }
+  }, [paginaActual]);
 
   const handleCerrarVotacion = async (votacion) => {
     if (!esAdministrador) {
@@ -107,17 +176,12 @@ function ListarVotaciones() {
           
           await votacionService.cerrarVotacion(votacion.id);
           
-          setVotaciones(prevVotaciones => 
-            prevVotaciones.map(v => 
-              v.id === votacion.id 
-                ? { ...v, estado: 'cerrada', resultadosPublicados: false }
-                : v
-            )
-          );
+          // Recargar votaciones después de cerrar
+          cargarVotaciones();
           
           messageApi.success({
             content: `La votación "${votacion.titulo}" ha sido cerrada exitosamente. Ahora puedes publicar los resultados cuando desees.`,
-            duration: 4
+            duration: 3
           });
           
         } catch (error) {
@@ -129,7 +193,6 @@ function ListarVotaciones() {
       }
     });
   };
-
 
   const handlePublicarResultados = async (votacion) => {
     if (!esAdministrador) {
@@ -162,13 +225,8 @@ function ListarVotaciones() {
           
           await votacionService.publicarResultados(votacion.id);
           
-          setVotaciones(prevVotaciones => 
-            prevVotaciones.map(v => 
-              v.id === votacion.id 
-                ? { ...v, resultadosPublicados: true }
-                : v
-            )
-          );
+          // Recargar votaciones después de publicar
+          cargarVotaciones();
           
           messageApi.success({
             content: `Los resultados de "${votacion.titulo}" ahora son visibles para todos los usuarios.`,
@@ -215,183 +273,162 @@ function ListarVotaciones() {
     );
   };
 
-  // Opciones de filtro disponibles según el rol del usuario
-  const getFiltroOptions = () => {
-    if (esAdministrador) {
-      // Para administradores: todas las opciones
-      return [
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-              <span>Activas</span>
-              <Badge count={votaciones.filter(v => v.estado === 'activa').length} style={{ backgroundColor: '#52c41a' }} size="small" />
-            </div>
-          ),
-          value: 'activa'
-        },
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <StopOutlined style={{ color: '#8c8c8c' }} />
-              <span>Cerradas</span>
-              <Badge count={votaciones.filter(v => v.estado === 'cerrada').length} style={{ backgroundColor: '#8c8c8c' }} size="small" />
-            </div>
-          ),
-          value: 'cerrada'
-        },
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FilterOutlined style={{ color: '#1e3a8a' }} />
-              <span>Todas</span>
-              <Badge count={votaciones.length} style={{ backgroundColor: '#1e3a8a' }} size="small" />
-            </div>
-          ),
-          value: 'todas'
-        }
-      ];
-    } else {
-      // Para estudiantes: solo activas, publicadas y todas
-      return [
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-              <span>Activas</span>
-              <Badge count={votaciones.filter(v => v.estado === 'activa').length} style={{ backgroundColor: '#52c41a' }} size="small" />
-            </div>
-          ),
-          value: 'activa'
-        },
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BarChartOutlined style={{ color: '#1890ff' }} />
-              <span>Publicadas</span>
-              <Badge count={votaciones.filter(v => v.estado === 'cerrada' && v.resultadosPublicados).length} style={{ backgroundColor: '#1890ff' }} size="small" />
-            </div>
-          ),
-          value: 'publicadas'
-        },
-        {
-          label: (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FilterOutlined style={{ color: '#1e3a8a' }} />
-              <span>Todas</span>
-              <Badge count={votaciones.length} style={{ backgroundColor: '#1e3a8a' }} size="small" />
-            </div>
-          ),
-          value: 'todas'
-        }
-      ];
-    }
+  // Limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setFiltroEstado('todas');
+    setFiltroResultados(null);
+    setTerminoBusqueda('');
+    setPaginaActual(1);
   };
 
-  const filtroOptions = getFiltroOptions();
+  // Verificar si hay filtros activos
+  const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null || terminoBusqueda.trim() !== '';
 
-  // CAMBIO: Mejorar la lógica de filtrado
-  const votacionesFiltradas = () => {
-    if (filtroEstado === 'todas') {
-      return votaciones;
-    } else if (filtroEstado === 'activa') {
-      return votaciones.filter(votacion => votacion.estado === 'activa');
-    } else if (filtroEstado === 'cerrada') {
-      return votaciones.filter(votacion => votacion.estado === 'cerrada');
-    } else if (filtroEstado === 'publicadas') {
-      return votaciones.filter(votacion => votacion.estado === 'cerrada' && votacion.resultadosPublicados);
+  // Manejar cambio de estado y limpiar filtro de resultados si es necesario
+  const handleCambioEstado = (valor) => {
+    setFiltroEstado(valor || 'todas');
+    // Si no es "cerrada", limpiar el filtro de resultados
+    if (valor !== 'cerrada') {
+      setFiltroResultados(null);
     }
-    return votaciones;
+    setPaginaActual(1);
   };
 
-  
-  // CAMBIO: Establecer filtro inicial según el rol
-  useEffect(() => {
-    if (esAdministrador && filtroEstado === 'publicadas') {
-      setFiltroEstado('todas');
+  // Cambiar página
+  const handleCambiarPagina = (page, size) => {
+    setPaginaActual(page);
+    if (size !== itemsPorPagina) {
+      setItemsPorPagina(size);
     }
-  }, [esAdministrador]);
+  };
 
   return (
-    
     <ConfigProvider locale={esES}>
-      <MainLayout
-      selectedKeyOverride="1" 
-    breadcrumb
-  >
-    {contextHolder}
-{modalContextHolder}
-          <Content style={{ padding: '12px 24px' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                <div>
-                  <Title level={1} style={{ color: '#1e3a8a', marginBottom: 6,  }}>
-                    Listado de Votaciones
-                   
-                  </Title>
-                  <Text style={{ fontSize: 16, color: '#64748b' }}>
-                    {esAdministrador 
-                      ? 'Gestiona y monitorea todas las votaciones del sistema'
-                      : 'Consulta las votaciones activas y resultados publicados'
-                    }
-                  </Text>
-                </div>
-                {esAdministrador && (
-                  <Button
-                    type="primary"
+      <MainLayout selectedKeyOverride="1" breadcrumb>
+        {contextHolder}
+        {modalContextHolder}
+        <Content style={{ padding: '12px 24px' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+              <div>
+                <Title level={1} style={{ color: '#1e3a8a', marginBottom: 6 }}>
+                  Listado de Votaciones
+                </Title>
+                <Text style={{ fontSize: 16, color: '#64748b' }}>
+                  {esAdministrador 
+                    ? 'Gestiona y monitorea todas las votaciones del sistema'
+                    : 'Consulta las votaciones activas y resultados publicados'
+                  }
+                </Text>
+              </div>
+              {esAdministrador && (
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/crear')}
+                  style={{
+                    backgroundColor: '#1e3a8a',
+                    borderColor: '#1e3a8a',
+                    borderRadius: 8,
+                    height: 48,
+                    paddingLeft: 24,
+                    paddingRight: 24,
+                    fontSize: 16,
+                    fontWeight: 500
+                  }}
+                >
+                  Nueva Votación
+                </Button>
+              )}
+            </div>
+
+            {/* Filtros y búsqueda */}
+              <div style={{ marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Input
+                  placeholder="Buscar votaciones..."
+                  prefix={<SearchOutlined style={{ color: '#1e3a8a' }} />}
+                  allowClear
+                  size="medium"
+                  style={{ width: 300, borderRadius: 8 }}
+                  onChange={(e) => debouncedBusqueda(e.target.value)}
+                  onClear={() => {
+                    setTerminoBusqueda('');
+                    setPaginaActual(1);
+                  }}
+                />
+
+                <Select
+                  placeholder="Filtrar por estado"
+                  value={filtroEstado}
+                  onChange={handleCambioEstado}
+                  style={{ width: 200 }}
+                  size="medium"
+                >
+                  <Option value="todas">Todas</Option>
+                  <Option value="activa">Activas</Option>
+                  {esAdministrador && <Option value="cerrada">Cerradas</Option>}
+                  <Option value="publicadas">Publicadas</Option>
+                </Select>
+
+                {/* Filtro de resultados - solo aparece si es admin y seleccionó "cerrada" */}
+                {esAdministrador && filtroEstado === 'cerrada' && (
+                  <Select
+                    placeholder="Filtrar por resultados"
+                    value={filtroResultados}
+                    onChange={setFiltroResultados}
+                    style={{ width: 200 }}
                     size="large"
-                    icon={<PlusOutlined />}
-                    onClick={() => window.location.href = '/crear'}
-                    style={{
-                      backgroundColor: '#1e3a8a',
-                      borderColor: '#1e3a8a',
-                      borderRadius: 8,
-                      height: 48,
-                      paddingLeft: 24,
-                      paddingRight: 24,
-                      fontSize: 16,
-                      fontWeight: 500
-                    }}
+                    allowClear
                   >
-                    Nueva Votación
-                  </Button>
+                    <Option value={true}>Publicadas</Option>
+                    <Option value={false}>Sin publicar</Option>
+                  </Select>
+                )}
+
+                {/* Botones para limpiar filtros y actualizar */}
+                {hayFiltrosActivos && (
+                  <>
+                    
+                    <Button 
+                      icon={<ClearOutlined />} 
+                      onClick={limpiarFiltros}
+                      size= "medium"
+                    >
+                      Limpiar Filtros
+                    </Button>
+                  </>
                 )}
               </div>
+           
 
-              {/* Mostrar filtros */}
-              <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 32,padding: 24 }} >
-                <Title level={4} style={{ color: '#1e3a8a', margin: 0, display: 'flex', alignItems: 'center' }}>
-                  <FilterOutlined style={{ marginRight: 8 }} />
-                  Filtrar por Estado
-                </Title>
-                <Radio.Group value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} style={{ width: '100%' }}>
-                  <Row gutter={[16, 16]}>
-                    {filtroOptions.map(option => (
-                      <Col xs={24} sm={12} md={8} key={option.value}>
-                        <Radio.Button value={option.value} style={{ width: '100%', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
-                          {option.label}
-                        </Radio.Button>
-                      </Col>
-                    ))}
-                  </Row>
-                </Radio.Group>
-              </Card>
-
-             {loading ? (
-                <div style={{ textAlign: 'center', padding: '80px 0' }}>
-                  <Spin size="large" />
-                  <div style={{ marginTop: 16 }}>
-                    <Text style={{ color: '#64748b' }}>Cargando votaciones...</Text>
-                  </div>
+            {/* Lista de votaciones */}
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '80px 0' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: 16 }}>
+                  <Text style={{ color: '#64748b' }}>Cargando votaciones...</Text>
                 </div>
-              ) : (
+              </div>
+            ) : votaciones.length === 0 ? (
+              <Empty
+                description={
+                  terminoBusqueda 
+                    ? `No se encontraron votaciones para "${terminoBusqueda}"`
+                    : "No hay votaciones disponibles"
+                }
+                style={{ padding: '80px 0' }}
+              />
+            ) : (
+              <>
                 <Row gutter={[24, 24]}>
-                  {votacionesFiltradas().map(votacion => {
+                  {votaciones.map(votacion => {
                     const yaVoto = votosUsuario[votacion.id];
                     
                     return (
                       <Col xs={24} lg={12} key={votacion.id}>
-                        <Card hoverable style={{ borderRadius: 12, border: '1px solid #e2e8f0', height: '100%', padding: 24 }} >
+                        <Card hoverable style={{ borderRadius: 12, border: '1px solid #e2e8f0', height: '100%' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                             <Title level={4} style={{ color: '#1e3a8a', margin: 0, flex: 1 }}>
                               {votacion.titulo}
@@ -415,7 +452,7 @@ function ListarVotaciones() {
                                       icon={yaVoto ? <CheckOutlined /> : <CheckCircleOutlined />}
                                       onClick={() => {
                                         if (!yaVoto) {
-                                          window.location.href = `/votacion/${votacion.id}/votar`;
+                                          navigate(`/votacion/${votacion.id}/votar`);
                                         }
                                       }}
                                       disabled={yaVoto}
@@ -445,7 +482,7 @@ function ListarVotaciones() {
                                     <Button
                                       block
                                       icon={<BarChartOutlined />}
-                                      onClick={() => window.location.href = `/votacion/${votacion.id}/resultados`}
+                                      onClick={() => navigate(`/votacion/${votacion.id}/resultados`)}
                                       style={{
                                         backgroundColor: '#1e3a8a',
                                         borderColor: '#1e3a8a',
@@ -473,7 +510,7 @@ function ListarVotaciones() {
                                     <Button
                                       block
                                       icon={<EyeOutlined />}
-                                      onClick={() => window.location.href = `/votacion/${votacion.id}`}
+                                      onClick={() => navigate(`/votacion/${votacion.id}`)}
                                       style={{ 
                                         borderColor: '#1e3a8a', 
                                         color: '#1e3a8a', 
@@ -493,7 +530,7 @@ function ListarVotaciones() {
                                     <Button
                                       block
                                       icon={<BarChartOutlined />}
-                                      onClick={() => window.location.href = `/votacion/${votacion.id}/resultados`}
+                                      onClick={() => navigate(`/votacion/${votacion.id}/resultados`)}
                                       style={{
                                         backgroundColor: '#f8f9fa',
                                         borderColor: '#64748b',
@@ -519,7 +556,7 @@ function ListarVotaciones() {
                                       icon={votacion.estado === 'activa' && !yaVoto ? <CheckCircleOutlined /> : <CheckOutlined />}
                                       onClick={() => {
                                         if (votacion.estado === 'activa' && !yaVoto) {
-                                          window.location.href = `/votacion/${votacion.id}/votar`;
+                                          navigate(`/votacion/${votacion.id}/votar`);
                                         }
                                       }}
                                       disabled={yaVoto || votacion.estado === 'cerrada'}
@@ -618,10 +655,41 @@ function ListarVotaciones() {
                     );
                   })}
                 </Row>
-              )}
-            </div>
-          </Content>
-        </MainLayout>
+
+                {/* Información de resultados y Paginación */}
+                {totalItems > 0 && (
+                  <div style={{ marginTop: 32 }}>
+                    {/* Información de resultados */}
+                    <div style={{ marginBottom: 16, textAlign: 'center' }}>
+                      <Text style={{ color: '#64748b' }}>
+                        Mostrando {((paginaActual - 1) * itemsPorPagina) + 1} - {Math.min(paginaActual * itemsPorPagina, totalItems)} de {totalItems} votaciones
+                        {terminoBusqueda && ` para "${terminoBusqueda}"`}
+                      </Text>
+                    </div>
+
+                    {/* Paginación */}
+                    <div style={{ textAlign: 'center' }}>
+                      <Pagination
+                        current={paginaActual}
+                        total={totalItems}
+                        pageSize={itemsPorPagina}
+                        onChange={handleCambiarPagina}
+                        onShowSizeChange={handleCambiarPagina}
+                        showSizeChanger
+                        showQuickJumper
+                        showTotal={(total, range) => 
+                          `${range[0]}-${range[1]} de ${total} votaciones`
+                        }
+                        pageSizeOptions={['10', '20', '50']}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Content>
+      </MainLayout>
     </ConfigProvider>
   );
 }
