@@ -38,7 +38,7 @@ export const crearEventoValidation = Joi.object({
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
 
-            // Evita interpretación UTC: usamos el string directamente
+            
             const [anio, mes, dia] = value.split("-").map(Number);
             const fechaEvento = new Date(anio, mes - 1, dia); // Mes 0-indexado
             fechaEvento.setHours(0, 0, 0, 0);
@@ -92,7 +92,7 @@ export const crearEventoValidation = Joi.object({
         }),
 
     tipo: Joi.string()
-        .valid("Reunión", "Taller", "Charla", "Recreativo", "otro", "Conferencia")
+        .valid("Reunión", "Taller", "Charla", "Recreativo", "Otro", "Conferencia")
         .required()
         .messages({
             "any.only": "El tipo de evento no es válido.",
@@ -199,6 +199,14 @@ export const modificarEventoValidation = Joi.object({
         .messages({
             "any.only": "El tipo de evento no es válido.",
             "any.required": "El tipo es obligatorio.",
+        }),
+    
+    imagen: Joi.string()
+        .optional()
+        .allow("")
+        .messages({
+            "string.base": "La imagen debe ser una URL válida.",
+            "any.required": "La imagen es opcional.",
         }),
 });
 

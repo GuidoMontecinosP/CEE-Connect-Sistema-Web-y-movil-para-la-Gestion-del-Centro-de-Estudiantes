@@ -25,6 +25,7 @@ function CrearEvento() {
   const [fecha, setFecha] = useState(null);
   const [hora, setHora] = useState(null);
   const [lugar, setLugar] = useState('');
+  const [imagen, setImagen] = useState(null);
   const [tipo, setTipo] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -38,15 +39,19 @@ function CrearEvento() {
     }
     setLoading(true);
     try {
-      const data = {
-        titulo,
-        descripcion,
-        fecha: fecha.format('YYYY-MM-DD'),
-        hora: hora.format('HH:mm'),
-        lugar,
-        tipo
-      };
-      const response = await crearEvento(data);
+      const formData = new FormData();
+      formData.append('titulo', titulo);
+      formData.append('descripcion', descripcion);
+      formData.append('fecha', fecha.format('YYYY-MM-DD'));
+      formData.append('hora', hora.format('HH:mm'));
+      formData.append('lugar', lugar);
+      formData.append('tipo', tipo);
+      
+      if (imagen) {
+        formData.append('imagen', imagen);
+      }
+      
+      const response = await crearEvento(formData);
 
       if (response.success) {
         messageApi.success('Evento creado exitosamente')
@@ -59,6 +64,7 @@ function CrearEvento() {
         setHora(null);
         setLugar('');
         setTipo('');
+        setImagen(null);
       }
     } catch (error) {
 
@@ -153,25 +159,39 @@ function CrearEvento() {
                 />
               </Col>
             </Row>
-            <div style={{ marginBottom: 32 }}>
-              <Text strong style={{ fontSize: 16, color: '#1e3a8a', display: 'block', marginBottom: 8 }}>
-                Tipo de Evento
-              </Text>
-              <Select
-                size="large"
-                placeholder="Selecciona el tipo de evento"
-                value={tipo}
-                onChange={setTipo}
-                style={{ width: '100%', borderRadius: 8 }}
-              >
-                <Option value="Charla">Charla</Option>
-                <Option value="Taller">Taller</Option>
-                <Option value="Conferencia">Conferencia</Option>
-                <Option value="Reunión">Reunión</Option>
-                <Option value="Recreativo">Recreativo</Option>
-                <Option value="otro">Otro</Option>
-              </Select>
-            </div>
+
+            <Row gutter={16} style={{ marginBottom: 24 }}>
+              <Col xs={24} sm={12} md={8}>
+                <Text strong style={{ fontSize: 16, color: '#1e3a8a', display: 'block', marginBottom: 8 }}>
+                  Tipo de Evento
+                </Text>
+                <Select
+  
+                  placeholder="Selecciona el tipo de evento"
+                  value={tipo}
+                  onChange={setTipo}
+                  style={{ width: '100%', borderRadius: 8 }}
+                >
+                  <Option value="Charla">Charla</Option>
+                  <Option value="Taller">Taller</Option>
+                  <Option value="Conferencia">Conferencia</Option>
+                  <Option value="Reunión">Reunión</Option>
+                  <Option value="Recreativo">Recreativo</Option>
+                  <Option value="Otro">Otro</Option>
+                </Select>
+              </Col>
+
+              <Col xs={24} sm={12} md={13}>
+                <Text strong style={{ fontSize: 16, color: '#1e3a8a', display: 'block', marginBottom: 8 }}>
+                  Imagen del Lugar (opcional)
+                </Text>
+                <Input                  
+                  type="file"
+                  onChange={(e) => setImagen(e.target.files[0])}
+                />
+              </Col>
+            </Row>
+            
             <Divider style={{ margin: '32px 0' }} />
             <Row gutter={16} justify="end">
               <Col>

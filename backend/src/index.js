@@ -25,6 +25,8 @@ app.use(express.json());
 app.use(cookieParser());     
 app.use(passport.initialize());
 
+app.use("/SubirImagenes", express.static("public/SubirImagenes")); // Servir archivos estáticos de la carpeta upload
+
 // Conectar a la base de datos
 await connectDB();
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Input, Modal, Space, Table, Typography, message, Select } from 'antd';
 import MainLayout from '../components/MainLayout.jsx';
-import { ExclamationCircleOutlined } from '@ant-design/icons'
+import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import { obtenerAnuncios, crearAnuncio, modificarAnuncio, eliminarAnuncio } from '../services/anuncios.services.js';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 function AdminAnuncios() {
   const [anuncios, setAnuncios] = useState([]);
@@ -30,6 +30,7 @@ function AdminAnuncios() {
 
   useEffect(() => {
     fetchAnuncios();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleOpenModal = (anuncio = null) => {
@@ -105,8 +106,30 @@ function AdminAnuncios() {
       {contextHolder}
       {modalContextHolder}
       <div style={{ padding: 24 }}>
-        <Title level={2} style={{ marginBottom: 24 }}>Administrar Anuncios del CEE</Title>
-        <Button type="primary" style={{ marginBottom: 16 }} onClick={() => handleOpenModal()}>Nuevo Anuncio</Button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
+          <div>
+            <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>Administrar Anuncios del CEE</Title>
+            <Text style={{ fontSize: 16, color: '#64748b', marginBottom: 24 }}>
+              Aquí puedes crear, editar o eliminar anuncios que serán visibles para todos los usuarios.
+            </Text>
+          </div>
+          <Button type="primary" 
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => handleOpenModal()}
+            style={{ 
+              backgroundColor: '#1e3a8a',
+              borderColor: '#1e3a8a',
+              borderRadius: 8,
+              height: 48,
+              paddingLeft: 24,
+              paddingRight: 24,
+              fontSize: 16,
+              fontWeight: 500 
+              }} >
+              Nuevo Anuncio
+          </Button>
+        </div>
         <Table columns={columns} dataSource={anuncios} rowKey="id" loading={loading} pagination={false} />
         <Modal
           open={modalOpen}

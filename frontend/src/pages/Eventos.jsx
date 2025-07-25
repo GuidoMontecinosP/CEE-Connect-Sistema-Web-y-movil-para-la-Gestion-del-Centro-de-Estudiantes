@@ -52,6 +52,31 @@ function Eventos (){
                   return (
                     <Card key={e.id} size="small" title={e.titulo} 
                     style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
+                                            {e.imagen ? (
+                          <img
+                            src={`http://localhost:3000${e.imagen}`}
+                            alt={e.titulo}
+                            style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
+                          />
+                        ) : (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: 140,
+                                background: '#f0f0f0',
+                                borderRadius: 8,
+                                marginBottom: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#aaa',
+                                fontSize: 16,
+                                fontStyle: 'italic'
+                              }}
+                            >
+                              Sin imagen
+                            </div>
+                      )}
                      <MdDescription/> Descripción: {e.descripcion} <br />
                      <MdEvent /> Fecha: {fechaFormateada} - Hora: {e.hora ?? ''}  <br />
                       <MdPlace />Lugar: {e.lugar} <br />
