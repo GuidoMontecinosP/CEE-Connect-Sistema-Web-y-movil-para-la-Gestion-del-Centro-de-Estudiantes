@@ -3,12 +3,29 @@ import axios from './api.js';
 
 export const votacionService = {
   // Obtener todas las votaciones
-  obtenerVotaciones: async () => {
+ obtenerVotaciones: async (parametros = {}) => {
     try {
-      const response = await axios.get('/votacion');
+      const {
+        page = 1,
+        limit = 10,
+        estado = null,
+        busqueda = null,
+        resultadosPublicados = null
+      } = parametros;
+
+      // Construir query params dinámicamente
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page.toString());
+      queryParams.append('limit', limit.toString());
+      
+      if (estado) queryParams.append('estado', estado);
+      if (busqueda && busqueda.trim()) queryParams.append('busqueda', busqueda.trim());
+      if (resultadosPublicados !== null) queryParams.append('resultadosPublicados', resultadosPublicados.toString());
+
+      const response = await axios.get(`/votacion?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.mensaje || 'Error al obtener votacion');
+      throw new Error(error.response?.data?.message || 'Error al obtener votaciones');
     }
   },
 

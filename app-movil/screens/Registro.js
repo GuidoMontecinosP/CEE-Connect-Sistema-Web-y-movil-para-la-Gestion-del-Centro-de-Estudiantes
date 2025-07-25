@@ -54,9 +54,8 @@ export default function Registro() {
         rolId: 2,
       });
 
-      // ✅ Alerta simple y directa
       Alert.alert(
-        '📧 Verifica tu cuenta',
+        ' Verifica tu cuenta',
         `Te enviamos un enlace de verificación a:\n${correo}\n\n• Abre tu aplicación de correo\n• Revisa tu bandeja de entrada y spam\n• Toca el enlace "Verificar cuenta"\n• Luego vuelve aquí para iniciar sesión`,
         [            
           {
@@ -105,17 +104,11 @@ export default function Registro() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ImageBackground
-          source={require('../assets/favicon.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          <View style={styles.overlay} />
-        </ImageBackground>
+        
         
         <View style={styles.formContainer}>
           <Image
-            source={require('../assets/icon.png')}
+            source={require('../assets/escudo-color-gradiente-oscuro.png')}
             style={styles.logo}
             resizeMode="contain"
           />

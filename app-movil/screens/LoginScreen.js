@@ -11,7 +11,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/Authcontext';
@@ -49,17 +48,9 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ImageBackground
-          source={require('../assets/favicon.png')}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          <View style={styles.overlay} />
-        </ImageBackground>
-        
         <View style={styles.formContainer}>
           <Image
-            source={require('../assets/icon.png')}
+            source={require('../assets/escudo-color-gradiente-oscuro.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -99,12 +90,12 @@ export default function LoginScreen() {
                 {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Text>
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.registerLinkContainer}>
-            <Text style={styles.registerText}>¿No tienes una cuenta? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
-              <Text style={styles.registerLink}>Regístrate aquí</Text>
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => navigation.navigate('Registro')}
+            >
+              <Text style={styles.registerButtonText}>Regístrate</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -120,44 +111,26 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-  },
-  backgroundImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    width: '100%',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    minHeight: '100%',
   },
   formContainer: {
     flex: 1,
-    marginTop: '40%',
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    justifyContent: 'center',
     paddingHorizontal: 40,
-    paddingTop: 40,
-    paddingBottom: 60,
+    paddingVertical: 60,
     alignItems: 'center',
   },
   logo: {
     width: 180,
     height: 120,
-    marginBottom: 8,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#1e3a8a',
-    marginBottom: 20,
+    marginBottom: 40,
   },
   form: {
     width: '100%',
@@ -197,18 +170,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  registerLinkContainer: {
-    flexDirection: 'row',
-    marginTop: 24,
+  registerButton: {
+    width: '100%',
+    padding: 15,
+    backgroundColor: 'transparent',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
     alignItems: 'center',
+    marginTop: 12,
   },
-  registerText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  registerLink: {
-    fontSize: 14,
+  registerButtonText: {
     color: '#1e3a8a',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

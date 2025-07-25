@@ -11,7 +11,7 @@ const domainEmailValidator = (value, helper) => {
   return value;
 };
 
-// 🔍 Validación para consultas (GET)
+//
 export const userQueryValidation = Joi.object({
   id: Joi.number()
     .integer()

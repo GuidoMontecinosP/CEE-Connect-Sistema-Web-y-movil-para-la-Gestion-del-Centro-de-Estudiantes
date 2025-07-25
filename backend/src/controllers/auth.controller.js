@@ -186,6 +186,9 @@ export async function recuperarContrasena(req, res) {
     if (!usuario) {
       return handleErrorClient(res, 404, "Usuario no encontrado");
     }
+    if (!usuario.verificado) {
+      return handleErrorClient(res, 400, "Debes verificar tu correo institucional antes de recuperar la contraseña.");
+    }
 
     // Generar token de recuperación
     const tokenRecuperacion = generarTokenRecuperacion(usuario);

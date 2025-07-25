@@ -9,7 +9,7 @@ const domainEmailValidator = (value, helper) => {
   return value;
 };
 
-// ✅ Validación para LOGIN
+//  Validación para LOGIN
 export const authValidation = Joi.object({
   correo: Joi.string()
     .trim()
@@ -44,7 +44,7 @@ export const authValidation = Joi.object({
   "object.unknown": "No se permiten propiedades adicionales.",
 });
 
-// ✅ Validación para REGISTRO
+// Validación para REGISTRO
 export const registerValidation = Joi.object({
   nombre: Joi.string()
     .min(3)
@@ -64,7 +64,7 @@ export const registerValidation = Joi.object({
     .trim()
     .lowercase()
     .email({ tlds: { allow: false } })
-    .min(15)
+    .min(21)
     .max(60)
     .required()
     .custom(domainEmailValidator, "Dominio institucional")
@@ -73,7 +73,7 @@ export const registerValidation = Joi.object({
       "string.empty": "El correo no puede estar vacío.",
       "any.required": "El correo es obligatorio.",
       "string.email": "El correo debe tener un formato válido.",
-      "string.min": "El correo debe tener al menos 15 caracteres.",
+      "string.min": "El correo debe tener al menos 21 caracteres.",
       "string.max": "El correo debe tener como máximo 60 caracteres.",
     }),
 
@@ -95,6 +95,7 @@ export const registerValidation = Joi.object({
     .positive()
     .required()
     .messages({
+      "number.empty": "El rol no puede estar vacío.",
       "number.base": "El rol debe ser un número entero.",
       "number.integer": "El rol debe ser un número entero.",
       "number.positive": "El rol debe ser un número positivo.",

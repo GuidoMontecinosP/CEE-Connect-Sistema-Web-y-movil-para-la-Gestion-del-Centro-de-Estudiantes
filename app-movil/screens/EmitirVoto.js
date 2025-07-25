@@ -204,6 +204,7 @@ const EmitirVoto = () => {
             <Text style={styles.successTitle}>¡Ya has votado!</Text>
             <Text style={styles.successSubtitle}>
               Tu voto ha sido registrado correctamente en esta votación. No puedes votar nuevamente.
+              Por favor, revisa los resultados cuando estén disponibles.
             </Text>
             <View style={styles.successButtons}>
               <TouchableOpacity
@@ -212,12 +213,7 @@ const EmitirVoto = () => {
               >
                 <Text style={styles.secondaryButtonText}>Volver a Votaciones</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => navigation.navigate('Resultados', { votacionId })}
-              >
-                <Text style={styles.primaryButtonText}>Ver Resultados</Text>
-              </TouchableOpacity>
+           
             </View>
           </View>
         )}
