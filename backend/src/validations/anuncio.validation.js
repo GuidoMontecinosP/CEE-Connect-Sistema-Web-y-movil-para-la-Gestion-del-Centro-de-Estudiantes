@@ -92,6 +92,13 @@ export const modificarAnuncioValidation = Joi.object({
             "any.only": "El tipo de anuncio no es válido.",
         }),
     estado: Joi.boolean().optional(),
+    imagen: Joi.string()
+        .optional()
+        .allow("")
+        .messages({
+            "string.base": "La imagen debe ser una URL válida.",
+            "any.required": "La imagen es opcional.",
+    }),
 }).unknown(true);
 
 export default { crearAnuncioValidation, modificarAnuncioValidation };  

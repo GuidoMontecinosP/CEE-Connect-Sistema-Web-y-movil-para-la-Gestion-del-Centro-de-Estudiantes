@@ -3,7 +3,8 @@ import express from 'express';
 import { crearEventoController, 
         modificarEventoController, 
         eventosController,
-        eliminarEventoController 
+        eliminarEventoController,
+        eventoPorIdController
 } from '../controllers/eventos.controller.js';
 
 import upload from '../middlewares/subirImagen.js';
@@ -21,5 +22,7 @@ router.put('/modificarEvento/:id',authenticateJwt, isAdmin, upload.single('image
 router.get('/eventos',authenticateJwt, eventosController);
 // Ruta para eliminar un evento 
 router.delete('/eliminarEvento/:id',authenticateJwt, isAdmin, eliminarEventoController);
+// Ruta para obtener un evento por ID
+router.get('/evento/:id',authenticateJwt, isAdmin, eventoPorIdController);
 
 export default router;

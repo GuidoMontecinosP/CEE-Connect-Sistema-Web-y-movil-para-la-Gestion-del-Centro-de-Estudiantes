@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import dayjs from 'dayjs';
 
 import MainLayout from "../components/MainLayout.jsx";
 
@@ -85,16 +86,29 @@ function VerEventos() {
     // eslint-disable-next-line no-unused-vars
     const { id, estado, ...data } = selectedEvento;
     try {
-      const formData = new FormData();
-
-      for (const key in data) {
-        formData.append(key, data[key]);
+      // Asegurar formato HH:mm
+      let hora = data.hora;
+      if (!hora && selectedEvento.hora) {
+        hora = selectedEvento.hora;
       }
-
+      if (hora && typeof hora === 'object' && hora.format) {
+        hora = hora.format('HH:mm');
+      }
+      if (hora && typeof hora === 'string' && hora.length > 5) {
+        // Si por error viene con segundos, recortar
+        hora = hora.slice(0,5);
+      }
+      const formData = new FormData();
+      for (const key in data) {
+        if (key === 'hora') {
+          formData.append('hora', hora || '');
+        } else {
+          formData.append(key, data[key]);
+        }
+      }
       if (imagen) {
         formData.append('imagen', imagen);
       }
-
       await modificarEvento(id, formData);
       messageApi.success('Evento modificado exitosamente');
       setEditModalOpen(false);
@@ -176,7 +190,7 @@ function VerEventos() {
                         style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
                         {e.imagen ? (
                           <img
-                            src={`http://localhost:3000${e.imagen}`}
+                            src={`http://146.83.198.35:1217${e.imagen}`}
                             alt={e.titulo}
                             style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
                           />
@@ -224,10 +238,19 @@ function VerEventos() {
                 <Input type="text" placeholder="Título" name="titulo" value={selectedEvento.titulo} onChange={handleEditChange} />
                 <Input type="text" placeholder="Descripción" name="descripcion" value={selectedEvento.descripcion} onChange={handleEditChange}/>
                 <Space.Compact block>
-                  <DatePicker style={{ width: '100%' }} onChange={(date) => setSelectedEvento({ ...selectedEvento, fecha: date ? date.format('YYYY-MM-DD') : '' })} />
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    value={selectedEvento.fecha ? dayjs(selectedEvento.fecha, 'YYYY-MM-DD') : null}
+                    onChange={date => setSelectedEvento({ ...selectedEvento, fecha: date ? date.format('YYYY-MM-DD') : '' })}
+                  />
                 </Space.Compact>
                 <Space.Compact block>
-                  <TimePicker style={{ width: '100%' }} onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })} format={"HH:mm"} />
+                  <TimePicker
+                    style={{ width: '100%' }}
+                    value={selectedEvento.hora ? dayjs(selectedEvento.hora, 'HH:mm') : null}
+                    onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })}
+                    format={"HH:mm"}
+                  />
                 </Space.Compact>
                 {/* <Input type="date" placeholder="Fecha" name="fecha" value={selectedEvento.fecha} onChange={handleEditChange} required />
                 <Input type="time" placeholder="Hora" name="hora" value={selectedEvento.hora} onChange={handleEditChange} required /> */}

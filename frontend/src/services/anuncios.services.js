@@ -14,8 +14,11 @@ export const obtenerAnuncios = async () => {
 export const crearAnuncio = async (anuncio) => {
    
     try {
-        const response = await axios.post('/anuncios/crearAnuncio',anuncio,
-        );
+        const response = await axios.post('/anuncios/crearAnuncio',anuncio, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return response.data;
     } catch (error) {
         // Mostrar mensaje detallado del backend si existe
@@ -26,8 +29,11 @@ export const crearAnuncio = async (anuncio) => {
 
 export const modificarAnuncio = async (id, anuncio) => {
     try {
-        const response = await axios.put(`/anuncios/modificarAnuncio/${id}`, anuncio,
-        );
+        const response = await axios.put(`/anuncios/modificarAnuncio/${id}`, anuncio, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return response.data;
     } catch (error) {
         console.log(error);

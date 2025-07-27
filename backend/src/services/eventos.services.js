@@ -48,6 +48,14 @@ export const eventos = async () => {
     return eventos;
 }
 
+export const obtenerEventoPorId = async (id) => {
+
+    const evento = await eventoRepo.findOneBy({ id });
+    
+    if (!evento) throw new Error("Evento no encontrado");
+    return evento;
+}
+
 export const eliminarEvento = async (id) => {
     try {
       const resultado = await eventoRepo.delete(id);

@@ -13,6 +13,7 @@ function AdminAnuncios() {
   const [editMode, setEditMode] = useState(false);
   const [anuncioEdit, setAnuncioEdit] = useState(null);
   const [form, setForm] = useState({ titulo: '', epilogo: '', link: '', tipo: 'avisos importantes' });
+  const [imagen, setImagen] = useState(null);
   const [messageApi, contextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
 
@@ -36,14 +37,14 @@ function AdminAnuncios() {
   const handleOpenModal = (anuncio = null) => {
     setEditMode(!!anuncio);
     setAnuncioEdit(anuncio);
-    setForm(anuncio ? { ...anuncio } : { titulo: '', epilogo: '', link: '', tipo: 'avisos importantes' });
+    setForm(anuncio ? { ...anuncio } : { titulo: '', epilogo: '', link: '', tipo: '' });
     setModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setAnuncioEdit(null);
-    setForm({ titulo: '', epilogo: '', link: '', tipo: 'avisos importantes' });
+    setForm({ titulo: '', epilogo: '', link: '', tipo: '' });
   };
 
   const handleChange = e => {
@@ -57,15 +58,26 @@ function AdminAnuncios() {
 
   const handleSubmit = async () => {
     try {
+      let dataToSend = form;
+      // Si hay imagen, usar FormData
+      if (imagen) {
+        const formData = new FormData();
+        Object.entries(form).forEach(([key, value]) => {
+          formData.append(key, value);
+        });
+        formData.append('imagen', imagen);
+        dataToSend = formData;
+      }
       if (editMode && anuncioEdit) {
-        await modificarAnuncio(anuncioEdit.id, form);
+        await modificarAnuncio(anuncioEdit.id, dataToSend, !!imagen);
         messageApi.success('Anuncio modificado');
       } else {
-        await crearAnuncio(form);
+        await crearAnuncio(dataToSend, !!imagen);
         messageApi.success('Anuncio creado');
       }
       fetchAnuncios();
       handleCloseModal();
+      setImagen(null);
     } catch (e) {
       console.log(e);
       messageApi.error(e.message || 'Error al guardar el anuncio');
@@ -89,6 +101,21 @@ function AdminAnuncios() {
   };
 
   const columns = [
+    {
+      title: 'Imagen',
+      dataIndex: 'imagen',
+      key: 'imagen',
+      render: img =>
+        img ? (
+          <img
+            src={`http://146.83.198.35:1217${img}`}
+            alt="anuncio"
+            style={{ width: 100, height: 80, objectFit: 'cover', borderRadius: 4, border: '1px solid #eee' }}
+          />
+        ) : (
+          <span style={{ color: '#aaa', fontStyle: 'italic', fontSize: 12 }}>Sin imagen</span>
+        ),
+    },
     { title: 'Título', dataIndex: 'titulo', key: 'titulo' },
     { title: 'Epílogo', dataIndex: 'epilogo', key: 'epilogo' },
     { title: 'Tipo', dataIndex: 'tipo', key: 'tipo' },
@@ -151,6 +178,15 @@ function AdminAnuncios() {
               { value: 'otro', label: 'Otro' },
             ]}
           />
+          <Input
+            type="file"
+            accept="image/*"
+            style={{ marginTop: 12 }}
+            onChange={e => setImagen(e.target.files[0])}
+          />
+          <Text style={{ fontSize: 12, color: '#888' }}>
+            Imagen opcional. Si no seleccionas una imagen, el anuncio no tendrá imagen.
+          </Text>
         </Modal>
       </div>
     </MainLayout>

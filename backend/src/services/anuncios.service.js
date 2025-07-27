@@ -4,7 +4,7 @@ const anuncioRepo = AppDataSource.getRepository("Anuncios");
 
 export const crearAnuncio = async (datos) => {
 
-    const { titulo, epilogo, link, tipo } = datos;
+    const { titulo, epilogo, link, tipo, imagen } = datos;
 
     const nuevoAnuncio = anuncioRepo.create({
         titulo,
@@ -12,6 +12,7 @@ export const crearAnuncio = async (datos) => {
         link,
         tipo,
         estado: true, // Por defecto, el anuncio está activo
+        imagen
     }); 
 
     return await anuncioRepo.save(nuevoAnuncio);      
@@ -28,18 +29,27 @@ export const obtenerAnuncios = async () => {
     return anuncios;
 }
 
+export const obtenerAnuncioPorId = async (id) => {
+
+    const anuncio = await anuncioRepo.findOneBy({ id });
+    if (!anuncio) throw new Error("Anuncio no encontrado");
+    
+    return anuncio;
+}
+
 export const modificarAnuncio = async (id, datos) => {
 
     const anuncio = await anuncioRepo.findOneBy({ id });
     if (!anuncio) throw new Error("Anuncio no encontrado");
 
-    const { titulo, epilogo, link, tipo } = datos;
+    const { titulo, epilogo, link, tipo, imagen } = datos;
 
     anuncio.titulo = titulo || anuncio.titulo;
     anuncio.epilogo = epilogo || anuncio.epilogo;  
     anuncio.link = link || anuncio.link;
     anuncio.tipo = tipo || anuncio.tipo;
     anuncio.estado = anuncio.estado;
+    anuncio.imagen = imagen || anuncio.imagen
 
     return await anuncioRepo.save(anuncio);
 }

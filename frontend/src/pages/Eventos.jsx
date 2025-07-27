@@ -7,24 +7,37 @@ import { obtenerEventos} from "../services/eventos.services.js";
 import MainLayout from '../components/MainLayout.jsx';
 import { Breadcrumb, 
          Card,
-         Typography
+         Typography,
+          message,
+          Spin
 } from 'antd';
 
 const { Title, Text } = Typography;
 
 function Eventos (){
     const [eventos, setEventos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [messageApi, contextHolder] = message.useMessage();
+
+    const fetchEventos = async () => {
+        setLoading(true);
+        try {
+          const data = await obtenerEventos();
+          setEventos(Array.isArray(data) ? data : []);
+        } catch {
+          messageApi.error('Error al obtener anuncios');
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        obtenerEventos()
-          .then(res => setEventos(res))
-          .catch(err => alert(err.message));
+        fetchEventos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <MainLayout
-            breadcrumb
-        >
+        <MainLayout breadcrumb>
+        {contextHolder}
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Title level={1} style={{ color: '#1e3a8a', marginBottom: 8 }}>
               Listado de Eventos
@@ -33,8 +46,12 @@ function Eventos (){
               Aquí podras encontrar los proximos eventos, podras ver el tipo, descripcion, fecha y lugar de encuentro.
             </Text>
           </div>
-        
-            {eventos.length === 0 ? (
+            {loading ? (
+              <div style={{ textAlign: 'center', marginTop: 50 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+            eventos.length === 0 ? (
               <p>No hay eventos registrados.</p>
             ) : (
               <div style={{
@@ -54,7 +71,7 @@ function Eventos (){
                     style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
                                             {e.imagen ? (
                           <img
-                            src={`http://localhost:3000${e.imagen}`}
+                            src={`http://146.83.198.35:1217${e.imagen}`}
                             alt={e.titulo}
                             style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
                           />
@@ -85,7 +102,7 @@ function Eventos (){
                   );
                 })}
               </div>
-            )}
+            ))}
         </MainLayout>
     );
 }

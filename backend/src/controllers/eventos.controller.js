@@ -1,8 +1,8 @@
-import { crearEvento, modificarEvento, eventos, eliminarEvento } from "../services/eventos.services.js";
+import { crearEvento, modificarEvento, eventos, eliminarEvento, obtenerEventoPorId } from "../services/eventos.services.js";
 import { crearEventoValidation, modificarEventoValidation } from "../validations/eventos.validation.js";
 
 export async function crearEventoController(req, res) {
-
+  console.log("Datos recibidos para crear evento:", req.body);
   const {error, value} = crearEventoValidation.validate(req.body);
   if (error) {
     console.log("Error de validación:", error.details);
@@ -92,6 +92,22 @@ export async function eventosController(req, res) {
   } catch (error) {
     console.error("Error al obtener los eventos:", error);
     res.status(500).json({ error: "Error al obtener los eventos" });
+  }
+}
+
+export async function eventoPorIdController(req, res) {
+  const { id } = req.params;
+  try {
+    const evento = await obtenerEventoPorId(id);
+    if (!evento) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+    res.status(200).json(evento);
+
+  } catch (error) {
+    
+    console.error("Error al obtener el evento por ID:", error);
+    res.status(500).json({ error: "Error al obtener el evento" });
   }
 }
 
