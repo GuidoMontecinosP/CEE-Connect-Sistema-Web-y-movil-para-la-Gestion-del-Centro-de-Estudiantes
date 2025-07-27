@@ -75,7 +75,6 @@ const EmitirVoto = () => {
             try {
               setEnviandoVoto(true);
               await votoService.emitirVoto(usuarioId, votacionId, opcionSeleccionada);
-              Alert.alert('Éxito', '¡Voto emitido exitosamente!');
               setYaVoto(true);
             } catch (error) {
               Alert.alert('Error', `Error al emitir voto: ${error.message}`);

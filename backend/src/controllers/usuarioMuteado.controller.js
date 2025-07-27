@@ -17,6 +17,19 @@ export const mutearUsuario = async (req, res) => {
     const usuario = await usuarioRepo.findOne({ where: { id: parseInt(userId) } });
     if (!usuario) return handleErrorClient(res, 404, "Usuario no encontrado");
 
+    if (!razon || !fecha_fin) {
+      return handleErrorClient(res, 400, "Razón y fecha de fin son requeridas");
+    }
+    //validar que no este muteado
+    const muteoExistente = await muteadoRepo.findOne({
+      where: { usuario: { id: parseInt(userId) }, activo: true }
+    });
+    if (muteoExistente) {
+      return handleErrorClient(res, 400, "El usuario ya está muteado");
+    }
+    if (new Date(fecha_fin) <= new Date()) {
+      return handleErrorClient(res, 400, "La fecha de fin debe ser futura");
+    }
     const muteo = muteadoRepo.create({
       usuario,
       razon,

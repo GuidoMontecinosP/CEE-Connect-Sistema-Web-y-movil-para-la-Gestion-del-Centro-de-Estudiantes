@@ -15,11 +15,13 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../context/Authcontext';
 import { login as apiLogin } from '../services/auth.services'; // Tu servicio de login
+import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener esta librería instalada
 
 export default function LoginScreen() {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const navigation = useNavigation();
   const { login } = useContext(AuthContext);
@@ -71,15 +73,27 @@ export default function LoginScreen() {
             />
 
             <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              value={contrasena}
-              onChangeText={setContrasena}
-              placeholder="Contraseña"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry
-              autoComplete="password"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={contrasena}
+                onChangeText={setContrasena}
+                placeholder="Contraseña"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showPassword}
+                autoComplete="password"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Icon
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -153,6 +167,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#ffffff',
     color: '#374151',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+    color: '#374151',
+  },
+  eyeButton: {
+    padding: 12,
   },
   button: {
     width: '100%',

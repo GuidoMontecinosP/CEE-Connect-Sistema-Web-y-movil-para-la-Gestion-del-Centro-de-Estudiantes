@@ -37,7 +37,7 @@ function CustomHeader({ navigation, userInfo }) {
     <View style={styles.customHeader}>
       <View style={styles.headerLeft}>
         {/* Logo o título de la app */}
-        <Text style={styles.appTitle}>Mi App</Text>
+        <Text style={styles.appTitle}>CEE Connect</Text>
       </View>
       
       <View style={styles.headerRight}>

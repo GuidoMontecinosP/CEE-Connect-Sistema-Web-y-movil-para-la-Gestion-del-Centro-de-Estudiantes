@@ -13,7 +13,7 @@ export async function crearSugerencia(req, res) {
     const { titulo, mensaje, categoria, contacto } = req.body;
     const autorId = req.user.id;
     
-   
+ 
     const nuevaSugerencia = await sugerenciasService.crearSugerencia({
       titulo,
       mensaje,
@@ -40,7 +40,7 @@ export async function obtenerSugerencias(req, res) {
     const filtros = {};
     if (categoria) filtros.categoria = categoria;
     if (estado) filtros.estado = estado;
-    if (busqueda) filtros.busqueda = busqueda; // Agregar esta línea
+    if (busqueda) filtros.busqueda = busqueda; // 
      const isAdmin = req.user.rol.nombre === 'administrador';
     const sugerencias = await sugerenciasService.obtenerSugerencias(
       parseInt(page),

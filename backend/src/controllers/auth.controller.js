@@ -133,7 +133,7 @@ export async function register(req, res) {
       return handleErrorClient(res, 400, "Correo ya registrado");
     }
 
-    // ✅ DESPUÉS crear el usuario (solo si no existe)
+    //  DESPUÉS crear el usuario (solo si no existe)
     const [usuarioCreado, errorNewUser] = await registerService(body);
 
     if (errorNewUser) {

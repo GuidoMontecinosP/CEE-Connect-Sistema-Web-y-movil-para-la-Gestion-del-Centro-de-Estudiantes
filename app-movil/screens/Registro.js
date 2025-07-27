@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import axios from '../services/api.js';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons'; // Asegúrate de tener esta librería instalada
 
 export default function Registro() {
   const [nombre, setNombre] = useState('');
@@ -23,6 +24,8 @@ export default function Registro() {
   const [confirmarContrasena, setConfirmarContrasena] = useState('');
   const [passwordStrength, setPasswordStrength] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const navigation = useNavigation();
 
@@ -44,6 +47,15 @@ export default function Registro() {
       return;
     }
 
+    // Validar contraseña fuerte
+    if (!isPasswordValid(contrasena)) {
+      Alert.alert(
+        'Error', 
+        'La contraseña debe tener:\n• Mínimo 8 caracteres\n• Al menos 1 mayúscula\n• Al menos 1 minúscula\n• Al menos 1 número\n• Al menos 1 símbolo (!@#$%^&*[]_-.,\'"#$%&/()=)'
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -55,7 +67,7 @@ export default function Registro() {
       });
 
       Alert.alert(
-        ' Verifica tu cuenta',
+        'Verifica tu cuenta',
         `Te enviamos un enlace de verificación a:\n${correo}\n\n• Abre tu aplicación de correo\n• Revisa tu bandeja de entrada y spam\n• Toca el enlace "Verificar cuenta"\n• Luego vuelve aquí para iniciar sesión`,
         [            
           {
@@ -77,11 +89,27 @@ export default function Registro() {
     }
   };
 
+  const isPasswordValid = (password) => {
+    return (
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[!@#$%^&*\[\]\-_.,'"#$%&/()=]/.test(password)
+    );
+  };
+
   const getPasswordStrength = (password) => {
     if (password.length < 8) return 'débil';
-    if (!/[A-Z]/.test(password)) return 'media';
-    if (!/[0-9]/.test(password)) return 'media';
-    if (!/[!@#$%^&*]/.test(password)) return 'media';
+    
+    let strength = 0;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[!@#$%^&*\[\]\-_.,'"#$%&/()=]/.test(password)) strength++;
+    
+    if (strength < 3) return 'débil';
+    if (strength === 3) return 'media';
     return 'fuerte';
   };
 
@@ -98,14 +126,22 @@ export default function Registro() {
     }
   };
 
+  const getPasswordRequirements = (password) => {
+    return [
+      { text: 'Mínimo 8 caracteres', valid: password.length >= 8 },
+      { text: 'Al menos 1 mayúscula', valid: /[A-Z]/.test(password) },
+      { text: 'Al menos 1 minúscula', valid: /[a-z]/.test(password) },
+      { text: 'Al menos 1 número', valid: /[0-9]/.test(password) },
+      { text: 'Al menos 1 símbolo (!@#$%^&*[]_-.,\'"#$%&/()=)', valid: /[!@#$%^&*\[\]\-_.,'"#$%&/()=]/.test(password) },
+    ];
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        
-        
         <View style={styles.formContainer}>
           <Image
             source={require('../assets/escudo-color-gradiente-oscuro.png')}
@@ -140,40 +176,92 @@ export default function Registro() {
             />
 
             <Text style={styles.label}>Contraseña</Text>
-            <TextInput
-              style={styles.input}
-              value={contrasena}
-              onChangeText={(text) => {
-                setContrasena(text);
-                setPasswordStrength(getPasswordStrength(text));
-              }}
-              placeholder="Contraseña"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry
-              autoComplete="password-new"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={contrasena}
+                onChangeText={(text) => {
+                  setContrasena(text);
+                  setPasswordStrength(getPasswordStrength(text));
+                }}
+                placeholder="Contraseña"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showPassword}
+                autoComplete="password-new"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Icon
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
 
             {contrasena && (
-              <Text
-                style={[
-                  styles.passwordStrength,
-                  { color: getColorStrength(passwordStrength) },
-                ]}
-              >
-                Seguridad: {passwordStrength}
-              </Text>
+              <>
+                <Text
+                  style={[
+                    styles.passwordStrength,
+                    { color: getColorStrength(passwordStrength) },
+                  ]}
+                >
+                  Seguridad: {passwordStrength}
+                </Text>
+                
+                <View style={styles.requirementsContainer}>
+                  {getPasswordRequirements(contrasena).map((req, index) => (
+                    <View key={index} style={styles.requirementRow}>
+                      <Icon
+                        name={req.valid ? 'checkmark-circle' : 'close-circle'}
+                        size={16}
+                        color={req.valid ? '#16a34a' : '#dc2626'}
+                      />
+                      <Text
+                        style={[
+                          styles.requirementText,
+                          { color: req.valid ? '#16a34a' : '#dc2626' }
+                        ]}
+                      >
+                        {req.text}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </>
             )}
 
             <Text style={styles.label}>Confirmar contraseña</Text>
-            <TextInput
-              style={styles.input}
-              value={confirmarContrasena}
-              onChangeText={setConfirmarContrasena}
-              placeholder="Confirmar contraseña"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry
-              autoComplete="password-new"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={confirmarContrasena}
+                onChangeText={setConfirmarContrasena}
+                placeholder="Confirmar contraseña"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showConfirmPassword}
+                autoComplete="password-new"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Icon
+                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {confirmarContrasena && contrasena !== confirmarContrasena && (
+              <Text style={styles.errorText}>
+                Las contraseñas no coinciden
+              </Text>
+            )}
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -224,18 +312,18 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    marginTop: '40%',
+    marginTop: '25%', // Reducido de 40% a 25%
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 40,
-    paddingTop: 40,
-    paddingBottom: 60,
+    paddingTop: 20, // Aumentado de 0.1 a 20
+    paddingBottom: 10,
     alignItems: 'center',
   },
   logo: {
-    width: 180,
-    height: 120,
+    width: 160, // Reducido de 180 a 160
+    height: 100, // Reducido de 120 a 100
     marginBottom: 8,
   },
   title: {
@@ -266,10 +354,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     color: '#374151',
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    marginBottom: 4,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 16,
+    color: '#374151',
+  },
+  eyeButton: {
+    padding: 12,
+  },
   passwordStrength: {
     fontSize: 13,
     marginBottom: 8,
-    marginTop: -4,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  requirementsContainer: {
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  requirementText: {
+    fontSize: 12,
+    marginLeft: 8,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#dc2626',
+    marginTop: 4,
+    marginBottom: 8,
   },
   button: {
     width: '100%',

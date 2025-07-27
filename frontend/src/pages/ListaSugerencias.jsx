@@ -1372,7 +1372,7 @@ return null;
                   <DatePicker
                     style={{ width: '100%' }}
                     showTime
-                    format="YYYY-MM-DD HH:mm:ss"
+                   format="DD/MM/YYYY HH:mm:ss"
                     placeholder="Selecciona fecha y hora"
                   disabledDate={(current) => current && current < dayjs().endOf('day')}
 

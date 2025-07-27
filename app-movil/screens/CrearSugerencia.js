@@ -27,9 +27,15 @@ const CrearSugerencia = ({ navigation }) => {
 
   const categorias = [
     { label: 'Selecciona una categoría', value: '' },
-    { label: 'Infraestructura', value: 'infraestructura' },
+    { label: 'Academico', value: 'academico' },
+     { label: 'Bienestar', value: 'bienestar' },
+     { label: 'Cultura', value: 'cultura' },
+     {label: 'Deportes', value: 'deportes' },
+     { label: 'Infraestructura', value: 'infraestructura' },
     { label: 'Eventos', value: 'eventos' },
-    { label: 'Bienestar', value: 'bienestar' },
+    { label: 'General', value: 'general' },
+    { label: 'Seguridad', value: 'seguridad' },
+    { label: 'Servicios', value: 'servicios' },
     { label: 'Otros', value: 'otros' },
   ];
 
@@ -76,9 +82,9 @@ const CrearSugerencia = ({ navigation }) => {
     
     return true;
   };
-  if(usuario?.rol !== 'estudiante') {
+  if(usuario?.rol.nombre !== 'estudiante') {
     
-    navigation.navigate('ListaSugerencias');
+    navigation.replace('ListaSugerencias');
   }
 
   const enviarSugerencia = async () => {
@@ -111,10 +117,10 @@ const CrearSugerencia = ({ navigation }) => {
       );
 
     } catch (error) {
-
+        const msg1 = error.message;
       Alert.alert(
         'Error',
-        error.message || 'No se pudo enviar la sugerencia. Intenta nuevamente.'
+        msg1 || 'No se pudo enviar la sugerencia. Intenta nuevamente.'
       );
     } finally {
       setLoading(false);

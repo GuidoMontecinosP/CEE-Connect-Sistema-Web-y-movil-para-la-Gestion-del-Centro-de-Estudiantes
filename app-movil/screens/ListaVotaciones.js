@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import {
   View,
@@ -9,7 +10,8 @@ import {
   RefreshControl,
   Alert,
   StyleSheet,
-  Dimensions
+  Dimensions,
+  Modal
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -27,8 +29,15 @@ const ListarVotaciones = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('todas');
   const [filtroResultados, setFiltroResultados] = useState(null);
- const [inputBusqueda, setInputBusqueda] = useState('');
-const [terminoBusqueda, setTerminoBusqueda] = useState('');
+  const [inputBusqueda, setInputBusqueda] = useState('');
+  const [terminoBusqueda, setTerminoBusqueda] = useState('');
+
+  // Estados para el modal de filtros
+  const [modalVisible, setModalVisible] = useState(false);
+  const [filtrosTemporales, setFiltrosTemporales] = useState({
+    estado: 'todas',
+    resultados: null
+  });
 
   const [cerrandoVotacion, setCerrandoVotacion] = useState(null);
   const [publicandoResultados, setPublicandoResultados] = useState(null);
@@ -54,100 +63,150 @@ const [terminoBusqueda, setTerminoBusqueda] = useState('');
   };
 
   // Función para cargar votaciones con filtros y paginación
-  const cargarVotaciones = useCallback(async (resetPage = false, concatenar = false) => {
-    if (!concatenar) setLoading(true);
+const cargarVotaciones = useCallback(async (resetPage = false, concatenar = false) => {
+  if (!concatenar) setLoading(true);
+  
+  try {
+    const page = resetPage ? 1 : paginaActual;
     
-    try {
-      const page = resetPage ? 1 : paginaActual;
-      
-      // Construir parámetros de consulta
-      const parametros = {
-        page,
-        limit: itemsPorPagina
-      };
+    // Construir parámetros de consulta
+    const parametros = {
+      page,
+      limit: itemsPorPagina
+    };
 
-      // Agregar filtros solo si están definidos
-      if (filtroEstado && filtroEstado !== 'todas') {
-        if (filtroEstado === 'publicadas') {
-          parametros.estado = 'cerrada';
-          parametros.resultadosPublicados = true;
-        } else if (filtroEstado === 'cerrada') {
-          parametros.estado = 'cerrada';
-          if (filtroResultados !== null) {
-            parametros.resultadosPublicados = filtroResultados;
-          }
-        } else {
-          parametros.estado = filtroEstado;
+    // Agregar filtros solo si están definidos
+    if (filtroEstado && filtroEstado !== 'todas') {
+      if (filtroEstado === 'publicadas') {
+        parametros.estado = 'cerrada';
+        parametros.resultadosPublicados = true;
+        // NUEVO: Agregar ordenamiento por fecha de publicación para votaciones publicadas
+        parametros.ordenarPor = 'fechaPublicacion';
+        parametros.orden = 'DESC'; // Más recientes primero
+      } else if (filtroEstado === 'cerrada') {
+        parametros.estado = 'cerrada';
+        if (filtroResultados !== null) {
+          parametros.resultadosPublicados = filtroResultados;
         }
-      }
-
-      if (terminoBusqueda?.trim()) {
-        parametros.busqueda = terminoBusqueda.trim();
-      }
-
-      const res = await votacionService.obtenerVotaciones(parametros);
-      let votacionesData = res.data;
-      
-      // Filtrar según el rol del usuario
-      if (esEstudiante) {
-        votacionesData = votacionesData.filter(votacion => 
-          votacion.estado === 'activa' || 
-          (votacion.estado === 'cerrada' && votacion.resultadosPublicados)
-        );
-      }
-      
-      if (concatenar && page > 1) {
-        setVotaciones(prev => [...prev, ...votacionesData]);
+        // Si estamos viendo cerradas con resultados publicados, también ordenar por fecha de publicación
+        if (filtroResultados === true) {
+          parametros.ordenarPor = 'fechaPublicacion';
+          parametros.orden = 'DESC';
+        }
       } else {
-        setVotaciones(votacionesData);
+        parametros.estado = filtroEstado;
       }
-      
-      setTotalItems(res.pagination.totalItems);
-      setHayMasPaginas(res.pagination.currentPage < res.pagination.totalPages);
-      
-      if (resetPage) {
-        setPaginaActual(1);
-      }
-
-      // Verificar qué votaciones ya votó el usuario
-      if (usuarioId && votacionesData.length > 0) {
-        const votosStatus = {};
-        
-        const verificaciones = votacionesData.map(async (votacion) => {
-          try {
-            const yaVotoRes = await votoService.verificarSiYaVoto(usuarioId, votacion.id);
-            votosStatus[votacion.id] = yaVotoRes.data.yaVoto;
-          } catch (error) {
-            console.error(`Error verificando voto para votación ${votacion.id}:`, error);
-            votosStatus[votacion.id] = false;
-          }
-        });
-
-        await Promise.all(verificaciones);
-        setVotosUsuario(prev => ({ ...prev, ...votosStatus }));
-      }
-      
-    } catch (err) {
-      mostrarAlerta('Error', `Error al cargar votaciones: ${err.message}`);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
     }
-  }, [paginaActual, itemsPorPagina, filtroEstado, filtroResultados, terminoBusqueda, esEstudiante, usuarioId]);
+
+    if (terminoBusqueda?.trim()) {
+      parametros.busqueda = terminoBusqueda.trim();
+    }
+
+    const res = await votacionService.obtenerVotaciones(parametros);
+    let votacionesData = res.data;
+    
+    // Filtrar según el rol del usuario
+    if (esEstudiante) {
+      votacionesData = votacionesData.filter(votacion => 
+        votacion.estado === 'activa' || 
+        (votacion.estado === 'cerrada' && votacion.resultadosPublicados)
+      );
+    }
+
+    // NUEVO: Ordenamiento adicional en el frontend para las votaciones publicadas
+    // Esto es un respaldo por si el backend no soporta el ordenamiento
+    if (filtroEstado === 'publicadas' || 
+        (filtroEstado === 'cerrada' && filtroResultados === true)) {
+      votacionesData = votacionesData.sort((a, b) => {
+        // Si ambas tienen fecha de publicación, ordenar por ella
+        if (a.fechaPublicacion && b.fechaPublicacion) {
+          return new Date(b.fechaPublicacion) - new Date(a.fechaPublicacion);
+        }
+        // Si solo una tiene fecha de publicación, esa va primero
+        if (a.fechaPublicacion && !b.fechaPublicacion) return -1;
+        if (!a.fechaPublicacion && b.fechaPublicacion) return 1;
+        // Si ninguna tiene fecha de publicación, ordenar por ID (más reciente primero)
+        return b.id - a.id;
+      });
+    }
+    
+    if (concatenar && page > 1) {
+      setVotaciones(prev => [...prev, ...votacionesData]);
+    } else {
+      setVotaciones(votacionesData);
+    }
+    
+    setTotalItems(res.pagination.totalItems);
+    setHayMasPaginas(res.pagination.currentPage < res.pagination.totalPages);
+    
+    if (resetPage) {
+      setPaginaActual(1);
+    }
+
+    // Verificar qué votaciones ya votó el usuario
+    if (usuarioId && votacionesData.length > 0) {
+      const votosStatus = {};
+      
+      const verificaciones = votacionesData.map(async (votacion) => {
+        try {
+          const yaVotoRes = await votoService.verificarSiYaVoto(usuarioId, votacion.id);
+          votosStatus[votacion.id] = yaVotoRes.data.yaVoto;
+        } catch (error) {
+          console.error(`Error verificando voto para votación ${votacion.id}:`, error);
+          votosStatus[votacion.id] = false;
+        }
+      });
+
+      await Promise.all(verificaciones);
+      setVotosUsuario(prev => ({ ...prev, ...votosStatus }));
+    }
+    
+  } catch (err) {
+    mostrarAlerta('Error', `Error al cargar votaciones: ${err.message}`);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+}, [paginaActual, itemsPorPagina, filtroEstado, filtroResultados, terminoBusqueda, esEstudiante, usuarioId]);
+
 
   // Búsqueda con debounce
   const debouncedBusqueda = useCallback(
-  debounce((termino) => {
-    setTerminoBusqueda(termino);
-    setPaginaActual(1);
-  }, 500),
-  [] // Sin dependencias
-);
-const handleBusquedaChange = (texto) => {
-  setInputBusqueda(texto);
-  debouncedBusqueda(texto);
-};
+    debounce((termino) => {
+      setTerminoBusqueda(termino);
+      setPaginaActual(1);
+    }, 500),
+    []
+  );
 
+  const handleBusquedaChange = (texto) => {
+    setInputBusqueda(texto);
+    debouncedBusqueda(texto);
+  };
+
+  // Funciones para el modal de filtros
+  const abrirModal = () => {
+    setFiltrosTemporales({
+      estado: filtroEstado,
+      resultados: filtroResultados
+    });
+    setModalVisible(true);
+  };
+
+  const aplicarFiltros = () => {
+    setFiltroEstado(filtrosTemporales.estado);
+    setFiltroResultados(filtrosTemporales.resultados);
+    setPaginaActual(1);
+    setModalVisible(false);
+  };
+
+  const cancelarFiltros = () => {
+    setFiltrosTemporales({
+      estado: filtroEstado,
+      resultados: filtroResultados
+    });
+    setModalVisible(false);
+  };
 
   // Efectos
   useEffect(() => {
@@ -254,16 +313,27 @@ const handleBusquedaChange = (texto) => {
 
   // Limpiar todos los filtros
   const limpiarFiltros = () => {
-  setFiltroEstado('todas');
-  setFiltroResultados(null);
-  setInputBusqueda('');
-  setTerminoBusqueda('');
-  setPaginaActual(1);
-};
+    setFiltroEstado('todas');
+    setFiltroResultados(null);
+    setInputBusqueda('');
+    setTerminoBusqueda('');
+    setPaginaActual(1);
+  };
 
+  const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null || inputBusqueda.trim() !== '';
 
-const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null || inputBusqueda.trim() !== '';
-
+  // Obtener texto del filtro activo
+  const getTextoFiltroActivo = () => {
+    if (filtroEstado === 'todas') return 'Todos los estados';
+    if (filtroEstado === 'activa') return 'Activas';
+    if (filtroEstado === 'cerrada') {
+      if (filtroResultados === true) return 'Cerradas - Publicadas';
+      if (filtroResultados === false) return 'Cerradas - Sin publicar';
+      return 'Cerradas';
+    }
+    if (filtroEstado === 'publicadas') return 'Publicadas';
+    return 'Filtro activo';
+  };
 
   const renderVotacionCard = (votacion) => {
     const yaVoto = votosUsuario[votacion.id];
@@ -431,7 +501,7 @@ const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Listado de Votaciones</Text>
+          <Text style={styles.title}>Lista de Votaciones</Text>
           <Text style={styles.subtitle}>
             {esAdministrador 
               ? 'Gestiona y monitorea todas las votaciones del sistema'
@@ -450,8 +520,9 @@ const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null 
         )}
       </View>
 
-      {/* Filtros y búsqueda */}
-      <View style={styles.filtersContainer}>
+      {/* Barra de búsqueda y filtros */}
+      <View style={styles.searchAndFiltersContainer}>
+        {/* Búsqueda */}
         <View style={styles.searchContainer}>
           <Icon name="search" size={16} color="#1e3a8a" style={styles.searchIcon} />
           <TextInput
@@ -468,52 +539,190 @@ const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null 
                 setTerminoBusqueda('');
                 setPaginaActual(1);
               }}
+              style={styles.clearSearchButton}
             >
               <Icon name="close" size={16} color="#64748b" />
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={filtroEstado}
-            onValueChange={(value) => {
-              setFiltroEstado(value || 'todas');
-              if (value !== 'cerrada') {
-                setFiltroResultados(null);
-              }
-              setPaginaActual(1);
-            }}
-            style={styles.picker}
-          >
-            <Picker.Item label="Todas" value="todas" />
-            <Picker.Item label="Activas" value="activa" />
-            {esAdministrador && <Picker.Item label="Cerradas" value="cerrada" />}
-            <Picker.Item label="Publicadas" value="publicadas" />
-          </Picker>
-        </View>
-
-        {esAdministrador && filtroEstado === 'cerrada' && (
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={filtroResultados}
-              onValueChange={setFiltroResultados}
-              style={styles.picker}
-            >
-              <Picker.Item label="Todos los resultados" value={null} />
-              <Picker.Item label="Publicadas" value={true} />
-              <Picker.Item label="Sin publicar" value={false} />
-            </Picker>
-          </View>
-        )}
-
-        {hayFiltrosActivos && (
-          <TouchableOpacity style={styles.clearButton} onPress={limpiarFiltros}>
-            <Icon name="close" size={16} color="#64748b" />
-            <Text style={styles.clearButtonText}>Limpiar Filtros</Text>
-          </TouchableOpacity>
-        )}
+        {/* Botón de filtros */}
+        <TouchableOpacity style={styles.filterButton} onPress={abrirModal}>
+          <Icon name="filter" size={16} color="#1e3a8a" />
+          <Text style={styles.filterButtonText}>Filtros</Text>
+          {hayFiltrosActivos && <View style={styles.filterBadge} />}
+        </TouchableOpacity>
       </View>
+
+      {/* Indicador de filtros activos */}
+      {hayFiltrosActivos && (
+        <View style={styles.activeFiltersContainer}>
+          <View style={styles.activeFilterTag}>
+            <Text style={styles.activeFilterText}>{getTextoFiltroActivo()}</Text>
+            <TouchableOpacity onPress={limpiarFiltros} style={styles.removeFilterButton}>
+              <Icon name="close" size={14} color="#1e3a8a" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Modal de filtros */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={cancelarFiltros}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtros</Text>
+              <TouchableOpacity onPress={cancelarFiltros}>
+                <Icon name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {/* Filtro por estado */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Estado de la votación</Text>
+                <View style={styles.optionsList}>
+                  <TouchableOpacity
+                    style={[
+                      styles.optionItem,
+                      filtrosTemporales.estado === 'todas' && styles.optionItemSelected
+                    ]}
+                    onPress={() => setFiltrosTemporales(prev => ({ ...prev, estado: 'todas', resultados: null }))}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      filtrosTemporales.estado === 'todas' && styles.optionTextSelected
+                    ]}>
+                      Todas las votaciones
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.optionItem,
+                      filtrosTemporales.estado === 'activa' && styles.optionItemSelected
+                    ]}
+                    onPress={() => setFiltrosTemporales(prev => ({ ...prev, estado: 'activa', resultados: null }))}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      filtrosTemporales.estado === 'activa' && styles.optionTextSelected
+                    ]}>
+                      Votaciones activas
+                    </Text>
+                  </TouchableOpacity>
+
+                  {esAdministrador && (
+                    <TouchableOpacity
+                      style={[
+                        styles.optionItem,
+                        filtrosTemporales.estado === 'cerrada' && styles.optionItemSelected
+                      ]}
+                      onPress={() => setFiltrosTemporales(prev => ({ ...prev, estado: 'cerrada' }))}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        filtrosTemporales.estado === 'cerrada' && styles.optionTextSelected
+                      ]}>
+                        Votaciones cerradas
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={[
+                      styles.optionItem,
+                      filtrosTemporales.estado === 'publicadas' && styles.optionItemSelected
+                    ]}
+                    onPress={() => setFiltrosTemporales(prev => ({ ...prev, estado: 'publicadas', resultados: null }))}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      filtrosTemporales.estado === 'publicadas' && styles.optionTextSelected
+                    ]}>
+                      Resultados publicados
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Filtro por resultados (solo para administradores y estado cerrado) */}
+              {esAdministrador && filtrosTemporales.estado === 'cerrada' && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.filterSectionTitle}>Estado de resultados</Text>
+                  <View style={styles.optionsList}>
+                    <TouchableOpacity
+                      style={[
+                        styles.optionItem,
+                        filtrosTemporales.resultados === null && styles.optionItemSelected
+                      ]}
+                      onPress={() => setFiltrosTemporales(prev => ({ ...prev, resultados: null }))}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        filtrosTemporales.resultados === null && styles.optionTextSelected
+                      ]}>
+                        Todos los resultados
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.optionItem,
+                        filtrosTemporales.resultados === true && styles.optionItemSelected
+                      ]}
+                      onPress={() => setFiltrosTemporales(prev => ({ ...prev, resultados: true }))}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        filtrosTemporales.resultados === true && styles.optionTextSelected
+                      ]}>
+                        Resultados publicados
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.optionItem,
+                        filtrosTemporales.resultados === false && styles.optionItemSelected
+                      ]}
+                      onPress={() => setFiltrosTemporales(prev => ({ ...prev, resultados: false }))}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        filtrosTemporales.resultados === false && styles.optionTextSelected
+                      ]}>
+                        Resultados sin publicar
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Botones del modal */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={cancelarFiltros}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.applyButton]}
+                onPress={aplicarFiltros}
+              >
+                <Text style={styles.applyButtonText}>Aplicar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Lista de votaciones */}
       {loading && votaciones.length === 0 ? (
@@ -571,6 +780,7 @@ const hayFiltrosActivos = filtroEstado !== 'todas' || filtroResultados !== null 
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -612,21 +822,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 4,
   },
-  filtersContainer: {
+  // Contenedor para búsqueda y filtros
+  searchAndFiltersContainer: {
     backgroundColor: 'white',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
   },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
@@ -637,6 +851,167 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#1f2937',
+  },
+  clearSearchButton: {
+    padding: 4,
+  },
+  // Botón de filtros
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    position: 'relative',
+  },
+  filterButtonText: {
+    color: '#1e3a8a',
+    fontWeight: '500',
+    marginLeft: 4,
+    fontSize: 14,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#dc2626',
+  },
+  // Filtros activos
+  activeFiltersContainer: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  activeFilterTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  activeFilterText: {
+    color: '#1e3a8a',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  removeFilterButton: {
+    marginLeft: 4,
+    padding: 2,
+  },
+  // Modal de filtros
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+    minHeight: '60%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+  },
+  modalBody: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  filterSection: {
+    marginVertical: 16,
+  },
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  optionsList: {
+    gap: 8,
+  },
+  optionItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  optionItemSelected: {
+    backgroundColor: '#eff6ff',
+    borderColor: '#3b82f6',
+  },
+  optionText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  optionTextSelected: {
+    color: '#1e3a8a',
+    fontWeight: '600',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  cancelButtonText: {
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  applyButton: {
+    backgroundColor: '#1e3a8a',
+  },
+  applyButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+  // Contenedor principal de filtros (obsoleto, mantenido por compatibilidad)
+  filtersContainer: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
   },
   pickerContainer: {
     backgroundColor: '#f8f9fa',
@@ -662,6 +1037,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginLeft: 4,
   },
+  // Scroll y contenido
   scrollView: {
     flex: 1,
   },
@@ -688,6 +1064,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  // Cards de votaciones
   card: {
     backgroundColor: 'white',
     marginHorizontal: 20,
@@ -734,6 +1111,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  // Botones
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -781,6 +1159,7 @@ const styles = StyleSheet.create({
   disabledButtonText: {
     color: '#666',
   },
+  // Paginación
   paginationInfo: {
     alignItems: 'center',
     paddingVertical: 20,

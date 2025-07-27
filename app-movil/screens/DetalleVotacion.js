@@ -106,7 +106,6 @@ const DetalleVotacion = () => {
               {item.usuario?.nombre || 'Sin nombre'}
             </Text>
           </View>
-          <Text style={styles.participanteId}>ID: {item.usuario?.id || 'N/A'}</Text>
         </View>
       </View>
       <Text style={styles.participanteCorreo}>

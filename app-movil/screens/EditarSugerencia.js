@@ -252,10 +252,16 @@ const EditarSugerencia = () => {
                   onValueChange={(value) => updateFormData('categoria', value)}
                 >
                   <Picker.Item label="Selecciona una categoría..." value="" />
+                 <Picker.Item label="Académico" value="academico" />
+                  <Picker.Item label="Bienestar" value="bienestar" />
+                  <Picker.Item label="Cultura" value="cultura" />
+                  <Picker.Item label="Deportes" value="deportes" />
                   <Picker.Item label="Infraestructura" value="infraestructura" />
                   <Picker.Item label="Eventos" value="eventos" />
-                  <Picker.Item label="Bienestar" value="bienestar" />
-                  <Picker.Item label="Otro" value="otros" />
+                  <Picker.Item label="General" value="general" />
+                  <Picker.Item label="Seguridad" value="seguridad" />
+                  <Picker.Item label="Servicios" value="servicios" />
+                  <Picker.Item label="Otros" value="otros" />
                 </Picker>
               </View>
               {errors.categoria && (
@@ -413,6 +419,7 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 24,
+    
   },
   label: {
     fontSize: 16,

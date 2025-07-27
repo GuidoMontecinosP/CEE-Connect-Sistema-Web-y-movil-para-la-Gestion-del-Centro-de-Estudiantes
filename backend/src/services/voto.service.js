@@ -26,6 +26,9 @@ export const emitirVoto = async ({ usuarioId, votacionId, opcionId }) => {
   if (!usuario) {
     throw new Error("Usuario no encontrado");
   }
+  // if (usuario.estado === "inactivo") {
+  //   throw new Error("Usuario inactivo, no puede votar");
+  // }
 
   // Verificar que la opción existe y pertenece a la votación
   const opcion = await opcionRepo.findOne({

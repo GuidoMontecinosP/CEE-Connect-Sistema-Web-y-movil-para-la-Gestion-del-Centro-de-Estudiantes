@@ -249,9 +249,15 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
 
   const getCategoriaTexto = (categoria) => {
     const categorias = {
-      'eventos': 'Eventos',
-      'infraestructura': 'Infraestructura', 
+      'academico': 'Académico',
       'bienestar': 'Bienestar',
+      'cultura': 'Cultura',
+      'deportes': 'Deportes',
+      'infraestructura': 'Infraestructura',
+      'eventos': 'Eventos',
+      'general': 'General',
+      'servicios': 'Servicios',
+      'seguridad': 'Seguridad',
       'otros': 'Otros'
     };
     return categorias[categoria] || categoria;
@@ -804,7 +810,7 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
               </Text>
             </TouchableOpacity>
 
-            {item.isReportada && (
+            {item.isReportada && reportesDisponibles.filter(r => r.sugerencia?.id === item.id).length > 0 && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.reportButton]}
                 onPress={() => verInfoReporte(item)}
@@ -824,10 +830,13 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>
-         {esAdmin ? 'Administrar Sugerencias' : 'Lista de Sugerencias'}
-        </Text>
+       <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>
+            {esAdmin ? 'Administrar Sugerencias' : 'Lista de Sugerencias'}
+          </Text>
+        
+        </View>
         
         {/* Botón de reportes pendientes para admin */}
         {esAdmin && reportesDisponibles.length > 0 && (
@@ -900,16 +909,18 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Ionicons name="document-outline" size={60} color="#ccc" />
-                <Text style={styles.emptyText}>No se encontraron sugerencias</Text>
-                {(searchText || categoriaFiltro || estadoFiltro) && (
-                  <TouchableOpacity onPress={limpiarFiltros} style={styles.clearFiltersButton}>
-                    <Text style={styles.clearFiltersText}>Limpiar filtros</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            }
+  <View style={styles.emptyContainer}>
+    <Ionicons name="document-outline" size={60} color="#ccc" />
+    <Text style={styles.emptyText}>No se encontraron sugerencias</Text>
+    {(searchText || categoriaFiltro || estadoFiltro) && (
+      <TouchableOpacity onPress={limpiarFiltros} style={styles.emptyClearButton}>
+        <Ionicons name="refresh-outline" size={16} color="white" />
+        <Text style={styles.emptyClearButtonText}>Limpiar filtros</Text>
+      </TouchableOpacity>
+    )}
+  </View>
+}
+
           />
           
           {/* Paginación */}
@@ -954,9 +965,15 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
           <View style={styles.optionsGrid}>
             {[
               { label: 'Todas', value: null, icon: 'apps-outline' },
+              { label: 'Académico', value: 'academico', icon: 'school-outline' },
+              { label: 'Bienestar', value: 'bienestar', icon: 'medical-outline' },
+              { label: 'Cultura', value: 'cultura', icon: 'musical-notes-outline' },
+              { label: 'Deportes', value: 'deportes', icon: 'football-outline' },
               { label: 'Eventos', value: 'eventos', icon: 'calendar-outline' },
               { label: 'Infraestructura', value: 'infraestructura', icon: 'construct-outline' },
-              { label: 'Bienestar', value: 'bienestar', icon: 'heart-outline' },
+              { label: 'General', value: 'general', icon: 'globe-outline' },
+              { label: 'Servicios', value: 'servicios', icon: 'cog-outline' },
+              { label: 'Seguridad', value: 'seguridad', icon: 'shield-outline' },
               { label: 'Otros', value: 'otros', icon: 'ellipsis-horizontal-outline' }
             ].map((option) => (
               <TouchableOpacity
@@ -984,7 +1001,7 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
         </View>
 
         {/* Estado */}
-        <View style={styles.filterCard}>
+       <View style={styles.filterCard}>
           <View style={styles.filterCardHeader}>
             <Ionicons name="flag-outline" size={20} color="#1e3a8a" />
             <Text style={styles.filterCardTitle}>Estado</Text>
@@ -995,7 +1012,8 @@ const [deberiaLimpiar, setDeberiaLimpiar] = useState(false);
               { label: 'Pendiente', value: 'pendiente', icon: 'time-outline', color: '#ff9500' },
               { label: 'En proceso', value: 'en proceso', icon: 'sync-outline', color: '#1890ff' },
               { label: 'Resuelta', value: 'resuelta', icon: 'checkmark-done-outline', color: '#52c41a' },
-              { label: 'Archivada', value: 'archivada', icon: 'archive-outline', color: '#8c8c8c' }
+              // Solo mostrar "Archivada" si es administrador
+              ...(esAdmin ? [{ label: 'Archivada', value: 'archivada', icon: 'archive-outline', color: '#8c8c8c' }] : [])
             ].map((option) => (
               <TouchableOpacity
                 key={option.value || 'all'}
@@ -1627,18 +1645,18 @@ const styles = StyleSheet.create({
 }
 ,
   header: {
+    backgroundColor: 'white',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingTop: 40,
-    backgroundColor: '#1e3a8a',
+    paddingTop: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1e3a8a',
   },
   reportesButton: {
     flexDirection: 'row',
@@ -2085,6 +2103,23 @@ filterOptionTextSelected: {
   color: '#fff',
   fontWeight: '600',
 },
+clearFiltersButton: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1e3a8a',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    justifyContent: 'center', // Centrar contenido
+  },
+  clearFiltersText: {
+    color: 'white',
+    fontWeight: '600',
+    marginLeft: 4,
+    fontSize: 14, // Asegurar tamaño de fuente visible
+  },
+
 activeFiltersCard: {
   backgroundColor: '#e6f3ff',
   borderRadius: 12,
@@ -2209,6 +2244,23 @@ applyFiltersButtonText: {
     color: '#666',
     marginBottom: 4,
   },
+  emptyClearButton: {
+  marginTop: 16,
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#1e3a8a',
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderRadius: 8,
+  justifyContent: 'center',
+},
+emptyClearButtonText: {
+  color: 'white',
+  fontWeight: '600',
+  fontSize: 14,
+  marginLeft: 6,
+},
+
   // Modal de respuesta
   responseText: {
     fontSize: 14,
@@ -2428,7 +2480,7 @@ applyFiltersButtonText: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
-    backgroundColor: '#722ed1',
+    backgroundColor: '#1e3a8a',
   },
   deleteReportButtonText: {
     color: 'white',
@@ -2512,6 +2564,12 @@ ellipsis: {
   fontWeight: '500',
   marginHorizontal: 4,
 },
+subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    marginTop: 2,
+
+  },
 mySuggestionsButton: {
   flexDirection: 'row',
   alignItems: 'center',
