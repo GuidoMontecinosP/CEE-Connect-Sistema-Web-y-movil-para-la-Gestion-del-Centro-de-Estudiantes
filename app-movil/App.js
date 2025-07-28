@@ -8,7 +8,12 @@ import { AuthContext, AuthProvider } from "./context/Authcontext";
 
 // Screens existentes
 import HomeScreen from './screens/Home';
+import CrearAnuncio from './screens/CrearAnuncio';
+import EditarAnuncio from './screens/EditarAnuncio';
+import WebViewScreen from './screens/WebViewScreen';
 import Eventos from './screens/Eventos';
+import CrearEvento from './screens/CrearEvento';
+import EditarEvento from './screens/EditarEvento';
 import ListaVotaciones from './screens/ListaVotaciones';
 import CrearVotacion from './screens/CrearVotacion';
 import EmitirVoto from './screens/EmitirVoto';
@@ -62,6 +67,16 @@ function CustomHeader({ navigation, userInfo }) {
   );
 }
 
+// Stack de Anuncios
+function AnunciosStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ListaAnuncios" component={HomeScreen} />
+      <Stack.Screen name="CrearAnuncio" component={CrearAnuncio} />
+    </Stack.Navigator>
+  );
+}
+
 // Stack de Votaciones
 function VotacionesStack() {
   return (
@@ -80,6 +95,8 @@ function EventosStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Eventos" component={Eventos} />
+      <Stack.Screen name="CrearEvento" component={CrearEvento} />
+      <Stack.Screen name="EditarEvento" component={EditarEvento} />
     </Stack.Navigator>
   );
 }
@@ -101,7 +118,7 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false, // Sin header porque lo manejamos globalmente
+        headerShown: false,
         tabBarActiveTintColor: '#1e3a8a',
         tabBarIcon: ({ color, size }) => {
           let iconName;
@@ -113,7 +130,7 @@ function MainTabs() {
         }
       })}
     >
-      <Tab.Screen name="Inicio" component={HomeScreen} />
+      <Tab.Screen name="Inicio" component={AnunciosStack} />
       <Tab.Screen name="Votaciones" component={VotacionesStack} />
       <Tab.Screen name="Eventos" component={EventosStack} />
       <Tab.Screen name="Sugerencias" component={SugerenciasStack} />
@@ -140,6 +157,10 @@ function MainStackNavigator() {
           headerTitle: 'Mi Perfil',
         }}
       />
+      <MainStack.Screen name="WebViewScreen" component={WebViewScreen} />
+      <MainStack.Screen name="CrearAnuncio" component={CrearAnuncio} />
+      <MainStack.Screen name="EditarAnuncio" component={EditarAnuncio} />
+      <MainStack.Screen name="ListaAnuncios" component={HomeScreen} />
     </MainStack.Navigator>
   );
 }

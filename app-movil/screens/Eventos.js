@@ -1,203 +1,324 @@
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
-import axios from '../services/api.js';
-import { formatDateToDDMMYYYY } from '../utils/formatDate.js';
-import { StyleSheet } from 'react-native';
-// Agregar iconos de react-native-vector-icons
+import React, { useEffect, useState, useContext, useCallback } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+  ActivityIndicator,
+  StatusBar,
+  Image,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { eventosService } from '../services/eventos.service';
+import { AuthContext } from '../context/Authcontext';
+import { formatDateToDDMMYYYY } from '../utils/formatDate';
+import { RefreshControl } from 'react-native';
 
-export default function ListaEventos({ navigation }) {
+const ListaEventos = () => {
+  const navigation = useNavigation();
   const [eventos, setEventos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { usuario } = useContext(AuthContext);
+
+  const esAdministrador = usuario?.rol?.nombre === 'administrador';
+
+  const cargarEventos = async () => {
+    setLoading(true);
+    try {
+      const data = await eventosService.obtenerEventos();
+      setEventos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      Alert.alert('Error', 'No se pudieron cargar los eventos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
-    axios.get('/eventos/eventos')
-      .then(res => setEventos(res.data))
-      .catch(err => console.error("Error al cargar los Eventos", err));
+    cargarEventos();
   }, []);
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}> <Icon name="calendar-month" size={28} color="#1e3a8a" /> Próximos Eventos</Text>
-      <FlatList
-        data={eventos}
-        keyExtractor={(item) => item.id.toString()}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Icon name="calendar-remove-outline" size={64} color="#cbd5e1" />
-            <Text style={styles.emptyTitle}>No hay eventos registrados</Text>
-            <Text style={styles.emptySubtitle}>¡Vuelve pronto para ver nuevos eventos!</Text>
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.title}>{item.titulo}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="text" size={18} color="#64748b" style={styles.infoIcon} />
-              <Text style={styles.infoText}>{item.descripcion}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="calendar" size={18} color="#64748b" style={styles.infoIcon} />
-              <Text style={styles.infoText}>{formatDateToDDMMYYYY(item.fecha)} {item.hora}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="map-marker" size={18} color="#64748b" style={styles.infoIcon} />
-              <Text style={styles.infoText}>{item.lugar}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="tag" size={18} color="#64748b" style={styles.infoIcon} />
-              <Text style={styles.infoText}>{item.tipo}</Text>
-            </View>
-          </View>
-        )}
-      />
+  // Refresca automáticamente al volver a la pantalla
+  useFocusEffect(
+    useCallback(() => {
+      cargarEventos();
+    }, [])
+  );
+
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await cargarEventos();
+    setRefreshing(false);
+  };
+
+  const handleEliminarEvento = (eventoId) => {
+    Alert.alert(
+      '¿Eliminar evento?',
+      'Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await eventosService.eliminarEvento(eventoId);
+              setEventos(prev => prev.filter(e => e.id !== eventoId));
+              Alert.alert('Evento eliminado');
+            } catch (err) {
+              console.error(err);
+              Alert.alert('Error', 'No se pudo eliminar el evento.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const renderEventoCard = (evento) => (
+    <View key={evento.id} style={styles.card}>
+      {evento.imagen && (
+        <Image source={{ uri: `http://146.83.198.35:1217${evento.imagen}` }} style={styles.image} />
+      )}
+
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle} numberOfLines={2}>{evento.titulo}</Text>
+      </View>
+
+      <View style={styles.infoRow}>
+        <Icon name="calendar" size={18} color="#64748b" />
+        <Text style={styles.infoText}>
+          {formatDateToDDMMYYYY(evento.fecha)} {evento.hora}
+        </Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Icon name="map-marker" size={18} color="#64748b" />
+        <Text style={styles.infoText}>{evento.lugar}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Icon name="tag" size={18} color="#64748b" />
+        <Text style={styles.infoText}>{evento.tipo}</Text>
+      </View>
+      <View style={styles.infoRow}>
+        <Icon name="text" size={18} color="#64748b" />
+        <Text style={styles.infoText}>{evento.descripcion}</Text>
+      </View>
+
+      {esAdministrador && (
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.buttonOutline]}
+            onPress={() => navigation.navigate('EditarEvento', { eventoId: evento.id })}
+          >
+            <Icon name="pencil" size={18} color="#1e3a8a" />
+            <Text style={styles.buttonTextOutline}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.buttonDanger]}
+            onPress={() => handleEliminarEvento(evento.id)}
+          >
+            <Icon name="delete" size={18} color="#fff" />
+            <Text style={styles.buttonText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
-}
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Listado de Eventos</Text>
+          <Text style={styles.subtitle}>
+            {esAdministrador
+              ? 'Gestiona y edita los eventos del sistema'
+              : 'Consulta los próximos eventos disponibles'}
+          </Text>
+        </View>
+        {esAdministrador && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('CrearEvento')}
+          >
+            <Icon name="plus" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1e3a8a" />
+          <Text style={styles.loadingText}>Cargando eventos...</Text>
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#1e3a8a"]} />
+          }
+        >
+          {eventos.map(renderEventoCard)}
+          {eventos.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Icon name="calendar-remove-outline" size={64} color="#cbd5e1" />
+              <Text style={styles.emptyTitle}>No hay eventos registrados</Text>
+              <Text style={styles.emptySubtitle}>¡Vuelve pronto para ver nuevos eventos!</Text>
+            </View>
+          )}
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 16,
-    paddingTop: 20,
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#1e3a8a',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-  },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 20,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  activeFilterButton: {
     backgroundColor: '#1e3a8a',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  filterText: {
-    fontSize: 12,
-    color: '#374151',
-    fontWeight: '500',
+  headerContent: {
+    flex: 1,
   },
-  activeFilterText: {
-    color: '#fff',
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#cbd5e1',
+    lineHeight: 20,
+  },
+  addButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    padding: 8,
+    marginLeft: 16,
+  },
+  scrollView: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
   card: {
     backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 20,
-    borderRadius: 16,
-    marginBottom: 18,
-    elevation: 4,
+    marginVertical: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.13,
-    shadowRadius: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: {
+    width: '100%',
+    height: 180,
+    borderRadius: 10,
+    marginBottom: 12,
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    marginBottom: 10,
-    backgroundColor: '#e9e9e9',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#052569',
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1e3a8a',
     flex: 1,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 6,
-    marginLeft: 2,
-  },
-  infoIcon: {
-    marginRight: 8,
   },
   infoText: {
-    fontSize: 17,
-    color: '#22223b',
+    fontSize: 16,
+    color: '#374151',
+    marginLeft: 6,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 80,
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 12,
+  },
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 6,
   },
-  activeBadge: {
-    backgroundColor: '#dcfce7',
+  buttonDanger: {
+    backgroundColor: '#dc2626',
   },
-  closedBadge: {
-    backgroundColor: '#fef2f2',
+  buttonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1e3a8a',
   },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
+  buttonText: {
+    color: '#fff',
+    fontWeight: '500',
   },
-  activeText: {
-    color: '#166534',
-  },
-  closedText: {
-    color: '#991b1b',
-  },
-  actions: {
-    gap: 8,
-  },
-  actionButton: {
-    paddingVertical: 2,
-  },
-  primaryAction: {
-    fontSize: 16,
+  buttonTextOutline: {
     color: '#1e3a8a',
-    fontWeight: '600',
-  },
-  secondaryAction: {
-    fontSize: 16,
-    color: '#2563eb',
     fontWeight: '500',
   },
-  dangerAction: {
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
     fontSize: 16,
-    color: '#dc2626',
-    fontWeight: '500',
+    color: '#64748b',
+    marginTop: 12,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
   },
-  emptyText: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#374151',
-    marginBottom: 8,
+    marginTop: 12,
   },
   emptySubtitle: {
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+    marginTop: 4,
+  },
+  bottomPadding: {
+    height: 20,
   },
 });
+
+export default ListaEventos;

@@ -1,7 +1,8 @@
-import { crearEvento, modificarEvento, eventos, eliminarEvento } from "../services/eventos.services.js";
+import { crearEvento, modificarEvento, eventos, eliminarEvento, obtenerEventoPorId } from "../services/eventos.services.js";
 import { crearEventoValidation, modificarEventoValidation } from "../validations/eventos.validation.js";
 
 export async function crearEventoController(req, res) {
+  console.log("Datos recibidos para crear evento:", req.body);
   const {error, value} = crearEventoValidation.validate(req.body);
   if (error) {
     console.log("Error de validación:", error.details);
@@ -14,6 +15,8 @@ export async function crearEventoController(req, res) {
 
   try {
     const { titulo, descripcion, fecha, hora, lugar, tipo } = value;
+    const imagen = req.file ? `/SubirImagenes/${req.file.filename}` : null;
+
     const evento = await crearEvento({
       titulo,
       descripcion,
@@ -21,6 +24,7 @@ export async function crearEventoController(req, res) {
       hora,
       lugar,
       tipo,
+      imagen
     });
 
     res.status(201).json({
@@ -52,7 +56,7 @@ export async function modificarEventoController(req, res) {
     const { id } = req.params;
     const { titulo, descripcion, fecha, hora, lugar, tipo, estado } = value;
 
-    const eventoModificado = await modificarEvento(id, {
+    const datosActualizar =  {
       titulo,
       descripcion,
       fecha,
@@ -60,8 +64,14 @@ export async function modificarEventoController(req, res) {
       lugar,
       tipo,
       estado,
-    });
+    };
 
+    if (req.file) {
+      datosActualizar.imagen = `/SubirImagenes/${req.file.filename}`;
+    }
+
+    const eventoModificado = await modificarEvento(id, datosActualizar);
+    
     res.status(200).json({
       message: "Evento modificado exitosamente",
       evento: eventoModificado,
@@ -74,6 +84,7 @@ export async function modificarEventoController(req, res) {
 
 export async function eventosController(req, res) {
   try {
+    // console.log("Obteniendo lista de eventos...");
     const listaEventos = await eventos();
 
     res.status(200).json(listaEventos);
@@ -81,6 +92,22 @@ export async function eventosController(req, res) {
   } catch (error) {
     console.error("Error al obtener los eventos:", error);
     res.status(500).json({ error: "Error al obtener los eventos" });
+  }
+}
+
+export async function eventoPorIdController(req, res) {
+  const { id } = req.params;
+  try {
+    const evento = await obtenerEventoPorId(id);
+    if (!evento) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+    res.status(200).json(evento);
+
+  } catch (error) {
+    
+    console.error("Error al obtener el evento por ID:", error);
+    res.status(500).json({ error: "Error al obtener el evento" });
   }
 }
 

@@ -36,6 +36,11 @@ const EventosSchema = new EntitySchema({
       type: "varchar",
       default: "activo",
       length: 50,
+    },
+    imagen: {
+      type: "varchar",
+      nullable: true, 
+      length: 255, 
     }
   },
 });

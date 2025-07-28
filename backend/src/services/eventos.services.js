@@ -3,7 +3,7 @@ import { AppDataSource } from "../config/configDb.js";
 const eventoRepo = AppDataSource.getRepository("Evento");
 
 export const crearEvento = async (data) => {
-  const { titulo, descripcion, fecha, hora, lugar, tipo } = data;
+  const { titulo, descripcion, fecha, hora, lugar, tipo, imagen } = data;
 
   const nuevoEvento = eventoRepo.create({
     titulo,
@@ -12,6 +12,7 @@ export const crearEvento = async (data) => {
     hora,
     lugar,
     tipo,
+    imagen,
   });
 
   return await eventoRepo.save(nuevoEvento);
@@ -22,7 +23,7 @@ export const modificarEvento = async (id, data) => {
     const evento = await eventoRepo.findOneBy({ id });
     if (!evento) throw new Error("Evento no encontrado");
 
-    const { titulo, descripcion, fecha, hora, lugar, tipo, estado } = data;
+    const { titulo, descripcion, fecha, hora, lugar, tipo, estado, imagen } = data;
 
     evento.titulo = titulo || evento.titulo;
     evento.descripcion = descripcion || evento.descripcion;
@@ -31,7 +32,8 @@ export const modificarEvento = async (id, data) => {
     evento.lugar = lugar || evento.lugar;
     evento.tipo = tipo || evento.tipo;
     evento.estado = estado || evento.estado;
-
+    evento.imagen = imagen || evento.imagen;
+    
     return await eventoRepo.save(evento);
 };
 
@@ -44,6 +46,14 @@ export const eventos = async () => {
       }
     });
     return eventos;
+}
+
+export const obtenerEventoPorId = async (id) => {
+
+    const evento = await eventoRepo.findOneBy({ id });
+    
+    if (!evento) throw new Error("Evento no encontrado");
+    return evento;
 }
 
 export const eliminarEvento = async (id) => {

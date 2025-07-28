@@ -103,7 +103,7 @@ function Noticias() {
           {/* Anuncio CEE */}
           <div>
             <Card
-              title={<span style={{ color: '#1e3a8a', fontWeight: 600 }}>Anuncios del CEE</span>}
+              title={<span style={{ color: '#1e3a8a', fontWeight: 600, fontSize: 24 }}>Anuncios del CEE</span>}
               style={{ minHeight: 300, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
             >
               {loadingAnuncio && <Spin />}
@@ -115,6 +115,14 @@ function Noticias() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                   {anuncios.map((anuncio, idx) => (
                     <div key={anuncio.id || idx} style={{ borderBottom: '1px solid #eee', paddingBottom: 12 }}>
+                      {/* Imagen del anuncio si existe */}
+                      {anuncio.imagen && (
+                        <img
+                          src={`http://146.83.198.35:1217${anuncio.imagen}`}
+                          alt={anuncio.titulo}
+                          style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }}
+                        />
+                      )}
                       <Title level={4} style={{ marginBottom: 8 }}>{anuncio.titulo}</Title>
                       <Text style={{ fontSize: 16 }}>{anuncio.epilogo}</Text>
                       {anuncio.link && (

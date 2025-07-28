@@ -20,7 +20,7 @@ export const crearAnuncioValidation = Joi.object({
         .min(20)
         .max(500)
         .trim()
-        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()-]+$/)
+        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()\-%]+$/)
         .required()
         .messages({
             "string.empty": "El epílogo del anuncio no puede estar vacío.",
@@ -66,7 +66,7 @@ export const modificarAnuncioValidation = Joi.object({
         .min(20)
         .max(500)
         .trim()
-        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()-]+$/)
+        .pattern(/^(?!.*\s{2})(?!\s)(?!.*\s$)[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\d.,;:¿?¡!()\-%]+$/)
         .optional()
         .allow("")
         .messages({
@@ -92,6 +92,13 @@ export const modificarAnuncioValidation = Joi.object({
             "any.only": "El tipo de anuncio no es válido.",
         }),
     estado: Joi.boolean().optional(),
+    imagen: Joi.string()
+        .optional()
+        .allow("")
+        .messages({
+            "string.base": "La imagen debe ser una URL válida.",
+            "any.required": "La imagen es opcional.",
+    }),
 }).unknown(true);
 
 export default { crearAnuncioValidation, modificarAnuncioValidation };  

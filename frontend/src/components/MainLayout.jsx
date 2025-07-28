@@ -7,13 +7,11 @@ import {
   FileTextOutlined,
   AuditOutlined,
   PlusOutlined,
-  PlusCircleOutlined,
   CalendarOutlined,
   ScheduleOutlined,
   EyeOutlined,
   FormOutlined,
   SettingOutlined,
-  LogoutOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -53,7 +51,7 @@ const [collapsed, setCollapsed] = useState(false);
     getItem('Anuncios', '10', <DesktopOutlined />),
     getItem('Eventos', 'sub1', <CarryOutOutlined />, [
       getItem('Ver Eventos', '3', <CarryOutOutlined />),
-      getItem('Agregar Evento', '6', <PlusCircleOutlined />),
+      getItem('Agregar Evento', '6', <PlusOutlined />),
     ]),
     getItem('Sugerencias', '7', <CalendarOutlined />),
     getItem('Dashboard', '5', <AuditOutlined />),

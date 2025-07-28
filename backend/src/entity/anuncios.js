@@ -32,6 +32,11 @@ const AnunciosSchema = new EntitySchema({
       type: "timestamp",
       default: () => "CURRENT_TIMESTAMP", 
     },
+    imagen: {
+      type: "varchar",
+      nullable: true, 
+      length: 255, 
+    }
   },
 });
 

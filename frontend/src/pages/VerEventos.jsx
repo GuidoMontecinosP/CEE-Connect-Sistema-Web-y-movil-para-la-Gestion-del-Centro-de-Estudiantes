@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import dayjs from 'dayjs';
 
 import MainLayout from "../components/MainLayout.jsx";
 
@@ -14,10 +15,13 @@ import { Breadcrumb,
          Card,
          Typography,
          message,
-         Select,     
+         Select,
+         Spin,     
 } from 'antd';
 
-import { PlusOutlined } from '@ant-design/icons';
+import { MdEvent, MdDescription, MdPlace, MdLabel } from 'react-icons/md'
+
+import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -25,44 +29,33 @@ function VerEventos() {
   const [eventos, setEventos] = useState([]);
 
   const [messageApi, contextHolder] = message.useMessage();
+  const [modal, modalContextHolder] = Modal.useModal();
+  const [loading, setLoading] = useState(true);
+
+  const fetchEventos = async () => {
+      setLoading(true);
+      try {
+        const data = await obtenerEventos();
+        setEventos(Array.isArray(data) ? data : []);
+      } catch {
+        messageApi.error('Error al obtener anuncios');
+      }
+      setLoading(false);
+    };
 
   useEffect(() => {
-    obtenerEventos()
-      .then(setEventos)
-      .catch(() => messageApi.error('Error al obtener eventos. Inténtalo de nuevo más tarde.'));
-  }, [messageApi]);
+    fetchEventos(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
+  const [imagen, setNuevaImagen] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState(null);
   const [confirmEditVisible, setConfirmEditVisible] = useState(false);
-  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
-  const [eventoAEliminar, setEventoAEliminar] = useState(null);
 
   const handleEditClick = (evento) => {
     setSelectedEvento(evento);
     setEditModalOpen(true);
-  };
-
-  const handleDeleteClick = (id, titulo) => {
-    setEventoAEliminar({ id, titulo });
-    setConfirmDeleteVisible(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!eventoAEliminar) return;
-    try {
-      await eliminarEvento(eventoAEliminar.id);
-      messageApi.success('Evento eliminado exitosamente');
-      setConfirmDeleteVisible(false);
-      setEventoAEliminar(null);
-      // Recargar eventos después de eliminar
-      const nuevosEventos = await obtenerEventos();
-      setEventos(nuevosEventos);
-    } catch {
-      messageApi.error('Error al eliminar el evento. Inténtalo de nuevo más tarde.');
-      setConfirmDeleteVisible(false);
-      setEventoAEliminar(null);
-    }
   };
 
   const handleEditChange = (e) => {
@@ -73,14 +66,54 @@ function VerEventos() {
     setConfirmEditVisible(true);
   };
 
+  const handleDelete = (e) => {
+    modal.confirm({
+      title: `¿Seguro de eliminar el evento "${e.titulo}"?`,
+      icon: <ExclamationCircleOutlined />,
+      content: 'Esta acción no se podra deshacer.',
+      okText: 'Eliminar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      async onOk() {
+        await eliminarEvento(e.id);
+        fetchEventos();
+        messageApi.success('Evento eliminado');
+      },
+    });
+  };
+
   const handleConfirmEdit = async () => {
     // eslint-disable-next-line no-unused-vars
     const { id, estado, ...data } = selectedEvento;
     try {
-      await modificarEvento(id, data);
+      // Asegurar formato HH:mm
+      let hora = data.hora;
+      if (!hora && selectedEvento.hora) {
+        hora = selectedEvento.hora;
+      }
+      if (hora && typeof hora === 'object' && hora.format) {
+        hora = hora.format('HH:mm');
+      }
+      if (hora && typeof hora === 'string' && hora.length > 5) {
+        // Si por error viene con segundos, recortar
+        hora = hora.slice(0,5);
+      }
+      const formData = new FormData();
+      for (const key in data) {
+        if (key === 'hora') {
+          formData.append('hora', hora || '');
+        } else {
+          formData.append(key, data[key]);
+        }
+      }
+      if (imagen) {
+        formData.append('imagen', imagen);
+      }
+      await modificarEvento(id, formData);
       messageApi.success('Evento modificado exitosamente');
       setEditModalOpen(false);
       setSelectedEvento(null);
+      setNuevaImagen(null);
       setConfirmEditVisible(false);
       // Recargar eventos después de modificar
       const nuevosEventos = await obtenerEventos();
@@ -96,6 +129,7 @@ function VerEventos() {
     <>     
       <MainLayout breadcrumb>
       {contextHolder}
+      {modalContextHolder}
         <div >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 48 }}>
           <div>
@@ -125,10 +159,15 @@ function VerEventos() {
                 Ingresar Nuevo Evento
             </Button>
           </div>
-            {eventos.length === 0 ? (
-              <p>No hay eventos registrados.</p>
+            {loading ? (
+              <div style={{ textAlign: 'center', marginTop: 40 }}>
+                <Spin size="large" />
+              </div>
             ) : (
-              <div style={{
+              eventos.length === 0 ? (
+                <p>No hay eventos registrados.</p>
+              ) : (
+                <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                   flexWrap: 'wrap',
@@ -136,28 +175,53 @@ function VerEventos() {
                   marginTop: 24,
                   marginLeft: '20px',            
                 }}>
-                
-                {eventos.map(e => {
-                // Formatear fecha de YYYY-MM-DD a DD-MM-YYYY
-                  let fechaFormateada = e.fecha ? e.fecha.split('-').reverse().join('-') : '';
-                  // Mostrar hora solo en formato HH:mm
-                  let horaFormateada = e.hora ? e.hora.slice(0,5) : '';
-                  return (
-                    <Card key={e.id} size="small" title={e.titulo} extra={
-                      <>
-                        <a href="#" onClick={() => handleEditClick(e)} style={{ marginRight: 8}}>Modificar</a>
-                        <a href="#" onClick={() => handleDeleteClick(e.id, e.titulo)} style={{color: 'red'}}>eliminar</a>
-                      </>
-                      }
-                      style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
-                        Fecha: {fechaFormateada} - Hora: {horaFormateada}  <br />
-                        Descripción: {e.descripcion} <br />
-                        Lugar: {e.lugar} <br />
-                        Tipo: {e.tipo} <br />
-                    </Card>
-                  );
-                })}
-              </div>
+                  {eventos.map(e => {
+                    // Formatear fecha de YYYY-MM-DD a DD-MM-YYYY
+                    let fechaFormateada = e.fecha ? e.fecha.split('-').reverse().join('-') : '';
+                    // Mostrar hora solo en formato HH:mm
+                    let horaFormateada = e.hora ? e.hora.slice(0,5) : '';
+                    return (
+                      <Card key={e.id} size="small" title={e.titulo} extra={
+                        <>
+                          <a><Button size="small" wuarning onClick={() => handleEditClick(e)}>Editar</Button> </a>
+                          <a><Button size="small" danger onClick={() => handleDelete(e)}>Eliminar</Button></a>
+                        </>
+                        }
+                        style={{ width: 300, boxShadow: '5px 10px 15px rgba(0,0,0,0.1)', }}>
+                        {e.imagen ? (
+                          <img
+                            src={`http://146.83.198.35:1217${e.imagen}`}
+                            alt={e.titulo}
+                            style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
+                          />
+                        ) : (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: 140,
+                                background: '#f0f0f0',
+                                borderRadius: 8,
+                                marginBottom: 8,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#aaa',
+                                fontSize: 16,
+                                fontStyle: 'italic'
+                              }}
+                            >
+                              Sin imagen
+                            </div>
+                        )}
+                        <MdEvent/> Fecha: {fechaFormateada} - Hora: {horaFormateada}  <br />
+                        <MdDescription/> Descripción: {e.descripcion} <br />
+                        <MdPlace/> Lugar: {e.lugar} <br />
+                        <MdLabel/> Tipo: {e.tipo} <br />
+                      </Card>
+                    );
+                  })}
+                </div>
+              )
             )}
         </div>
       
@@ -174,10 +238,19 @@ function VerEventos() {
                 <Input type="text" placeholder="Título" name="titulo" value={selectedEvento.titulo} onChange={handleEditChange} />
                 <Input type="text" placeholder="Descripción" name="descripcion" value={selectedEvento.descripcion} onChange={handleEditChange}/>
                 <Space.Compact block>
-                  <DatePicker style={{ width: '100%' }} onChange={(date) => setSelectedEvento({ ...selectedEvento, fecha: date ? date.format('YYYY-MM-DD') : '' })} />
+                  <DatePicker
+                    style={{ width: '100%' }}
+                    value={selectedEvento.fecha ? dayjs(selectedEvento.fecha, 'YYYY-MM-DD') : null}
+                    onChange={date => setSelectedEvento({ ...selectedEvento, fecha: date ? date.format('YYYY-MM-DD') : '' })}
+                  />
                 </Space.Compact>
                 <Space.Compact block>
-                  <TimePicker style={{ width: '100%' }} onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })} format={"HH:mm"} />
+                  <TimePicker
+                    style={{ width: '100%' }}
+                    value={selectedEvento.hora ? dayjs(selectedEvento.hora, 'HH:mm') : null}
+                    onChange={(time, timeString) => setSelectedEvento({ ...selectedEvento, hora: timeString })}
+                    format={"HH:mm"}
+                  />
                 </Space.Compact>
                 {/* <Input type="date" placeholder="Fecha" name="fecha" value={selectedEvento.fecha} onChange={handleEditChange} required />
                 <Input type="time" placeholder="Hora" name="hora" value={selectedEvento.hora} onChange={handleEditChange} required /> */}
@@ -197,6 +270,15 @@ function VerEventos() {
                     { value: 'Otro', label: 'Otro' },
                   ]}
                 />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNuevaImagen(e.target.files[0])}
+                  style={{ marginTop: 8 }}
+                />
+                <Text style={{ fontSize: 12, color: '#888' }}>
+                  Si no seleccionas una nueva imagen, se mantendrá la actual.
+                </Text>
               </div>
               <div style={{ marginTop: 16, textAlign: 'right' }}>
                 <Button onClick={() => setEditModalOpen(false)} style={{ marginRight: 8 }}>
@@ -218,16 +300,6 @@ function VerEventos() {
           cancelText="Cancelar"
         >
           <p>Recuerda que una vez modificado, no podrás revertir los cambios.</p>
-        </Modal>
-        <Modal
-          open={confirmDeleteVisible}
-          title={`¿Estás seguro de eliminar el evento "${eventoAEliminar?.titulo ?? ''}"?`}
-          onOk={handleConfirmDelete}
-          onCancel={() => { setConfirmDeleteVisible(false); setEventoAEliminar(null); }}
-          okText="Eliminar"
-          cancelText="Cancelar"
-        >
-          <p>¡No podrás recuperar este evento!</p>
         </Modal>
       </MainLayout>
     </>
